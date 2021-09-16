@@ -114,6 +114,52 @@ InitGraphics (
   // Hint: Use GetMode/SetMode functions.
   //
 
+  ASSERT (GraphicsOutput != NULL);
+  ASSERT (GraphicsOutput->Mode != NULL);
+  UINT32 MaxGMode = GraphicsOutput->Mode->MaxMode;
+
+#if 1  ///< Uncomment to list available graphics modes
+  UINT32 CurGMode = GraphicsOutput->Mode->Mode;
+
+  DEBUG ((DEBUG_INFO, "JOS: Found support for %u graphics modes:\n",
+          MaxGMode));
+
+  for (UINT32 Idx = 0; Idx < MaxGMode; ++Idx) {
+    UINTN SizeOfInfo = 0;
+    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info = NULL;
+
+    Status = GraphicsOutput->QueryMode (GraphicsOutput, Idx, &SizeOfInfo,
+                                        &Info);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "JOS: Failded to query mode #%u - %r\n", Idx,
+              Status));
+      return Status;
+    }
+
+    ASSERT (Info != NULL);
+
+    DEBUG ((DEBUG_INFO, " %c Mode #%u: %u*%u, %u pixels per scanline\n",
+            (Idx == CurGMode ? '*' : '-'), Idx, Info->HorizontalResolution,
+            Info->VerticalResolution, Info->PixelsPerScanLine));
+  }
+#endif
+
+  UINT32 DesiredGMode = 4;
+
+  if (DesiredGMode >= MaxGMode) {
+    DEBUG ((DEBUG_INFO, "JOS: Desired graphics mode (#%u) not supported, "
+                        "picking closest available (#%u) instead.\n", 
+            DesiredGMode, MaxGMode - 1));
+    
+    DesiredGMode = MaxGMode - 1;
+  }
+
+  Status = GraphicsOutput->SetMode (GraphicsOutput, DesiredGMode);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "JOS: Failded to set graphics mode to #%u - %r\n",
+            DesiredGMode, Status));
+    return Status;
+  }
 
   //
   // Fill screen with black.
@@ -139,6 +185,84 @@ InitGraphics (
   LoaderParams->PixelsPerScanLine    = GraphicsOutput->Mode->Info->PixelsPerScanLine;
   LoaderParams->HorizontalResolution = GraphicsOutput->Mode->Info->HorizontalResolution;
   LoaderParams->VerticalResolution   = GraphicsOutput->Mode->Info->VerticalResolution;
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Initialise text rendering.
+
+  @retval EFI_SUCCESS on success.
+**/
+STATIC
+EFI_STATUS
+InitText ()
+{
+  EFI_STATUS                      Status;
+  EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *SimpleTextOutput;
+
+  //
+  // Obtain simple text output protocol.
+  //
+  Status = HandleProtocolFallback (
+    gST->ConsoleOutHandle,
+    &gEfiSimpleTextOutProtocolGuid,
+    (VOID **) &SimpleTextOutput
+    );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "JOS: Cannot find STOP protocol - %r\n", Status));
+    return Status;
+  }
+
+  //
+  // Configure font size.
+  //
+  ASSERT (SimpleTextOutput != NULL);
+  ASSERT (SimpleTextOutput->Mode != NULL);
+  UINT32 MaxTMode = SimpleTextOutput->Mode->MaxMode;
+
+#if 0  ///< Uncomment to list available text modes
+  UINT32 CurTMode = SimpleTextOutput->Mode->Mode;
+
+  DEBUG ((DEBUG_INFO, "JOS: Found support for %u text modes:\n", MaxTMode));
+
+  for (UINT32 Idx = 0; Idx < MaxTMode; ++Idx) {
+    UINTN Columns = 0,
+          Rows    = 0;
+
+    Status = SimpleTextOutput->QueryMode (SimpleTextOutput, Idx, &Columns,
+                                          &Rows);
+    if (EFI_ERROR (Status) && Idx == 1) {
+      DEBUG ((DEBUG_INFO, " x Mode #1: 80*50 characters, not supported\n"));
+      continue;
+    }
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "JOS: Failded to query mode #%u - %r\n", Idx,
+              Status));
+      return Status;
+    }
+
+    DEBUG ((DEBUG_INFO, " %c Mode #%u: %u*%u characters\n",
+            (Idx == CurTMode ? '*' : '-'), Idx, Columns, Rows));
+  }
+#endif
+
+  UINT32 DesiredTMode = 0;
+
+  if (DesiredTMode >= MaxTMode) {
+    DEBUG ((DEBUG_INFO, "JOS: Desired text mode (#%u) not supported, "
+                        "picking closest available (#%u) instead.\n", 
+            DesiredTMode, MaxTMode - 1));
+    
+    DesiredTMode = MaxTMode - 1;
+  }
+
+  Status = SimpleTextOutput->SetMode (SimpleTextOutput, DesiredTMode);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "JOS: Failded to set text mode to #%u - %r\n",
+            DesiredTMode, Status));
+    return Status;
+  }
 
   return EFI_SUCCESS;
 }
@@ -977,7 +1101,7 @@ UefiMain (
   UINTN              EntryPoint;
   VOID               *GateData;
 
-#if 1 ///< Uncomment to await debugging
+#if 0  ///< Uncomment to await debugging
   volatile BOOLEAN   Connected;
   DEBUG ((DEBUG_INFO, "JOS: Awaiting debugger connection\n"));
 
@@ -1022,6 +1146,17 @@ UefiMain (
     FreePool (LoaderParams);
     return Status;
   }
+
+#if 1
+  Status = InitText ();
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "JOS: Failed to init text - %r\n", Status));
+    FreePool (LoaderParams);
+    return Status;
+  }
+#else
+  (void)(InitText);
+#endif
 
   DEBUG ((
     DEBUG_INFO,
