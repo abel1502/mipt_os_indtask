@@ -381,9 +381,14 @@ struct Dwarf_Addrs {
 int info_by_address(const struct Dwarf_Addrs *addrs, uintptr_t p, Dwarf_Off *store);
 int file_name_by_info(const struct Dwarf_Addrs *addrs, Dwarf_Off offset, char **buf, Dwarf_Off *line_off);
 int line_for_address(const struct Dwarf_Addrs *addrs, uintptr_t p, Dwarf_Off line_offset, int *store);
-int function_by_info(const struct Dwarf_Addrs *addrs, uintptr_t p, Dwarf_Off cu_offset, char **buf, uintptr_t *offset);
+int function_by_info_nargs(const struct Dwarf_Addrs *addrs, uintptr_t p, Dwarf_Off cu_offset, char **buf, uintptr_t *offset, int *nargs);
 int address_by_fname(const struct Dwarf_Addrs *addrs, const char *fname, uintptr_t *offset);
 int naive_address_by_fname(const struct Dwarf_Addrs *addrs, const char *fname, uintptr_t *offset);
+
+static inline int
+function_by_info(const struct Dwarf_Addrs *addrs, uintptr_t p, Dwarf_Off cu_offset, char **buf, uintptr_t *offset) {
+    return function_by_info_nargs(addrs, p, cu_offset, buf, offset, NULL);
+}
 
 /* dwarf_entry_len - return the length of an FDE or CIE
  *

@@ -394,7 +394,7 @@ file_name_by_info(const struct Dwarf_Addrs *addrs, Dwarf_Off offset, char **buf,
 }
 
 int
-function_by_info(const struct Dwarf_Addrs *addrs, uintptr_t p, Dwarf_Off cu_offset, char **buf, uintptr_t *offset) {
+function_by_info_nargs(const struct Dwarf_Addrs *addrs, uintptr_t p, Dwarf_Off cu_offset, char **buf, uintptr_t *offset, int *nargs) {
     uint64_t len = 0;
     uint32_t count;
 
@@ -418,6 +418,9 @@ function_by_info(const struct Dwarf_Addrs *addrs, uintptr_t p, Dwarf_Off cu_offs
     uint64_t abbrev_code = 0;
     uint64_t table_abbrev_code = 0;
     const uint8_t *abbrev_entry = addrs->abbrev_begin + abbrev_offset;
+
+    uint32_t nargs_tmp = 0;
+    int func_found = 0;
 
     while (entry < entry_end) {
         /* Read info abbreviation code */
@@ -463,6 +466,13 @@ function_by_info(const struct Dwarf_Addrs *addrs, uintptr_t p, Dwarf_Off cu_offs
                 }
             } while (name || form);
 
+            if (func_found) {
+                if (nargs) {
+                    *nargs = nargs_tmp;
+                }
+                return 0;
+            }
+
             /* Load info and finish if address is inside of the function */
             if (p >= low_pc && p <= high_pc) {
                 *offset = low_pc;
@@ -475,9 +485,14 @@ function_by_info(const struct Dwarf_Addrs *addrs, uintptr_t p, Dwarf_Off cu_offs
                     entry += dwarf_read_abbrev_entry(fn_name_entry, name_form, buf, sizeof(uint8_t *), address_size);
                     (void)entry;
                 }
-                return 0;
+                
+                func_found = 1;
             }
         } else {
+            if (tag == DW_TAG_formal_parameter && func_found) {
+                nargs_tmp++;
+            }
+
             /* Skip if not a subprogram */
             do {
                 curr_abbrev_entry += dwarf_read_uleb128(curr_abbrev_entry, &name);
