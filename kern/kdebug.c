@@ -43,6 +43,7 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
     strcpy(info->rip_file, UNKNOWN);
     strcpy(info->rip_fn_name, UNKNOWN);
     info->rip_fn_namelen = sizeof UNKNOWN - 1;
+    info->rip_filelen = sizeof UNKNOWN - 1;
     info->rip_line = 0;
     info->rip_fn_addr = addr;
     info->rip_fn_narg = 0;
