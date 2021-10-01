@@ -501,6 +501,14 @@ function_by_info_nargs(const struct Dwarf_Addrs *addrs, uintptr_t p, Dwarf_Off c
             } while (name || form);
         }
     }
+
+    if (func_found) {
+        if (nargs) {
+            *nargs = nargs_tmp;
+        }
+        return 0;
+    }
+
     return -E_NO_ENT;
 }
 
