@@ -85,11 +85,17 @@ envid2env(envid_t envid, struct Env **env_store, bool need_check_perm) {
  */
 void
 env_init(void) {
+    env_free_list = envs;
 
-    /* Set up envs array */
+    memset(envs, 0, NENV * sizeof(struct Env));
 
-    // LAB 3: Your code here
+    for (unsigned i = 0; i < NENV; ++i) {
+        envs[i].env_id = 0;
+        envs[i].env_status = ENV_FREE;
+        envs[i].env_link = envs + i + 1;
+    }
 
+    envs[NENV - 1].env_link = NULL;
 }
 
 /* Allocates and initializes a new environment.
@@ -103,7 +109,6 @@ env_init(void) {
  */
 int
 env_alloc(struct Env **newenv_store, envid_t parent_id, enum EnvType type) {
-
     struct Env *env;
     if (!(env = env_free_list))
         return -E_NO_FREE_ENV;
@@ -145,8 +150,12 @@ env_alloc(struct Env **newenv_store, envid_t parent_id, enum EnvType type) {
     env->env_tf.tf_ss = GD_KD;
     env->env_tf.tf_cs = GD_KT;
 
-    // LAB 3: Your code here:
-    //static uintptr_t stack_top = 0x2000000;
+    #define ENV_STACK_SIZE_ 0x2000
+    static uintptr_t stack_top = 0x2000000;
+    stack_top += ENV_STACK_SIZE_;
+    env->env_tf.tf_rsp = stack_top;
+
+    #undef ENV_STACK_SIZE_
 #else
     env->env_tf.tf_ds = GD_UD | 3;
     env->env_tf.tf_es = GD_UD | 3;
@@ -170,9 +179,72 @@ env_alloc(struct Env **newenv_store, envid_t parent_id, enum EnvType type) {
  */
 static int
 bind_functions(struct Env *env, uint8_t *binary, size_t size, uintptr_t image_start, uintptr_t image_end) {
-    // LAB 3: Your code here:
+    #define DEMAND_(STMT)           \
+        if (!(STMT)) {              \
+            return -E_INVALID_EXE;  \
+        }
 
-    /* NOTE: find_function from kdebug.c should be used */
+    DEMAND_(size > sizeof(struct Elf));
+    struct Elf *elf_header = (struct Elf *)binary;
+
+    DEMAND_(elf_header->e_magic == ELF_MAGIC);
+    DEMAND_(elf_header->e_shentsize == sizeof(struct Secthdr));
+    DEMAND_(elf_header->e_phentsize == sizeof(struct Proghdr));
+    DEMAND_(elf_header->e_shstrndx < elf_header->e_shnum);
+    DEMAND_(elf_header->e_shstrndx != ELF_SHN_UNDEF);
+
+    DEMAND_(elf_header->e_shoff + elf_header->e_shnum * sizeof(struct Secthdr) <= size);
+    struct Secthdr *sections = (struct Secthdr *)(binary + elf_header->e_shoff);
+
+    DEMAND_(sections[elf_header->e_shstrndx].sh_offset < size);
+    // Might prove useful if I ever want to test for section names
+    const char *shstrtab = (const char *)(binary + sections[elf_header->e_shstrndx].sh_offset);
+
+    struct Elf64_Sym *symtab = NULL;
+    uint64_t symtab_size = 0;
+    const char *strtab = NULL;
+    uint64_t strtab_size = 0;
+
+    for (uint16_t i = 0; i < elf_header->e_shnum; ++i) {
+        if (sections[i].sh_type == ELF_SHT_SYMTAB &&
+            strcmp(shstrtab + sections[i].sh_name, ".symtab") == 0) {
+            assert(!symtab);
+            DEMAND_(sections[i].sh_offset + sections[i].sh_size < size);
+            symtab = (struct Elf64_Sym *)(binary + sections[i].sh_offset);
+            symtab_size = sections[i].sh_size;
+        } else if (sections[i].sh_type == ELF_SHT_STRTAB &&
+                   strcmp(shstrtab + sections[i].sh_name, ".strtab") == 0) {
+            assert(!strtab);
+            DEMAND_(sections[i].sh_offset + sections[i].sh_size < size);
+            strtab = (const char *)(binary + sections[i].sh_offset);
+            strtab_size = sections[i].sh_size;
+        }
+    }
+
+    DEMAND_(symtab && strtab);
+
+    uint64_t symtab_length = symtab_size / sizeof(struct Elf64_Sym);
+
+    for (uint64_t i = 0; i < symtab_length; ++i) {
+        uintptr_t relocation = symtab[i].st_value;
+
+        DEMAND_(symtab[i].st_name < strtab_size);
+        const char *symbol = strtab + symtab[i].st_name;
+
+        if (relocation < image_start || relocation + sizeof(uintptr_t) > image_end) {
+            continue;
+        }
+
+        uintptr_t function = find_function(symbol);
+        if (!function) {
+            //cprintf("[Warning] bind_functions: Unrecognized symbol reference: %s()\n", symbol);
+            continue;
+        }
+
+        *(uintptr_t *)relocation = function;
+    }
+
+    #undef DEMAND_
 
     return 0;
 }
@@ -219,7 +291,90 @@ bind_functions(struct Env *env, uint8_t *binary, size_t size, uintptr_t image_st
  *   What?  (See env_run() and env_pop_tf() below.) */
 static int
 load_icode(struct Env *env, uint8_t *binary, size_t size) {
-    // LAB 3: Your code here
+    assert(env);
+    assert(binary);
+
+    int result = 0;
+    uint8_t *cur = binary;
+
+    #define DEMAND_(STMT)                           \
+        if (!(STMT)) {                              \
+            return -E_INVALID_EXE;                  \
+        }
+
+    #define READ_FROM_OFFS_(DEST, OFFSET, AMOUNT)   \
+        READ_FROM_PTR_(DEST, binary + OFFSET, AMOUNT);
+
+    #define READ_FROM_PTR_(DEST, PTR, AMOUNT) {     \
+        uint8_t *ptr_ = (PTR);                      \
+        size_t amount_ = (AMOUNT);                  \
+                                                    \
+        DEMAND_(ptr_ + amount_ - binary <= size);   \
+                                                    \
+        memcpy((DEST), ptr_, amount_);              \
+    }
+
+    #define READ_(DEST, AMOUNT) {                   \
+        size_t amount_ = (AMOUNT);                  \
+                                                    \
+        DEMAND_(cur + amount_ - binary <= size);    \
+                                                    \
+        memcpy((DEST), cur, amount_);               \
+                                                    \
+        cur += amount_;                             \
+    }
+
+    // TODO: Maybe not copy
+    struct Elf elf_header;
+    READ_(&elf_header, sizeof(elf_header));
+
+    DEMAND_(elf_header.e_magic == ELF_MAGIC);
+    DEMAND_(elf_header.e_shentsize == sizeof(struct Secthdr));
+    DEMAND_(elf_header.e_phentsize == sizeof(struct Proghdr));
+    // Turns out it isn't actually necessary, but a check is always fine
+    DEMAND_(elf_header.e_shstrndx < elf_header.e_shnum);
+    DEMAND_(elf_header.e_shstrndx != ELF_SHN_UNDEF);
+
+    DEMAND_(elf_header.e_shoff + elf_header.e_shnum * sizeof(struct Secthdr) <= size);
+    // Unused, currently
+    // struct Secthdr *sections = (struct Secthdr *)(binary + elf_header.e_shoff);
+
+    DEMAND_(elf_header.e_phoff + elf_header.e_phnum * sizeof(struct Proghdr) <= size);
+    struct Proghdr *program_headers = (struct Proghdr *)(binary + elf_header.e_phoff);
+
+    uintptr_t image_start = (uintptr_t)-1;
+    uintptr_t image_end = 0;
+
+    for (uint16_t i = 0; i < elf_header.e_phnum; ++i) {
+        struct Proghdr *ph = &program_headers[i];
+
+        if (ph->p_type == ELF_PROG_LOAD) {
+            DEMAND_(ph->p_filesz <= ph->p_memsz);
+
+            memset((void *)ph->p_va, 0, ph->p_memsz);
+
+            READ_FROM_OFFS_((void *)ph->p_va, ph->p_offset, ph->p_filesz);
+
+            if (ph->p_va < image_start) {
+                image_start = ph->p_va;
+            }
+
+            if (ph->p_va + ph->p_memsz > image_end) {
+                image_end = ph->p_va + ph->p_memsz;
+            }
+        }
+    }
+
+    env->binary = binary;
+    env->env_tf.tf_rip = elf_header.e_entry;
+
+    result = bind_functions(env, binary, size, image_start, image_end);
+    DEMAND_(result >= 0);
+
+    #undef READ_
+    #undef READ_FROM_PTR_
+    #undef READ_FROM_OFFS_
+    #undef DEMAND_
 
     return 0;
 }
@@ -232,14 +387,34 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
  */
 void
 env_create(uint8_t *binary, size_t size, enum EnvType type) {
-    // LAB 3: Your code here
+    int result = 0;
+    struct Env *env = NULL;
 
+    #define VALIDATE_(MSG, ...) {                       \
+        if (result < 0) {                               \
+            panic(MSG " (%i)", ##__VA_ARGS__, result);  \
+        }                                               \
+    }
+
+    result = env_alloc(&env, 0, type);
+    VALIDATE_("env_alloc failed");
+    assert(env);
+
+    result = load_icode(env, binary, size);
+    VALIDATE_("load_icode failed");
+
+    env->env_type = ENV_TYPE_KERNEL;
+
+    #undef VALIDATE_
 }
 
 
 /* Frees env and all memory it uses */
 void
 env_free(struct Env *env) {
+    if (!env) {
+        return;
+    }
 
     /* Note the environment's demise. */
     if (trace_envs) cprintf("[%08x] free env %08x\n", curenv ? curenv->env_id : 0, env->env_id);
@@ -260,9 +435,15 @@ env_destroy(struct Env *env) {
     /* If env is currently running on other CPUs, we change its state to
      * ENV_DYING. A zombie environment will be freed the next time
      * it traps to the kernel. */
+    assert(env);
+    //cprintf("KILL %08X\n", env->env_id);
 
-    // LAB 3: Your code here
+    //env->env_status = ENV_DYING;
+    env_free(env);
 
+    if (env == curenv) {
+        sched_yield();
+    }
 }
 
 #ifdef CONFIG_KSPACE
@@ -287,7 +468,6 @@ csys_yield(struct Trapframe *tf) {
 
 _Noreturn void
 env_pop_tf(struct Trapframe *tf) {
-
     /* Push RIP on program stack */
     tf->tf_rsp -= sizeof(uintptr_t);
     *((uintptr_t *)tf->tf_rsp) = tf->tf_rip;
@@ -319,7 +499,7 @@ env_pop_tf(struct Trapframe *tf) {
             : "memory");
 
     /* Mostly to placate the compiler */
-    panic("Reached unrecheble\n");
+    panic("Reached unreacheble\n");
 }
 
 /* Context switch from curenv to env.
@@ -353,7 +533,25 @@ env_run(struct Env *env) {
         cprintf("[%08X] env started: %s\n", env->env_id, state[env->env_status]);
     }
 
-    // LAB 3: Your code here
+    if (env->env_status == ENV_RUNNING) {
+        assert(env == curenv);
+        env_pop_tf(&env->env_tf);
+    }
 
-    while(1) {}
+    assert(env->env_status == ENV_RUNNABLE);
+
+    if (env != curenv && curenv) {
+        // TODO: Maybe save curenv trapframe
+        if (curenv->env_status == ENV_RUNNING) {
+            curenv->env_status = ENV_RUNNABLE;
+        }
+    }
+
+    curenv = env;
+    env->env_status = ENV_RUNNABLE;
+    env->env_runs++;
+
+    env_pop_tf(&env->env_tf);
+
+    panic("Shouldn't be reachable");
 }
