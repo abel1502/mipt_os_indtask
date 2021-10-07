@@ -4,6 +4,7 @@
 #include <inc/dwarf.h>
 #include <inc/elf.h>
 #include <inc/x86.h>
+#include <inc/error.h>
 
 #include <kern/kdebug.h>
 #include <kern/env.h>
@@ -96,7 +97,24 @@ find_function(const char *const fname) {
      * It may also be useful to look to kernel symbol table for symbols defined
      * in assembly. */
 
-    // LAB 3: Your code here:
+    int result = 0;
+
+    struct Dwarf_Addrs addrs;
+    load_kernel_dwarf_info(&addrs);
+
+    uintptr_t offset = 0;
+
+    result = address_by_fname(&addrs, fname, &offset);
+    if (result >= 0) {
+        return offset;
+    }
+
+    result = naive_address_by_fname(&addrs, fname, &offset);
+    if (result >= 0) {
+        return offset;
+    }
+
+    // TODO: Import-table fallback
 
     return 0;
 }
