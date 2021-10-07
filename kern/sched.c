@@ -24,14 +24,46 @@ sched_yield(void) {
      * simply drop through to the code
      * below to halt the cpu */
 
-    // LAB 3: Your code here:
-    env_run(&envs[0]);
+    struct Env *env_initial = curenv ? curenv : envs;
+    struct Env *env_cur = env_initial + 1;
 
-    cprintf("Halt\n");
+    /*const char *state[] = {"FREE", "DYING", "RUNNABLE", "RUNNING", "NOT_RUNNABLE"};
 
-    /* No runnable environments,
-     * so just halt the cpu */
-    sched_halt();
+    for (unsigned i = 0; i < NENV; ++i) {
+        if (envs[i].env_status == ENV_FREE) {
+            continue;
+        }
+        
+        cprintf("> %08X %s\n",  envs[i].env_id, state[envs[i].env_status]);
+    }*/
+
+    do {
+        if (env_cur >= envs + NENV) {
+            env_cur = envs;
+        }
+
+        //if (env_cur->env_status != ENV_FREE)
+        //    cprintf(">>> %08X %s\n",  env_cur->env_id, state[env_cur->env_status]);
+
+        if (env_cur->env_status == ENV_RUNNABLE) {
+            break;
+        }
+
+        env_cur++;
+    } while (env_cur != env_initial);
+
+    if (env_cur == env_initial) {
+        if (env_cur->env_status == ENV_RUNNABLE || env_cur->env_status == ENV_RUNNING) {
+            env_run(env_cur);
+        }
+
+        /* No runnable environments,
+         * so just halt the cpu */
+        cprintf("Halt\n");
+        sched_halt();
+    }
+
+    env_run(env_cur);
 }
 
 /* Halt this CPU when there is nothing to do. Wait until the
