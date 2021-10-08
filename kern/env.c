@@ -221,26 +221,44 @@ bind_functions(struct Env *env, uint8_t *binary, size_t size, uintptr_t image_st
         }
     }
 
+    // TODO: Actually link based on plt, and not static-linkage tables...
+
     DEMAND_(symtab && strtab);
 
     uint64_t symtab_length = symtab_size / sizeof(struct Elf64_Sym);
+
+    const char *excluded_names[] = {"binaryname", "thisenv", NULL};
 
     for (uint64_t i = 0; i < symtab_length; ++i) {
         uintptr_t relocation = symtab[i].st_value;
 
         DEMAND_(symtab[i].st_name < strtab_size);
-        const char *symbol = strtab + symtab[i].st_name;
+        const char *func_name = strtab + symtab[i].st_name;
 
-        if (relocation < image_start || relocation + sizeof(uintptr_t) > image_end) {
+        if (relocation < image_start || relocation + sizeof(uintptr_t) > image_end ||
+            ELF64_ST_BIND(symtab[i].st_info) != STB_GLOBAL ||
+            ELF64_ST_TYPE(symtab[i].st_info) != STT_OBJECT) {
             continue;
         }
 
-        uintptr_t function = find_function(symbol);
+        int is_excluded = 0;
+        for (const char **excl_name = excluded_names; *excl_name; ++excl_name) {
+            if (strcmp(*excl_name, func_name) == 0) {
+                is_excluded = 1;
+                break;
+            }
+        }
+        if (is_excluded) {
+            continue;
+        }
+
+        uintptr_t function = find_function(func_name);
         if (!function) {
-            //cprintf("[Warning] bind_functions: Unrecognized symbol reference: %s()\n", symbol);
+            cprintf("bind_functions: Unrecognized function reference: %s\n", func_name);
             continue;
         }
 
+        cprintf("bind_functions: Bound %s() (st_info=%hhX) to %p\n", func_name, symtab[i].st_info, (void *)relocation);
         *(uintptr_t *)relocation = function;
     }
 
