@@ -89,8 +89,10 @@ error:
     return res;
 }
 
+static int symtab_address_by_fname(const char *fname, uintptr_t *offset);
+
 uintptr_t
-find_function(const char *const fname) {
+find_function(const char *fname) {
     /* There are two functions for function name lookup.
      * address_by_fname, which looks for function name in section .debug_pubnames
      * and naive_address_by_fname which performs full traversal of DIE tree.
@@ -114,7 +116,49 @@ find_function(const char *const fname) {
         return offset;
     }
 
-    // TODO: Import-table fallback
+    result = symtab_address_by_fname(fname, &offset);
+    if (result >= 0) {
+        return offset;
+    }
 
     return 0;
+}
+
+static int
+symtab_address_by_fname(const char *fname, uintptr_t *offset) {
+    #define DEMAND_(STMT)           \
+        if (!(STMT)) {              \
+            return -E_INVALID_EXE;  \
+        }
+    
+    assert(fname && offset);
+
+    const struct Elf64_Sym *cur_symbol = (struct Elf64_Sym *)uefi_lp->SymbolTableStart;
+    const struct Elf64_Sym *symtab_end = (struct Elf64_Sym *)uefi_lp->SymbolTableEnd;
+
+    DEMAND_(symtab_end >= cur_symbol);
+
+    const char *strtab     = (const char *)uefi_lp->StringTableStart;
+    const char *strtab_end = (const char *)uefi_lp->SymbolTableEnd;
+
+    DEMAND_(strtab_end >= strtab);
+
+    for (; cur_symbol < symtab_end; ++cur_symbol) {
+        if (ELF64_ST_TYPE(cur_symbol->st_info) != STT_FUNC) {
+            continue;
+        }
+
+        const char *func_name = strtab + cur_symbol->st_name;
+
+        DEMAND_(func_name < strtab_end);
+
+        if (strcmp(fname, func_name) == 0) {
+            *offset = (uintptr_t)cur_symbol->st_value;
+            return 0;
+        }
+    }
+
+    #undef DEMAND_
+
+    return -E_NO_ENT;
 }
