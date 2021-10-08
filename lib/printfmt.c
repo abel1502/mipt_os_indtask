@@ -60,7 +60,15 @@ static uintmax_t
 get_unsigned(va_list *ap, int lflag, bool zflag) {
     if (zflag) return va_arg(*ap, size_t);
 
+    // 4-byte field for negative lflag values has to be used, because the smaller types
+    // are promotable, and thus cause UB
     switch (lflag) {
+    case -2:
+        // return va_arg(*ap, unsigned char);
+        // FALLTHROUGH
+    case -1:
+        // return va_arg(*ap, unsigned short);
+        // FALLTHROUGH
     case 0:
         return va_arg(*ap, unsigned int);
     case 1:
@@ -152,6 +160,10 @@ vprintfmt(void (*putch)(int, void *), void *put_arg, const char *fmt, va_list ap
 
         case 'l': /* long flag (doubled for long long) */
             lflag++;
+            goto reswitch;
+        
+        case 'h': /* h is the opposite of l */
+            lflag--;
             goto reswitch;
 
         case 'z':
