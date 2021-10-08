@@ -24,8 +24,12 @@ sched_yield(void) {
      * simply drop through to the code
      * below to halt the cpu */
 
-    struct Env *env_initial = curenv ? curenv : envs;
+    struct Env *env_initial = curenv ? curenv : envs + NENV - 1;
     struct Env *env_cur = env_initial + 1;
+
+    if (curenv && curenv->env_status == ENV_RUNNING) {
+        curenv->env_status = ENV_RUNNABLE;
+    }
 
     /*const char *state[] = {"FREE", "DYING", "RUNNABLE", "RUNNING", "NOT_RUNNABLE"};
 

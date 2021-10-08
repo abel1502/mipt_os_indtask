@@ -197,7 +197,6 @@ bind_functions(struct Env *env, uint8_t *binary, size_t size, uintptr_t image_st
     struct Secthdr *sections = (struct Secthdr *)(binary + elf_header->e_shoff);
 
     DEMAND_(sections[elf_header->e_shstrndx].sh_offset < size);
-    // Might prove useful if I ever want to test for section names
     const char *shstrtab = (const char *)(binary + sections[elf_header->e_shstrndx].sh_offset);
 
     struct Elf64_Sym *symtab = NULL;
@@ -259,7 +258,12 @@ bind_functions(struct Env *env, uint8_t *binary, size_t size, uintptr_t image_st
         }
 
         cprintf("bind_functions: Bound %s() (st_info=%hhX) to %p\n", func_name, symtab[i].st_info, (void *)relocation);
-        *(volatile uintptr_t *)relocation = function;
+
+        // decltype(&cprintf)
+        // typedef void (*funcptr_t_)();
+        // void (*)(void)
+        // int (*)(const char *fmt, ...)
+        *(uintptr_t *)relocation = function;
     }
 
     #undef DEMAND_
@@ -321,7 +325,7 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
         }
 
     #define READ_FROM_OFFS_(DEST, OFFSET, AMOUNT)   \
-        READ_FROM_PTR_(DEST, binary + OFFSET, AMOUNT);
+        READ_FROM_PTR_((DEST), binary + (OFFSET), (AMOUNT));
 
     #define READ_FROM_PTR_(DEST, PTR, AMOUNT) {     \
         uint8_t *ptr_ = (PTR);                      \
@@ -353,6 +357,7 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
     DEMAND_(elf_header.e_shstrndx < elf_header.e_shnum);
     DEMAND_(elf_header.e_shstrndx != ELF_SHN_UNDEF);
 
+    // TODO: Overflow intrinsics
     DEMAND_(elf_header.e_shoff + elf_header.e_shnum * sizeof(struct Secthdr) <= size);
     // Unused, currently
     // struct Secthdr *sections = (struct Secthdr *)(binary + elf_header.e_shoff);
@@ -369,9 +374,9 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
         if (ph->p_type == ELF_PROG_LOAD) {
             DEMAND_(ph->p_filesz <= ph->p_memsz);
 
-            memset((void *)ph->p_va, 0, ph->p_memsz);
+            READ_FROM_OFFS_((uint8_t *)ph->p_va, ph->p_offset, ph->p_filesz);
 
-            READ_FROM_OFFS_((void *)ph->p_va, ph->p_offset, ph->p_filesz);
+            memset((uint8_t *)ph->p_va + ph->p_filesz, 0, ph->p_memsz - ph->p_filesz);
 
             if (ph->p_va < image_start) {
                 image_start = ph->p_va;
