@@ -259,7 +259,7 @@ bind_functions(struct Env *env, uint8_t *binary, size_t size, uintptr_t image_st
         }
 
         cprintf("bind_functions: Bound %s() (st_info=%hhX) to %p\n", func_name, symtab[i].st_info, (void *)relocation);
-        *(uintptr_t *)relocation = function;
+        *(volatile uintptr_t *)relocation = function;
     }
 
     #undef DEMAND_
@@ -384,6 +384,7 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
     }
 
     env->binary = binary;
+    DEMAND_(image_start <= elf_header.e_entry && elf_header.e_entry < image_end);
     env->env_tf.tf_rip = elf_header.e_entry;
 
     result = bind_functions(env, binary, size, image_start, image_end);
