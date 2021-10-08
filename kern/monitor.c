@@ -60,7 +60,7 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf) {
 
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf) {
-    // LAB 2: Your code here
+    // TODO: Maybe print the backtrace for the trapframe?
     cprintf("Stack backtrace:\n");
 
     uintptr_t rbp = read_rbp();
@@ -122,7 +122,6 @@ runcmd(char *buf, struct Trapframe *tf) {
 
 void
 monitor(struct Trapframe *tf) {
-
     cprintf("Welcome to the JOS kernel monitor!\n");
     cprintf("Type 'help' for a list of commands.\n");
 

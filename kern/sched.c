@@ -52,18 +52,16 @@ sched_yield(void) {
         env_cur++;
     } while (env_cur != env_initial);
 
-    if (env_cur == env_initial) {
-        if (env_cur->env_status == ENV_RUNNABLE || env_cur->env_status == ENV_RUNNING) {
-            env_run(env_cur);
-        }
-
-        /* No runnable environments,
-         * so just halt the cpu */
-        cprintf("Halt\n");
-        sched_halt();
+    if (env_cur->env_status == ENV_RUNNABLE || env_cur->env_status == ENV_RUNNING) {
+        env_run(env_cur);
     }
 
-    env_run(env_cur);
+    assert(env_cur == env_initial);
+
+    /* No runnable environments,
+        * so just halt the cpu */
+    cprintf("Halt\n");
+    sched_halt();
 }
 
 /* Halt this CPU when there is nothing to do. Wait until the
