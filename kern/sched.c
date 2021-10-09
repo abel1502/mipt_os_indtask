@@ -27,10 +27,6 @@ sched_yield(void) {
     struct Env *env_initial = curenv ? curenv : envs + NENV - 1;
     struct Env *env_cur = env_initial + 1;
 
-    if (curenv && curenv->env_status == ENV_RUNNING) {
-        curenv->env_status = ENV_RUNNABLE;
-    }
-
     /*const char *state[] = {"FREE", "DYING", "RUNNABLE", "RUNNING", "NOT_RUNNABLE"};
 
     for (unsigned i = 0; i < NENV; ++i) {

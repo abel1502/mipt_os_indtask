@@ -572,7 +572,7 @@ env_run(struct Env *env) {
     }
 
     curenv = env;
-    env->env_status = ENV_RUNNABLE;
+    env->env_status = ENV_RUNNING;
     env->env_runs++;
 
     env_pop_tf(&env->env_tf);
