@@ -1,6 +1,8 @@
 /* See COPYRIGHT for copyright information. */
 
 #include <inc/x86.h>
+#include <inc/stdio.h>
+#include <inc/assert.h>
 #include <kern/kclock.h>
 #include <kern/trap.h>
 #include <kern/picirq.h>
@@ -19,9 +21,12 @@
 uint8_t
 cmos_read8(uint8_t reg) {
     /* MC146818A controller */
-    // LAB 4: Your code here
+    // LAB 4: Your code here DONE
 
-    uint8_t res = 0;
+    // TODO: disable NMI?
+
+    outb(CMOS_CMD, reg | CMOS_NMI_LOCK);
+    uint8_t res = inb(CMOS_DATA);
 
     nmi_enable();
     return res;
@@ -29,7 +34,9 @@ cmos_read8(uint8_t reg) {
 
 void
 cmos_write8(uint8_t reg, uint8_t value) {
-    // LAB 4: Your code here
+    // LAB 4: Your code here DONE
+    outb(CMOS_CMD, reg | CMOS_NMI_LOCK);
+    outb(CMOS_DATA, value);
 
     nmi_enable();
 }
@@ -41,8 +48,9 @@ cmos_read16(uint8_t reg) {
 
 void
 rtc_timer_pic_interrupt(void) {
-    // LAB 4: Your code here
+    // LAB 4: Your code here DONE
     // Enable PIC interrupts.
+    pic_irq_unmask(IRQ_CLOCK);
 }
 
 void
@@ -53,13 +61,23 @@ rtc_timer_pic_handle(void) {
 
 void
 rtc_timer_init(void) {
-    // LAB 4: Your code here
+    // LAB 4: Your code here DONE
     // (use cmos_read8/cmos_write8)
+
+    //cprintf("Was: %02X\n", cmos_read8(RTC_AREG));
+    //cmos_write8(RTC_BREG, 0x80 | cmos_read8(RTC_BREG));
+    cmos_write8(RTC_AREG, RTC_SET_NEW_RATE(cmos_read8(RTC_AREG), RTC_500MS_RATE));
+    cmos_write8(RTC_BREG, RTC_PIE | cmos_read8(RTC_BREG));
+    //cmos_write8(RTC_BREG, ~0x80 & cmos_read8(RTC_BREG));
+    //cprintf("Is: %02X\n", cmos_read8(RTC_AREG));
+
+    //panic("Test");
 }
 
 uint8_t
 rtc_check_status(void) {
-    // LAB 4: Your code here
+    // LAB 4: Your code here DONE
     // (use cmos_read8)
-    return 0;
+
+    return cmos_read8(RTC_CREG);
 }
