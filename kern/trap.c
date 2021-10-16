@@ -98,7 +98,7 @@ void
 trap_init(void) {
     // LAB 4: Your code here DONE
     // TODO: Maybe other DPL
-    idt[IRQ_CLOCK] = GATE(0, GD_KT, &clock_thdlr, 0);
+    idt[IRQ_OFFSET + IRQ_CLOCK] = GATE(0, GD_KT, &clock_thdlr, 0);
 
     /* Per-CPU setup */
     trap_init_percpu();
