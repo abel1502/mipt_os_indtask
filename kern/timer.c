@@ -145,12 +145,18 @@ acpi_find_table(const char *sign) {
 /* Obtain and map FADT ACPI table address. */
 FADT *
 get_fadt(void) {
-    // LAB 5: Your code here
+    // LAB 5: Your code here DONE
     // (use acpi_find_table)
     // HINT: ACPI table signatures are
     //       not always as their names
 
-    static FADT *kfadt;
+    static FADT *kfadt = NULL;
+
+    if (!kfadt) {
+        kfadt = acpi_find_table("FACP");
+        assert(kfadt);
+        assert(kfadt->h.Length >= sizeof(*kfadt));
+    }
 
     return kfadt;
 }
