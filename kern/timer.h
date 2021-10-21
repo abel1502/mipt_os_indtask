@@ -168,11 +168,12 @@ typedef struct {
     uint8_t Reserved2;
     uint32_t Flags;
 
+    // TODO: These don't match the length we get
     /* 12 byte structure; see below for details */
-    char ResetReg[12];
+    /*char ResetReg[12];
 
     uint8_t ResetValue;
-    uint8_t Reserved3[3];
+    uint8_t Reserved3[3];*/
 } FADT;
 
 #pragma pack(pop)

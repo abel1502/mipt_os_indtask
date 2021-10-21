@@ -54,6 +54,8 @@ rtc_timer_pic_interrupt(void) {
 
 static void
 rtc_timer_pic_handle(void) {
+    // cprintf("Timer RTC!\n");
+
     rtc_check_status();
     pic_send_eoi(IRQ_CLOCK);
 }

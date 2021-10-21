@@ -95,8 +95,9 @@ acpi_find_table(const char *sign) {
 
     assert(rsdp->Revision >= 2);
 
+    assert(rsdp->Length >= sizeof(RSDP));
     uint8_t rsdp_checksum = 0;
-    for (unsigned i = 0; i < sizeof(RSDP); ++i) {
+    for (unsigned i = 0; i < rsdp->Length; ++i) {
         if (i == offsetof(RSDP, Length)) {
             assert(rsdp_checksum == 0);
         }
@@ -113,8 +114,9 @@ acpi_find_table(const char *sign) {
 
     assert(strncmp(xsdt->h.Signature, "XSDT", sizeof(xsdt->h.Signature)) == 0);
 
+    assert(xsdt->h.Length >= sizeof(XSDT));
     uint8_t xsdt_checksum = 0;
-    for (unsigned i = 0; i < sizeof(XSDT); ++i) {
+    for (unsigned i = 0; i < xsdt->h.Length; ++i) {
         xsdt_checksum += ((uint8_t *)xsdt)[i];
     }
     assert(xsdt_checksum == 0);
@@ -132,8 +134,15 @@ acpi_find_table(const char *sign) {
 
         if (strncmp(header->Signature, sign, sizeof(header->Signature)) == 0) {
             assert(header->Length >= sizeof(ACPISDTHeader));
-            void *result = mmio_remap_last_region(header_pa, header, sizeof(ACPISDTHeader), header->Length);
+            uint32_t resultLen = header->Length;
+            void *result = mmio_remap_last_region(header_pa, header, sizeof(ACPISDTHeader), resultLen);
             assert(result);
+
+            uint8_t resultChecksum = 0;
+            for (unsigned i = 0; i < resultLen; ++i) {
+                resultChecksum += ((const char *)result)[i];
+            }
+            assert(resultChecksum == 0);
 
             return result;
         }
@@ -155,6 +164,7 @@ get_fadt(void) {
     if (!kfadt) {
         kfadt = acpi_find_table("FACP");
         assert(kfadt);
+        // cprintf("%.4s v%hhu %u %zu\n", kfadt->h.Signature, kfadt->h.Revision, kfadt->h.Length, sizeof(*kfadt));
         assert(kfadt->h.Length >= sizeof(*kfadt));
     }
 
@@ -237,7 +247,7 @@ hpet_init() {
         hpetFreq = (1 * Peta) / hpetFemto;
         /* cprintf("HPET: Frequency = %d.%03dMHz\n", (uintptr_t)(hpetFreq / Mega), (uintptr_t)(hpetFreq % Mega)); */
         /* Enable ENABLE_CNF bit to enable timer */
-        hpetReg->GEN_CONF |= HPET_ENABLE_CNF;
+        hpetReg->GEN_CONF |= HPET_ENABLE_CNF | HPET_LEG_RT_CNF;
         nmi_enable();
     }
 }
@@ -280,7 +290,11 @@ hpet_enable_interrupts_tim0(void) {
     assert(hpetReg);
     assert(hpetReg->GCAP_ID & HPET_LEG_RT_CAP);
     
-    hpetReg->TIM0_COMP = 500 * Tera;
+    hpetReg->TIM0_CONF |= HPET_TN_INT_ENB_CNF | HPET_TN_TYPE_CNF;
+    hpetReg->TIM0_COMP = 50 * Mega;
+    pic_irq_unmask(IRQ_TIMER);
+
+    hpet_print_reg();
 
     nmi_enable();
 }
@@ -293,7 +307,9 @@ hpet_enable_interrupts_tim1(void) {
     assert(hpetReg);
     assert(hpetReg->GCAP_ID & HPET_LEG_RT_CAP);
     
-    hpetReg->TIM1_COMP = 1500 * Tera;
+    hpetReg->TIM1_CONF |= HPET_TN_INT_ENB_CNF | HPET_TN_TYPE_CNF;
+    hpetReg->TIM1_COMP = 150 * Mega;
+    pic_irq_unmask(IRQ_CLOCK);
 
     nmi_enable();
 }
@@ -301,11 +317,13 @@ hpet_enable_interrupts_tim1(void) {
 // TODO: Maybe implement somehow?
 void
 hpet_handle_interrupts_tim0(void) {
+    // cprintf("Timer 0!\n");
     pic_send_eoi(IRQ_TIMER);
 }
 
 void
 hpet_handle_interrupts_tim1(void) {
+    // cprintf("Timer 1!\n");
     pic_send_eoi(IRQ_CLOCK);
 }
 
