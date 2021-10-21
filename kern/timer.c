@@ -247,7 +247,7 @@ hpet_init() {
         hpetFreq = (1 * Peta) / hpetFemto;
         /* cprintf("HPET: Frequency = %d.%03dMHz\n", (uintptr_t)(hpetFreq / Mega), (uintptr_t)(hpetFreq % Mega)); */
         /* Enable ENABLE_CNF bit to enable timer */
-        hpetReg->GEN_CONF |= HPET_ENABLE_CNF | HPET_LEG_RT_CNF;
+        hpetReg->GEN_CONF |= HPET_ENABLE_CNF;
         nmi_enable();
     }
 }
@@ -290,6 +290,7 @@ hpet_enable_interrupts_tim0(void) {
     assert(hpetReg);
     assert(hpetReg->GCAP_ID & HPET_LEG_RT_CAP);
     
+    hpetReg->GEN_CONF |= HPET_LEG_RT_CNF;
     hpetReg->TIM0_CONF |= HPET_TN_INT_ENB_CNF | HPET_TN_TYPE_CNF;
     hpetReg->TIM0_COMP = 50 * Mega;
     pic_irq_unmask(IRQ_TIMER);
@@ -307,6 +308,7 @@ hpet_enable_interrupts_tim1(void) {
     assert(hpetReg);
     assert(hpetReg->GCAP_ID & HPET_LEG_RT_CAP);
     
+    hpetReg->GEN_CONF |= HPET_LEG_RT_CNF;
     hpetReg->TIM1_CONF |= HPET_TN_INT_ENB_CNF | HPET_TN_TYPE_CNF;
     hpetReg->TIM1_COMP = 150 * Mega;
     pic_irq_unmask(IRQ_CLOCK);
@@ -332,9 +334,21 @@ hpet_handle_interrupts_tim1(void) {
  * about pause instruction. */
 uint64_t
 hpet_cpu_frequency(void) {
-    static uint64_t cpu_freq;
+    static uint64_t cpu_freq = 0;
 
-    // LAB 5: Your code here
+    // LAB 5: Your code here DONE
+    //if (!cpu_freq) {
+        uint64_t hpet_cnt0 = hpet_get_main_cnt();
+        uint64_t tsc_cnt0 = read_tsc();
+
+        for (unsigned i = 0; i < 100; ++i)
+            asm volatile ("pause");
+
+        uint64_t hpet_cnt1 = hpet_get_main_cnt();
+        uint64_t tsc_cnt1 = read_tsc();
+
+        cpu_freq = hpetFreq * (tsc_cnt1 - tsc_cnt0) / (hpet_cnt1 - hpet_cnt0);
+    //}
 
     return cpu_freq;
 }
@@ -350,9 +364,21 @@ pmtimer_get_timeval(void) {
  *      can be 24-bit or 32-bit. */
 uint64_t
 pmtimer_cpu_frequency(void) {
-    static uint64_t cpu_freq;
+    static uint64_t cpu_freq = 0;
 
-    // LAB 5: Your code here
+    // LAB 5: Your code here DONE
+    //if (!cpu_freq) {
+        uint64_t pm_cnt0 = pmtimer_get_timeval();
+        uint64_t tsc_cnt0 = read_tsc();
+
+        for (unsigned i = 0; i < 100; ++i)
+            asm volatile ("pause");
+
+        uint64_t pm_cnt1 = pmtimer_get_timeval();
+        uint64_t tsc_cnt1 = read_tsc();
+
+        cpu_freq = PM_FREQ * (tsc_cnt1 - tsc_cnt0) / (pm_cnt1 - pm_cnt0);
+    //}
 
     return cpu_freq;
 }
