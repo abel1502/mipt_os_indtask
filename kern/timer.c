@@ -87,7 +87,57 @@ acpi_find_table(const char *sign) {
      * HINT: You may want to distunguish RSDT/XSDT
      */
 
-    // LAB 5: Your code here
+    // LAB 5: Your code here DONE
+    RSDP *rsdp = mmio_map_region(uefi_lp->ACPIRoot, sizeof(RSDP));
+    assert(rsdp);
+
+    assert(strncmp(rsdp->Signature, "RSD PTR ", sizeof(rsdp->Signature)) == 0);
+
+    assert(rsdp->Revision >= 2);
+
+    uint8_t rsdp_checksum = 0;
+    for (unsigned i = 0; i < sizeof(RSDP); ++i) {
+        if (i == offsetof(RSDP, Length)) {
+            assert(rsdp_checksum == 0);
+        }
+
+        rsdp_checksum += ((uint8_t *)rsdp)[i];
+    }
+    assert(rsdp_checksum == 0);
+
+    physaddr_t xsdt_pa = rsdp->XsdtAddress;
+
+    XSDT *xsdt = mmio_remap_last_region(xsdt_pa, rsdp, sizeof(RSDP), sizeof(XSDT));
+    assert(xsdt);
+    rsdp = NULL;
+
+    assert(strncmp(xsdt->h.Signature, "XSDT", sizeof(xsdt->h.Signature)) == 0);
+
+    uint8_t xsdt_checksum = 0;
+    for (unsigned i = 0; i < sizeof(XSDT); ++i) {
+        xsdt_checksum += ((uint8_t *)xsdt)[i];
+    }
+    assert(xsdt_checksum == 0);
+
+    // Doesn't matter where we point it now, so I chose the certainly valid XSDT header
+    ACPISDTHeader *header = mmio_map_region(xsdt_pa, sizeof(ACPISDTHeader));
+    assert(header);
+
+    unsigned nTables = (xsdt->h.Length - sizeof(ACPISDTHeader)) / sizeof(xsdt->PointerToOtherSDT[0]);
+    for (unsigned i = 0; i < nTables; ++i) {
+        physaddr_t header_pa = xsdt->PointerToOtherSDT[i];
+
+        header = mmio_remap_last_region(header_pa, header, sizeof(ACPISDTHeader), sizeof(ACPISDTHeader));
+        assert(header);
+
+        if (strncmp(header->Signature, sign, sizeof(header->Signature)) == 0) {
+            assert(header->Length >= sizeof(ACPISDTHeader));
+            void *result = mmio_remap_last_region(header_pa, header, sizeof(ACPISDTHeader), header->Length);
+            assert(result);
+
+            return result;
+        }
+    }
 
     return NULL;
 }
