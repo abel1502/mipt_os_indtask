@@ -164,10 +164,16 @@ get_fadt(void) {
 /* Obtain and map RSDP ACPI table address. */
 HPET *
 get_hpet(void) {
-    // LAB 5: Your code here
+    // LAB 5: Your code here DONE
     // (use acpi_find_table)
 
-    static HPET *khpet;
+    static HPET *khpet = NULL;
+
+    if (!khpet) {
+        khpet = acpi_find_table("HPET");
+        assert(khpet);
+        assert(khpet->h.Length >= sizeof(*khpet));
+    }
 
     return khpet;
 }
