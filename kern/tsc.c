@@ -3,6 +3,7 @@
 #include <inc/x86.h>
 #include <inc/stdio.h>
 #include <inc/string.h>
+#include <inc/assert.h>
 
 #include <kern/tsc.h>
 #include <kern/timer.h>
@@ -191,25 +192,56 @@ print_timer_error(void) {
 /* Use print_time function to print timert result
  * Use print_timer_error function to print error. */
 
-// LAB 5: Your code here:
+// LAB 5: Your code here DONE
 
 static bool timer_started = 0;
 static int timer_id = -1;
 static uint64_t timer = 0;
 static uint64_t freq = 0;
 
+static void
+timer_cpu_frequency_(const char *name) {
+    for (int i = 0; i < MAX_TIMERS; i++) {
+        if (timertab[i].timer_name && !strcmp(timertab[i].timer_name, name)) {
+            if (!timertab[i].get_cpu_freq) {
+                panic("Timer %s does not support retrieving cpu frequency\n", name);
+                return;
+            }
+
+            freq = timertab[i].get_cpu_freq();
+            return;
+        }
+    }
+
+    panic("Timer %s does not exist\n", name);
+    return;
+}
+
 void
 timer_start(const char *name) {
-    (void)timer_started;
-    (void)timer_id;
-    (void)timer;
-    (void)freq;
+    timer_cpu_frequency_(name);
+
+    timer_started = true;
+    timer = read_tsc();
+    
+    (void)timer_id;  // TODO: Use somehow, perhaps?
 }
 
 void
 timer_stop(void) {
+    if (!timer_started) {
+        print_timer_error();
+        return;
+    }
+
+    timer_started = false;
+    uint64_t deltaT = read_tsc() - timer;
+    assert(freq);
+    print_time(deltaT / freq);
 }
 
 void
 timer_cpu_frequency(const char *name) {
+    timer_cpu_frequency_(name);
+    cprintf("Timer '%s's frequency is %lu\n", name, freq);
 }
