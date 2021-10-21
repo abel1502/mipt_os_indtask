@@ -350,7 +350,7 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
         cur += amount_;                             \
     }
 
-    // TODO: Maybe not copy
+    // Copying wasn't necessary, but let's just call it caching)
     struct Elf elf_header;
     READ_(&elf_header, sizeof(elf_header));
 

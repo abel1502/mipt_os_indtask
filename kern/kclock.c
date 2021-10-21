@@ -24,8 +24,6 @@ cmos_read8(uint8_t reg) {
     /* MC146818A controller */
     // LAB 4: Your code here DONE
 
-    // TODO: disable NMI?
-
     outb(CMOS_CMD, reg | CMOS_NMI_LOCK);
     uint8_t res = inb(CMOS_DATA);
 

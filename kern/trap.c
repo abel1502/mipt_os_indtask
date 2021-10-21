@@ -99,7 +99,6 @@ extern void timer_thdlr(void);
 void
 trap_init(void) {
     // LAB 4: Your code here DONE
-    // TODO: Maybe other DPL
     idt[IRQ_OFFSET + IRQ_CLOCK] = GATE(0, GD_KT, &clock_thdlr, 0);
     // LAB 5: Your code here DONE
     idt[IRQ_OFFSET + IRQ_CLOCK] = GATE(0, GD_KT, &timer_thdlr, 0);

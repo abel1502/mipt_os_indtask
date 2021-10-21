@@ -66,7 +66,7 @@ save_trapframe:
 .globl sys_yield
 .type  sys_yield, @function
 sys_yield:
-    cli  // TODO: Verify this and the one below
+    cli
     call save_trapframe_syscall
     call csys_yield
     jmp .
@@ -74,7 +74,7 @@ sys_yield:
 .globl sys_exit
 .type  sys_exit, @function
 sys_exit:
-    cli // ...Here
+    cli
     leaq bootstacktop(%rip),%rsp
     xor %ebp, %ebp
     call csys_exit

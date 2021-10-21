@@ -298,6 +298,7 @@ hpet_enable_interrupts_tim1(void) {
     nmi_enable();
 }
 
+// TODO: Maybe implement somehow?
 void
 hpet_handle_interrupts_tim0(void) {
     pic_send_eoi(IRQ_TIMER);
