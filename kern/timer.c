@@ -212,13 +212,28 @@ hpet_get_main_cnt(void) {
  * HINT Don't forget to unmask interrupt in PIC */
 void
 hpet_enable_interrupts_tim0(void) {
-    // LAB 5: Your code here
+    // LAB 5: Your code here DONE
+    nmi_disable();
 
+    assert(hpetReg);
+    assert(hpetReg->GCAP_ID & HPET_LEG_RT_CAP);
+    
+    hpetReg->TIM0_COMP = 500 * Tera;
+
+    nmi_enable();
 }
 
 void
 hpet_enable_interrupts_tim1(void) {
-    // LAB 5: Your code here
+    // LAB 5: Your code here DONE
+    nmi_disable();
+
+    assert(hpetReg);
+    assert(hpetReg->GCAP_ID & HPET_LEG_RT_CAP);
+    
+    hpetReg->TIM1_COMP = 1500 * Tera;
+
+    nmi_enable();
 }
 
 void
