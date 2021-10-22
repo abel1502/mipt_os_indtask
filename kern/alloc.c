@@ -65,12 +65,12 @@ test_alloc(uint8_t nbytes) {
 
         /* wrapped around free list */
         if (p == freep) {
-            unlock_kernel();
-            return NULL;
+            break;
         }
     }
 
     unlock_kernel();
+    return NULL;
 }
 
 /* free: put block ap in free list */

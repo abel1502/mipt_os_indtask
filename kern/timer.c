@@ -370,14 +370,20 @@ pmtimer_cpu_frequency(void) {
     //if (!cpu_freq) {
         uint64_t pm_cnt0 = pmtimer_get_timeval();
         uint64_t tsc_cnt0 = read_tsc();
+        uint64_t added_tsc_cnt = 0;
 
-        for (unsigned i = 0; i < 100; ++i)
+        for (unsigned i = 0; i < 100; ++i) {
             asm volatile ("pause");
+            if (read_tsc() < tsc_cnt0) {
+                // 24-bit counter overflow
+                added_tsc_cnt += 1 << 24;
+            }
+        }
 
         uint64_t pm_cnt1 = pmtimer_get_timeval();
         uint64_t tsc_cnt1 = read_tsc();
 
-        cpu_freq = PM_FREQ * (tsc_cnt1 - tsc_cnt0) / (pm_cnt1 - pm_cnt0);
+        cpu_freq = PM_FREQ * (tsc_cnt1 + added_tsc_cnt - tsc_cnt0) / (pm_cnt1 - pm_cnt0);
     //}
 
     return cpu_freq;
