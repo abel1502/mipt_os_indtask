@@ -84,6 +84,7 @@ inline static void __attribute__((always_inline))
 list_append(struct List *list, struct List *new) {
     // LAB 6: Your code here DONE
     new->next = list->next;
+    list->next->prev = new;
     list->next = new;
     new->prev = list;
 }
@@ -158,7 +159,7 @@ free_desc_rec(struct Page *p) {
 /*
  * This function allocates child
  * node for given parent in physical memory tree
- * right indicated whether left or right child should
+ * right indicates whether left or right child should
  * be allocated.
  *
  * New child describes lower (for the left one)
@@ -178,9 +179,21 @@ alloc_child(struct Page *parent, bool right) {
     assert_physical(parent);
     assert(parent);
 
-    // LAB 6: Your code here
+    // LAB 6: Your code here DONE
 
-    struct Page *new = NULL;
+    struct Page *new = alloc_descriptor(parent->state);
+    new->parent = parent;
+    new->refc = !!parent->refc;
+    assert(parent->class > 0);
+    new->class = parent->class - 1;
+    
+    if (right) {
+        new->addr = parent->addr + (CLASS_SIZE(new->class) >> CLASS_BASE);
+        parent->right = new;
+    } else {
+        new->addr = parent->addr;
+        parent->left = new;
+    }
 
     return new;
 }
@@ -325,14 +338,22 @@ page_unref(struct Page *page) {
 static void
 attach_region(uintptr_t start, uintptr_t end, enum PageState type) {
     if (trace_memory_more) cprintf("Attaching memory region [%08lX, %08lX] with type %d\n", start, end - 1, type);
-    int class = 0, res = 0;
-
-    (void)class; (void)res;
+    int class = 0;
 
     start = ROUNDDOWN(start, CLASS_SIZE(0));
     end = ROUNDUP(end, CLASS_SIZE(0));
 
-    // LAB 6: Your code here
+    // LAB 6: Your code here DONE
+
+    for (; start < end; start += CLASS_SIZE(class)) {
+        // Upshift class while we can
+        for (; (CLASS_MASK(class) & start) == 0 && class < MAX_CLASS; ++class);
+        // Downshift class while we have to
+        for (; ((CLASS_MASK(class) & start) != 0 || start + CLASS_SIZE(class) > end) && class; --class);
+
+        struct Page *res = page_lookup(NULL, start, class, type, 1);
+        assert(res);
+    }
 }
 
 /*
@@ -442,8 +463,22 @@ dump_virtual_tree(struct Page *node, int class) {
 
 void
 dump_memory_lists(void) {
-    // LAB 6: Your code here
+    // LAB 6: Your code here DONE
+    for (int class = 0; class < MAX_CLASS; ++class) {
+        struct List *list = &free_classes[class];
+        assert(list);
 
+        cprintf("Memory pages of 0x%llx bytes:\n", CLASS_SIZE(class));
+
+        for (struct List *node = list->next; node != list; node = node->next) {
+            struct Page *page = (struct Page *)node;
+            assert(page);
+            assert(page->class == class);
+            assert(page->refc == 0);
+
+            cprintf("  [0x%016zx] - state %06x\n", (uintptr_t)(page->addr << CLASS_BASE), page->state);
+        }
+    }
 }
 
 /*
@@ -522,7 +557,7 @@ static struct Page *zero_page, *one_page;
 /* Buffers for filler pages are statically allocated for simplicity
  * (this is also required for early KASAN) */
 __attribute__((aligned(HUGE_PAGE_SIZE))) uint8_t zero_page_raw[HUGE_PAGE_SIZE];
-__attribute__((aligned(HUGE_PAGE_SIZE))) uint8_t one_page_raw[HUGE_PAGE_SIZE];
+__attribute__((aligned(HUGE_PAGE_SIZE))) uint8_t  one_page_raw[HUGE_PAGE_SIZE];
 
 
 /*
@@ -538,14 +573,19 @@ detect_memory(void) {
     /* Attach reserved regions */
 
     /* Attach first page as reserved memory */
-    // LAB 6: Your code here
+    // LAB 6: Your code here DONE?
+    // TODO: Is this correct?
+    attach_region(PADDR(zero_page_raw), PADDR(zero_page_raw + HUGE_PAGE_SIZE), RESERVED_NODE);
+    attach_region(PADDR(one_page_raw), PADDR(one_page_raw + HUGE_PAGE_SIZE), RESERVED_NODE);
 
     /* Attach kernel and old IO memory
      * (from IOPHYSMEM to the physical address of end label. end points the the
      *  end of kernel executable image.)*/
-    // LAB 6: Your code here
+    // LAB 6: Your code here DONE?
+    // TODO: And this?
+    attach_region(IOPHYSMEM, PADDR(end), RESERVED_NODE);
 
-    /* Detech memory via ether UEFI or CMOS */
+    /* Detect memory via ether UEFI or CMOS */
     if (uefi_lp && uefi_lp->MemoryMap) {
         EFI_MEMORY_DESCRIPTOR *start = (void *)uefi_lp->MemoryMap;
         EFI_MEMORY_DESCRIPTOR *end = (void *)(uefi_lp->MemoryMap + uefi_lp->MemoryMapSize);
@@ -567,9 +607,8 @@ detect_memory(void) {
 
             /* Attach memory described by memory map entry described by start
              * of type type*/
-            // LAB 6: Your code here
-
-
+            // LAB 6: Your code here DONE?
+            attach_region(start->PhysicalStart, start->PhysicalStart + start->NumberOfPages * PAGE_SIZE, type);
 
             start = (void *)((uint8_t *)start + uefi_lp->MemoryMapDescriptorSize);
         }
