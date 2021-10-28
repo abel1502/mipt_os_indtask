@@ -34,24 +34,24 @@
  *                     |                              | RW/--
  *                     |   Remapped Physical Memory   | RW/--
  *                     |                              | RW/--
- * KERN_BASE_ADDR,-->  +------------------------------+ 0x8040000000    --+
- * KERN_STACK_TOP      |     CPU0's Kernel Stack      | RW/--  KERN_STACK_SIZE   |
- *                     | - - - - - - - - - - - - - - -|                   |
- *                     |      Invalid Memory (*)      | --/--  KERN_STACK_GAP    |
- *                     +------------------------------+                   |
- *    KERN_PF_STACK_TOP      |       CPU0's #PF Stack       | RW/--  KERN_PF_STACK_SIZE |
- *                     | - - - - - - - - - - - - - - -|                   |
- *                     |      Invalid Memory (*)      | --/--  KERN_STACK_GAP    |
- *                     +------------------------------+                   |
- *                     |     CPU1's Kernel Stack      | RW/--  KERN_STACK_SIZE   |
- *                     | - - - - - - - - - - - - - - -|                 HUGE_PAGE_SIZE
- *                     |      Invalid Memory (*)      | --/--  KERN_STACK_GAP    |
- *                     +------------------------------+                   |
- *                     :              .               :                   |
- *                     :              .               :                   |
- *  KERN_HEAP_END -->  +------------------------------+ 0x803fe00000    --+
+ * KERN_BASE_ADDR,-->  +------------------------------+ 0x8040000000            --+
+ * KERN_STACK_TOP      |     CPU0's Kernel Stack      | RW/--  KERN_STACK_SIZE    |
+ *                     | - - - - - - - - - - - - - - -|                           |
+ *                     |      Invalid Memory (*)      | --/--  KERN_STACK_GAP     |
+ *                     +------------------------------+                           |
+ * KERN_PF_STACK_TOP   |       CPU0's #PF Stack       | RW/--  KERN_PF_STACK_SIZE |
+ *                     | - - - - - - - - - - - - - - -|                           |
+ *                     |      Invalid Memory (*)      | --/--  KERN_STACK_GAP     |
+ *                     +------------------------------+                           |
+ *                     |     CPU1's Kernel Stack      | RW/--  KERN_STACK_SIZE    |
+ *                     | - - - - - - - - - - - - - - -|                        HUGE_PAGE_SIZE
+ *                     |      Invalid Memory (*)      | --/--  KERN_STACK_GAP     |
+ *                     +------------------------------+                           |
+ *                     :              .               :                           |
+ *                     :              .               :                           |
+ *   KERN_HEAP_END --> +------------------------------+ 0x803fe00000            --+
  *                     |       Memory-mapped I/O      | RW/--  HUGE_PAGE_SIZE
- * MAX_USER_READABLE, KERN_HEAP_START -->  +------------------------------+ 0x803fc00000
+ * KERN_HEAP_START --> +------------------------------+ 0x803fc00000  <-- MAX_USER_READABLE
  *                     |          RO PAGES            | R-/R-
  *                     .                              .
  *                     .                              .        400 * HUGE_PAGE_SIZE
@@ -63,8 +63,8 @@
  *                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *                     .                              .
  *                     .                              .
- * MAX_USER_ADDRESS,               .                              .
- *USER_EXCEPTION_STACK_TOP +-_------------------------+ 0x8000000000
+ *                     .                              .
+ * MAX_USER_ADDRESS -> +------------------------------+ 0x8000000000   <-- USER_EXCEPTION_STACK_TOP
  *                     |     User Exception Stack     | RW/RW  PAGE_SIZE
  *                     +------------------------------+ 0x7ffffff000
  *                     |       Empty Memory (*)       | --/--  PAGE_SIZE
@@ -158,11 +158,13 @@
 /* Top of one-page user exception stack */
 #define USER_EXCEPTION_STACK_TOP MAX_USER_ADDRESS
 /* Size of exception stack (must be one page for now) */
+// TODO: Why the hell is it 8 pages then?
 #define USER_EXCEPTION_STACK_SIZE (8 * PAGE_SIZE)
 /* Top of normal user stack */
 /* Next page left invalid to guard against exception stack overflow; then: */
 #define USER_STACK_TOP (USER_EXCEPTION_STACK_TOP - USER_EXCEPTION_STACK_SIZE - PAGE_SIZE)
 /* Stack size (variable) */
+// TODO: And here as well?
 #define USER_STACK_SIZE (16 * PAGE_SIZE)
 /* Max number of open files in the file system at once */
 #define MAXOPEN   512
