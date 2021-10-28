@@ -141,7 +141,7 @@ acpi_find_table(const char *sign) {
 
             uint8_t resultChecksum = 0;
             for (unsigned i = 0; i < resultLen; ++i) {
-                resultChecksum += ((const char *)result)[i];
+                resultChecksum += ((uint8_t *)result)[i];
             }
             assert(resultChecksum == 0);
 

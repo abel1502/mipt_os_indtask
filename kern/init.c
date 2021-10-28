@@ -154,7 +154,9 @@ i386_init(void) {
     env_init();
 
     /* Choose the timer used for scheduling: hpet or pit */
-    timers_schedule("hpet0");
+    timers_schedule("rtc");
+
+    //panic("OK");
 
 #ifdef CONFIG_KSPACE
     /* Touch all you want */
