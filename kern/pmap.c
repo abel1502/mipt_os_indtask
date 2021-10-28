@@ -82,7 +82,10 @@ list_init(struct List *list) {
  */
 inline static void __attribute__((always_inline))
 list_append(struct List *list, struct List *new) {
-    // LAB 6: Your code here
+    // LAB 6: Your code here DONE
+    new->next = list->next;
+    list->next = new;
+    new->prev = list;
 }
 
 /*
@@ -91,7 +94,10 @@ list_append(struct List *list, struct List *new) {
  */
 inline static struct List *__attribute__((always_inline))
 list_del(struct List *list) {
-    // LAB 6: Your code here.
+    // LAB 6: Your code here DONE
+    list->next->prev = list->prev;
+    list->prev->next = list->next;
+    list_init(list);
 
     return list;
 }
@@ -520,7 +526,7 @@ __attribute__((aligned(HUGE_PAGE_SIZE))) uint8_t one_page_raw[HUGE_PAGE_SIZE];
 
 
 /*
- * This function initialized phyisical memory tree
+ * This function initializes phyisical memory tree
  * with either UEFI memroy map or CMOS contents.
  * Every region is inserted into the tree using
  * attach_region() function.
