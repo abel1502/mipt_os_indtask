@@ -575,8 +575,7 @@ detect_memory(void) {
     /* Attach first page as reserved memory */
     // LAB 6: Your code here DONE?
     // TODO: Is this correct?
-    attach_region(PADDR(zero_page_raw), PADDR(zero_page_raw + HUGE_PAGE_SIZE), RESERVED_NODE);
-    attach_region(PADDR(one_page_raw), PADDR(one_page_raw + HUGE_PAGE_SIZE), RESERVED_NODE);
+    attach_region(0, PAGE_SIZE, RESERVED_NODE);
 
     /* Attach kernel and old IO memory
      * (from IOPHYSMEM to the physical address of end label. end points the the
