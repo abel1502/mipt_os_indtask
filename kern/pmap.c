@@ -116,7 +116,6 @@ void
 ensure_free_desc(size_t count) {
     if (free_desc_count < count) {
         struct Page *res = alloc_page(POOL_CLASS, ALLOC_POOL);
-        (void)res;
         if (!res) panic("Out of memory\n");
     }
 
@@ -261,7 +260,10 @@ page_lookup(struct Page *hint, uintptr_t addr, int class, enum PageState type, b
         if (trace_memory) cprintf("Attaching page (%x) at %p class=%d\n", node->state, (void *)page2pa(node), (int)node->class);
     }
 
-    if (node) assert(!(page2pa(node) & CLASS_MASK(node->class)));
+    if (node) {
+        assert_physical(node);
+        assert(!(page2pa(node) & CLASS_MASK(node->class)));
+    }
 
     return node;
 }
@@ -1065,7 +1067,7 @@ addr_common_class(uintptr_t addr1, uintptr_t addr2) {
 
 static int
 map_physical_region(struct AddressSpace *dst, uintptr_t dstart, uintptr_t pstart, size_t size, int flags) {
-    if (trace_memory) cprintf("Mapping physical region [%08lX, %08lX] to [%08lX, %08lX] (flags=%x)\n",
+    if (trace_memory/*|| 1*/) cprintf("Mapping physical region [%08lX, %08lX] to [%08lX, %08lX] (flags=%x)\n",
                               pstart, pstart + (long)size - 1, dstart, dstart + (long)size - 1, flags);
     assert(dstart > MAX_USER_ADDRESS || dst == &kspace);
 
