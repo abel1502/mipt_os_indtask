@@ -1437,8 +1437,7 @@ detect_memory(void) {
     /* Attach kernel and old IO memory
      * (from IOPHYSMEM to the physical address of end label. end points the the
      *  end of kernel executable image.)*/
-    // LAB 6: Your code here DONE?
-    // TODO: And this?
+    // LAB 6: Your code here DONE
     attach_region(IOPHYSMEM, PADDR(end), RESERVED_NODE);
 
     /* Detect memory via ether UEFI or CMOS */

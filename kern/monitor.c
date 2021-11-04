@@ -164,7 +164,7 @@ mon_frequency(int argc, char **argv, struct Trapframe *tf) {
 /* Implement memory (mon_memory) command.
  * This command should call dump_memory_lists()
  */
-// LAB 6: Your code here
+// LAB 6: Your code here DONE
 int
 mon_memory(int argc, char **argv, struct Trapframe *tf) {
     dump_memory_lists();
