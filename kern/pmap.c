@@ -799,7 +799,7 @@ unmap_page(struct AddressSpace *spc, uintptr_t addr, int class) {
     if (!(pdp[pdpi0] & PTE_P))
         return;
     /* otherwise we need to split 1*GB page hw page
-     * into smaller 2*MB pages, allocting new page table level */
+     * into smaller 2*MB pages, allocating new page table level */
     else if (pdp[pdpi0] & PTE_PS) {
         pdpe_t old = pdp[pdpi0];
         res = alloc_pt(pdp + pdpi0);
@@ -834,7 +834,7 @@ unmap_page(struct AddressSpace *spc, uintptr_t addr, int class) {
      * Then load apporopriate page table kernel virutal address
      * to the pt pointer.
      * Use alloc_pt(), alloc_fill_pt(), KADDR here
-     * (just like is above for 1BG pages)
+     * (just like is above for 1GB pages)
      */
 
     // LAB 7: Your code here DONE
@@ -863,7 +863,7 @@ unmap_page(struct AddressSpace *spc, uintptr_t addr, int class) {
     }
 
     /* We cannot allocate less than a page */
-    assert(0);
+    panic("Cannot allocate less than a page");
 
 finish:
     tlb_invalidate_range(spc, inval_start, inval_end);
