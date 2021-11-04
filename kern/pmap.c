@@ -1431,8 +1431,7 @@ detect_memory(void) {
     /* Attach reserved regions */
 
     /* Attach first page as reserved memory */
-    // LAB 6: Your code here DONE?
-    // TODO: Is this correct?
+    // LAB 6: Your code here DONE
     attach_region(0, PAGE_SIZE, RESERVED_NODE);
 
     /* Attach kernel and old IO memory
