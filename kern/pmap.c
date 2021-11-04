@@ -516,7 +516,7 @@ dump_entry(pte_t base, size_t step, bool isz) {
             step == 1 * GB ? " >    >" :
                              " >",
             PTE_ADDR(base),
-            PTE_ADDR(base) + (isz ? (step * isz - 1) : 0xFFF),
+            PTE_ADDR(base) + step - 1 /*(isz ? (step - 1) : 0xFFF)*/,  // TODO: The original seemed quite bugged
             base & PTE_P ? 'P' : '-',
             base & PTE_U ? 'U' : '-',
             base & PTE_W ? 'W' : '-',
@@ -641,44 +641,46 @@ dump_memory_lists(void) {
 }
 
 static void
-dump_page_table_(pte_t *table, unsigned level) {
-    assert(table);
-
-    if (level == 0)
-        return;
-    
+dump_page_table_(pte_t entry, unsigned level) {
     unsigned num_entries = 0;
 
-    switch (level) {
-    case 4:
-        num_entries = PML4_ENTRY_COUNT;
-        dump_entry(*table, -1u, false);
-        break;
+    if (!(entry & PTE_P))
+        return;
+    
+    bool is_leaf = entry & PTE_PS;
 
+    switch (level) {
     case 3:
         num_entries = PDP_ENTRY_COUNT;
-        dump_entry(*table, 1 * GB, (*table & PTE_PS));
+        dump_entry(entry, -1u, false);
         break;
 
     case 2:
-        num_entries = PD_ENTRY_COUNT;
-        dump_entry(*table, 2 * MB, (*table & PTE_PS));
+        num_entries = PD_ENTRY_COUNT * (!is_leaf);
+        dump_entry(entry, 1 * GB, is_leaf);
         break;
 
     case 1:
-        num_entries = PT_ENTRY_COUNT;
-        dump_entry(*table, 4 * KB, true);
+        num_entries = PT_ENTRY_COUNT * (!is_leaf);
+        dump_entry(entry, 2 * MB, is_leaf);
+        break;
+
+    case 0:
+        num_entries = 0;
+        dump_entry(entry, 4 * KB, true);
         break;
 
     default:
         panic("Bad pml4 level: %u", level);
     }
 
-    for (unsigned i = 0; i < num_entries; ++i) {
-        if (!(table[i] & PTE_P))
-            continue;
+    if (!num_entries)
+        return;
+    
+    pte_t *table = KADDR(PTE_ADDR(entry));
 
-        dump_page_table_(&table[i], level - 1);
+    for (unsigned i = 0; i < num_entries; ++i) {
+        dump_page_table_(table[i], level - 1);
     }
 }
 
@@ -691,12 +693,12 @@ dump_page_table_(pte_t *table, unsigned level) {
  */
 void
 dump_page_table(pte_t *pml4) {
-    uintptr_t addr = 0;
     cprintf("Page table:\n");
-    (void)addr;
     // LAB 7: Your code here DONE
     
-    dump_page_table_(pml4, 4);
+    for (unsigned i = 0; i < PML4_ENTRY_COUNT; ++i) {
+        dump_page_table_(pml4[i], 3);
+    }
 }
 
 inline static int
