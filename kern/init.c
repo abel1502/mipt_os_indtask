@@ -159,6 +159,7 @@ i386_init(void) {
     //panic("OK");
 
 #ifdef CONFIG_KSPACE
+#if LAB <= 5
     /* Touch all you want */
     ENV_CREATE_KERNEL_TYPE(prog_test1);
     ENV_CREATE_KERNEL_TYPE(prog_test2);
@@ -166,6 +167,7 @@ i386_init(void) {
     ENV_CREATE_KERNEL_TYPE(prog_test4);
     ENV_CREATE_KERNEL_TYPE(prog_test5);
     ENV_CREATE_KERNEL_TYPE(prog_test6);
+#endif
 #else
 
 #if LAB >= 10
