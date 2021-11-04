@@ -737,7 +737,13 @@ memcpy_page(struct AddressSpace *dst, uintptr_t va, struct Page *page) {
     assert(current_space);
     assert(dst);
 
-    // LAB 7: Your code here
+    // LAB 7: Your code here DONE
+
+    struct AddressSpace *old_space = switch_address_space(dst);
+    set_wp(0);
+    nosan_memcpy((void *)va, KADDR(page2pa(page->phy)), CLASS_SIZE(page->class));
+    set_wp(1);
+    switch_address_space(old_space);
 }
 
 static void
