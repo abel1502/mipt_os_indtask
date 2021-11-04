@@ -932,7 +932,8 @@ map_page(struct AddressSpace *spc, uintptr_t addr, struct Page *page, int flags)
         pdpe_t old = pdp[pdpi0];
         if (alloc_pt(pdp + pdpi0) < 0) return -E_NO_MEM;
         pde_t *pd = KADDR(PTE_ADDR(pdp[pdpi0]));
-        if (alloc_fill_pt(pd, old & ~PTE_PS, 2 * MB, 0, PT_ENTRY_COUNT) < 0) return -E_NO_MEM;
+        // TODO: Maybe shouldn't have fixed this, and left PT_ENTRY_COUNT
+        if (alloc_fill_pt(pd, old & ~PTE_PS, 2 * MB, 0, PD_ENTRY_COUNT) < 0) return -E_NO_MEM;
     }
     /* Calculate kernel virtual address of page directory */
     pde_t *pd = KADDR(PTE_ADDR(pdp[pdpi0]));
