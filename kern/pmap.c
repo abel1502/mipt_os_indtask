@@ -942,20 +942,27 @@ map_page(struct AddressSpace *spc, uintptr_t addr, struct Page *page, int flags)
 
     /* Calculate indexes and fill PD range if page size is larger than 2MB */
 
-    // LAB 7: Your code here
-
-    (void)pd;
-    size_t pdi0 = 0, pdi1 = 0;
+    // LAB 7: Your code here DONE
+    size_t pdi0 = PD_INDEX(addr), pdi1 = PD_INDEX(end);
+    if (pdi0 > pdi1) pdpi1 = PD_ENTRY_COUNT;
+    if (page->class >= 9) return alloc_fill_pt(pd, base, 2 * MB, pdi0, pdi1);
 
     /* Allocate empty pt or split 2MB page into 4KB pages if required and
      * calculate virtual address into pt.
      * alloc_pt(), alloc_fill_pt() are used here.
      * TIP: Look at the code above doing the same thing for 1GB pages */
 
-    // LAB 7: Your code here
-
-    (void)pdi0, (void)pdi1;
-    pte_t *pt = NULL;
+    /* Allocate empty pt... */
+    if (!(pd[pdi0] & PTE_P) && alloc_pt(pd + pdi0) < 0) return -E_NO_MEM;
+    /* ...split 2MB page into 4KB pages if required */
+    else if (pd[pdi0] & PTE_PS) {
+        pde_t old = pd[pdi0];
+        if (alloc_pt(pd + pdi0) < 0) return -E_NO_MEM;
+        pte_t *pt = KADDR(PTE_ADDR(pd[pdi0]));
+        if (alloc_fill_pt(pt, old & ~PTE_PS, 4 * KB, 0, PT_ENTRY_COUNT) < 0) return -E_NO_MEM;
+    }
+    /* Calculate kernel virtual address of page table */
+    pte_t *pt = KADDR(PTE_ADDR(pd[pdi0]));
 
     /* If requested region is larger than or equal to 4KB (at least one whole page) */
 
@@ -965,7 +972,7 @@ map_page(struct AddressSpace *spc, uintptr_t addr, struct Page *page, int flags)
     if (page->class >= 0) return alloc_fill_pt(pt, base, 4 * KB, pti0, pti1);
 
     /* We cannot allocate less than a page */
-    assert(0);
+    panic("Cannot allocate less than a page");
 }
 
 void
