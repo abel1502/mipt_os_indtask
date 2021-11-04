@@ -1436,8 +1436,17 @@ release_address_space(struct AddressSpace *space) {
 struct AddressSpace *
 switch_address_space(struct AddressSpace *space) {
     assert(space);
-    ///LAB 7: Your code here
-    return NULL;
+    // LAB 7: Your code here DONE
+    if (space == current_space) {
+        return space;
+    }
+
+    struct AddressSpace *old_space = current_space;
+    current_space = space;
+
+    lcr3(space->cr3);
+
+    return old_space;
 }
 
 /* Buffers for filler pages are statically allocated for simplicity
