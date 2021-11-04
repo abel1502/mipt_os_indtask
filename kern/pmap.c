@@ -1686,7 +1686,6 @@ init_shadow_pre(void) {
 void
 init_memory(void) {
     int res;
-    (void)res;
 
     init_allocator();
     if (trace_init) cprintf("Memory allocator is initiallized\n");
@@ -1704,10 +1703,11 @@ init_memory(void) {
     /* Map physical memroy onto kernel address space weakly... */
     /* NOTE We cannot use map_region to map memory allocated with ALLOC_WEAK */
 
-    // LAB 7: Your code here
+    // LAB 7: Your code here DONE
     // NOTE: You need to check if map_physical_region returned 0 everywhere! (and panic otherwise)
     // Map [0, max_memory_map_addr] to [KERN_BASE_ADDR, KERN_BASE_ADDR + max_memory_map_addr] as RW- + ALLOC_WEAK
-
+    res = map_physical_region(&kspace, KERN_BASE_ADDR, 0, max_memory_map_addr, PROT_R | PROT_W | ALLOC_WEAK);
+    assert(res == 0);
 
     extern char __text_end[], __text_start[];
     assert(!((uintptr_t)__text_start & CLASS_MASK(0)));
@@ -1716,15 +1716,22 @@ init_memory(void) {
 
     /* ...and make kernel .text section executable: */
 
-    // LAB 7: Your code here
+    // LAB 7: Your code here DONE
     // Map [PADDR(__text_start);PADDR(__text_end)] to [__text_start, __text_end] as RW-
-
+    // TODO: I'm mapping as RX, since this is code
+    res = map_physical_region(&kspace, (uintptr_t)__text_start, PADDR(__text_start), __text_end - __text_start, PROT_R | /*PROT_W |*/ PROT_X);
+    assert(res == 0);
 
     /* Allocate kernel stacks */
 
-    // LAB 7: Your code here
+    // LAB 7: Your code here DONE
     // Map [PADDR(bootstack), PADDR(bootstack) + KERN_STACK_SIZE] to [KERN_STACK_TOP - KERN_STACK_SIZE, KERN_STACK_TOP] as RW-
     // Map [PADDR(pfstack), PADDR(pfstack) + KERN_PF_STACK_SIZE] to [KERN_PF_STACK_TOP - KERN_PF_STACK_SIZE, KERN_PF_STACK_TOP] as RW-
+    res = map_physical_region(&kspace, KERN_STACK_TOP - KERN_STACK_SIZE, PADDR(bootstack), KERN_STACK_SIZE, PROT_R | PROT_W);
+    assert(res == 0);
+
+    res = map_physical_region(&kspace, KERN_PF_STACK_TOP - KERN_PF_STACK_SIZE, PADDR(pfstack), KERN_PF_STACK_SIZE, PROT_R | PROT_W);
+    assert(res == 0);
 
 #ifdef SANITIZE_SHADOW_BASE
     init_shadow_pre();
@@ -1734,9 +1741,13 @@ init_memory(void) {
     EFI_MEMORY_DESCRIPTOR *mend = (void *)((uint8_t *)mstart + uefi_lp->MemoryMapSize);
     for (; mstart < mend; mstart = (void *)((uint8_t *)mstart + uefi_lp->MemoryMapDescriptorSize)) {
         if (mstart->Attribute & EFI_MEMORY_RUNTIME) {
-            // LAB 7: Your code here
+            // LAB 7: Your code here DONE
             // Map [mstart->PhysicalStart, mstart->PhysicalStart+mstart->NumberOfPages*PAGE_SIZE] to
             //     [mstart->VirtualStart, mstart->VirtualStart+mstart->NumberOfPages*PAGE_SIZE] as RW-
+            // cprintf("> phys %zx, virt %zx, size %llx\n", mstart->PhysicalStart, mstart->VirtualStart, mstart->NumberOfPages * PAGE_SIZE);
+            // TODO: Rights (decide on executable vs. writeable)
+            res = map_physical_region(&kspace, mstart->VirtualStart, mstart->PhysicalStart, mstart->NumberOfPages * PAGE_SIZE, PROT_R | PROT_W /*| PROT_X*/);
+            assert(res == 0);
         }
     }
 
@@ -1758,7 +1769,12 @@ init_memory(void) {
 
     for (size_t i = 0; i < CLASS_SIZE(MAX_ALLOCATION_CLASS); i++) assert(!zero_page_raw[i]);
 
+    // check_virtual_tree(kspace.root, MAX_CLASS);
+    // cprintf(">>> {\n");
     switch_address_space(&kspace);
+    // check_physical_tree(&root);
+    // check_virtual_tree(kspace.root, MAX_CLASS);
+    // cprintf(">>> }\n");
 
     /* One page is a page filled with 0xFF values -- ASAN poison */
     nosan_memset(one_page_raw, 0xFF, CLASS_SIZE(MAX_ALLOCATION_CLASS));
@@ -1790,7 +1806,6 @@ init_memory(void) {
     }
     /* Map the rest of memory regions after initiallizing shadow memory */
 
-    // LAB 7: Your code here
     // Map [FRAMEBUFFER, FRAMEBUFFER + uefi_lp->FrameBufferSize] to
     //     [uefi_lp->FrameBufferBase, uefi_lp->FrameBufferBase + uefi_lp->FrameBufferSize] RW- + PROT_WC
     // Map [X86ADDR(KERN_BASE_ADDR),MIN(MAX_LOW_ADDR_KERN_SIZE, max_memory_map_addr)] to
@@ -1801,6 +1816,26 @@ init_memory(void) {
     //     [PADDR(bootstack), PADDR(boottop)] as RW-
     // Map [X86ADDR(KERN_PF_STACK_TOP - KERN_PF_STACK_SIZE), KERN_PF_STACK_TOP] to
     //     [PADDR(pfstack), PADDR(pfstacktop)] as RW-
+    // LAB 7: Your code here DONE
+    res = map_physical_region(&kspace, FRAMEBUFFER, uefi_lp->FrameBufferBase, uefi_lp->FrameBufferSize, PROT_R | PROT_W | PROT_WC);
+    assert(res == 0);
+
+    size_t tmp_size = MIN(MAX_LOW_ADDR_KERN_SIZE, max_memory_map_addr);
+    res = map_physical_region(&kspace, X86ADDR(KERN_BASE_ADDR), 0, tmp_size, PROT_R | PROT_W | ALLOC_WEAK);
+    assert(res == 0);
+
+    tmp_size = ROUNDUP((uintptr_t)__text_end, CLASS_SIZE(0)) - (uintptr_t)__text_start;
+    res = map_physical_region(&kspace, X86ADDR((uintptr_t)__text_start), PADDR(__text_start), tmp_size, PROT_R | PROT_X);
+    assert(res == 0);
+
+    assert(PADDR(bootstacktop) - PADDR(bootstack) == KERN_STACK_SIZE);
+    res = map_physical_region(&kspace, X86ADDR(KERN_STACK_TOP - KERN_STACK_SIZE), PADDR(bootstack), KERN_STACK_SIZE, PROT_R | PROT_W);
+    assert(res == 0);
+
+    assert(pfstacktop - pfstack == KERN_PF_STACK_SIZE);
+    res = map_physical_region(&kspace, X86ADDR(KERN_PF_STACK_TOP - KERN_PF_STACK_SIZE), PADDR(pfstack), KERN_PF_STACK_SIZE, PROT_R | PROT_W);
+    assert(res == 0);
+
 
     if (trace_memory_more) dump_page_table(kspace.pml4);
 
