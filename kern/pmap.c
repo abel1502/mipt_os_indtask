@@ -1698,7 +1698,7 @@ init_memory(void) {
 
     /* First, only map kernel itself, kernel stacks, UEFI memory
      * and KASAN shadow memory regions to new kernel address space.
-     * Allocated memory should not be touches until address space switch */
+     * Allocated memory should not be touched until address space switch */
 
     /* Map physical memroy onto kernel address space weakly... */
     /* NOTE We cannot use map_region to map memory allocated with ALLOC_WEAK */
@@ -1717,7 +1717,7 @@ init_memory(void) {
     /* ...and make kernel .text section executable: */
 
     // LAB 7: Your code here DONE
-    // Map [PADDR(__text_start);PADDR(__text_end)] to [__text_start, __text_end] as RW-
+    // Map [PADDR(__text_start);PADDR(__text_end)] to [__text_start, __text_end] as R-X
     // TODO: I'm mapping as RX, since this is code
     res = map_physical_region(&kspace, (uintptr_t)__text_start, PADDR(__text_start), __text_end - __text_start, PROT_R | /*PROT_W |*/ PROT_X);
     assert(res == 0);
@@ -1791,7 +1791,7 @@ init_memory(void) {
 #endif
 
     /* Traps needs to be initiallized here
-     * to alloc #PF to be handled during lazy allocation */
+     * to allow #PF to be handled during lazy allocation */
     trap_init();
 
     /* Check uefi memory mappings */
@@ -1806,17 +1806,17 @@ init_memory(void) {
     }
     /* Map the rest of memory regions after initiallizing shadow memory */
 
-    // Map [FRAMEBUFFER, FRAMEBUFFER + uefi_lp->FrameBufferSize] to
-    //     [uefi_lp->FrameBufferBase, uefi_lp->FrameBufferBase + uefi_lp->FrameBufferSize] RW- + PROT_WC
-    // Map [X86ADDR(KERN_BASE_ADDR),MIN(MAX_LOW_ADDR_KERN_SIZE, max_memory_map_addr)] to
-    //     [0, MIN(MAX_LOW_ADDR_KERN_SIZE, max_memory_map_addr)] as RW + ALLOC_WEAK
-    // Map [X86ADDR((uintptr_t)__text_start),ROUNDUP(X86ADDR((uintptr_t)__text_end), CLASS_SIZE(0))] to
-    //     [PADDR(__text_start), ROUNDUP(__text_end, CLASS_SIZE(0))] as R-X
-    // Map [X86ADDR(KERN_STACK_TOP - KERN_STACK_SIZE), KERN_STACK_TOP] to
-    //     [PADDR(bootstack), PADDR(boottop)] as RW-
-    // Map [X86ADDR(KERN_PF_STACK_TOP - KERN_PF_STACK_SIZE), KERN_PF_STACK_TOP] to
-    //     [PADDR(pfstack), PADDR(pfstacktop)] as RW-
     // LAB 7: Your code here DONE
+    // Map [uefi_lp->FrameBufferBase, uefi_lp->FrameBufferBase + uefi_lp->FrameBufferSize] to
+    //     [FRAMEBUFFER, FRAMEBUFFER + uefi_lp->FrameBufferSize] RW- + PROT_WC
+    // Map [0, MIN(MAX_LOW_ADDR_KERN_SIZE, max_memory_map_addr)] to
+    //     [X86ADDR(KERN_BASE_ADDR),MIN(MAX_LOW_ADDR_KERN_SIZE, max_memory_map_addr)] as RW + ALLOC_WEAK
+    // Map [PADDR(__text_start), ROUNDUP(PADDR(__text_end), CLASS_SIZE(0))] to
+    //     [X86ADDR((uintptr_t)__text_start),ROUNDUP(X86ADDR((uintptr_t)__text_end), CLASS_SIZE(0))] as R-X
+    // Map [PADDR(bootstack), PADDR(bootstacktop)] to
+    //     [X86ADDR(KERN_STACK_TOP - KERN_STACK_SIZE), KERN_STACK_TOP] as RW-
+    // Map [PADDR(pfstack), PADDR(pfstacktop)] to
+    //     [X86ADDR(KERN_PF_STACK_TOP - KERN_PF_STACK_SIZE), KERN_PF_STACK_TOP] as RW-
     res = map_physical_region(&kspace, FRAMEBUFFER, uefi_lp->FrameBufferBase, uefi_lp->FrameBufferSize, PROT_R | PROT_W | PROT_WC);
     assert(res == 0);
 
