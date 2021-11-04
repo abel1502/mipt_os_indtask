@@ -606,6 +606,18 @@ check_virtual_tree(struct Page *page, int class) {
 void
 dump_virtual_tree(struct Page *node, int class) {
     // LAB 7: Your code here
+    if (!node || node->refc == 0)
+        return;
+
+    if (node->refc != 0) {
+        /*for (unsigned i = 0; i < (MAX_CLASS - class); ++i) {
+            cprintf(" ");
+        }*/
+        cprintf("[%016zx] %x (%u refs)\n", page2pa(node), node->state, node->refc);
+    }
+
+    dump_virtual_tree(node->left,  class - 1);
+    dump_virtual_tree(node->right, class - 1);
 }
 
 void
@@ -628,6 +640,48 @@ dump_memory_lists(void) {
     }
 }
 
+static void
+dump_page_table_(pte_t *table, unsigned level) {
+    assert(table);
+
+    if (level == 0)
+        return;
+    
+    unsigned num_entries = 0;
+
+    switch (level) {
+    case 4:
+        num_entries = PML4_ENTRY_COUNT;
+        dump_entry(*table, -1u, false);
+        break;
+
+    case 3:
+        num_entries = PDP_ENTRY_COUNT;
+        dump_entry(*table, 1 * GB, (*table & PTE_PS));
+        break;
+
+    case 2:
+        num_entries = PD_ENTRY_COUNT;
+        dump_entry(*table, 2 * MB, (*table & PTE_PS));
+        break;
+
+    case 1:
+        num_entries = PT_ENTRY_COUNT;
+        dump_entry(*table, 4 * KB, true);
+        break;
+
+    default:
+        panic("Bad pml4 level: %u", level);
+    }
+
+    for (unsigned i = 0; i < num_entries; ++i) {
+        if (!(table[i] & PTE_P))
+            continue;
+
+        dump_page_table_(&table[i], level - 1);
+    }
+}
+
 /*
  * Pretty-print page table
  * You can read about page the table
@@ -640,7 +694,9 @@ dump_page_table(pte_t *pml4) {
     uintptr_t addr = 0;
     cprintf("Page table:\n");
     (void)addr;
-    // LAB 7: Your code here
+    // LAB 7: Your code here DONE
+    
+    dump_page_table_(pml4, 4);
 }
 
 inline static int
