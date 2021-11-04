@@ -805,23 +805,29 @@ unmap_page(struct AddressSpace *spc, uintptr_t addr, int class) {
         res = alloc_pt(pdp + pdpi0);
         assert(!res);
         pde_t *pd = KADDR(PTE_ADDR(pdp[pdpi0]));
-        res = alloc_fill_pt(pd, old & ~PTE_PS, 2 * MB, 0, PT_ENTRY_COUNT);
+        // TODO: Maybe shouldn't have fixed this, and left PT_ENTRY_COUNT
+        res = alloc_fill_pt(pd, old & ~PTE_PS, 2 * MB, 0, PD_ENTRY_COUNT);
         inval_start = ROUNDDOWN(inval_start, 1 * GB);
         inval_end = ROUNDUP(inval_end, 1 * GB);
         assert(!res);
     }
     pde_t *pd = KADDR(PTE_ADDR(pdp[pdpi0]));
-    (void)pd;
-
 
     /* Unmap 2 MB hw pages if requested virtual page size is larger than
      * or equal 2 MB.
      * Use remove_pt() here. remove_pt() can handle recusive removal.
      * TIP: this resembles closely unmapping code */
 
-    // LAB 7: Your code here
+    // LAB 7: Your code here DONE
+    size_t pdi0 = PD_INDEX(addr), pdi1 = PD_INDEX(end);
 
-    size_t pdi0 = 0, pdi1 = 0;
+    /* Fixup index if pdi0 == 511 and pdi1 == 0 (and should be 512) */
+    if (pdi0 > pdi1) pdi1 = PD_ENTRY_COUNT;
+
+    if (class >= 9) {
+        remove_pt(pd, addr, 2 * MB, pdi0, pdi1);
+        goto finish;
+    }
 
     /* Return if page is not present or
      * split 2*MB page into 4KB pages if required.
@@ -831,10 +837,22 @@ unmap_page(struct AddressSpace *spc, uintptr_t addr, int class) {
      * (just like is above for 1BG pages)
      */
 
-    // LAB 7: Your code here
-
-    (void)pdi1, (void)pdi0;
-    pte_t *pt = NULL;
+    // LAB 7: Your code here DONE
+    if (!(pd[pdi0] & PTE_P))
+        return;
+    /* otherwise we need to split 2*MB page hw page
+     * into smaller 4*KB pages, allocating new page table level */
+    else if (pd[pdi0] & PTE_PS) {
+        pde_t old = pd[pdi0];
+        res = alloc_pt(pd + pdi0);
+        assert(!res);
+        pte_t *pt = KADDR(PTE_ADDR(pd[pdi0]));
+        res = alloc_fill_pt(pt, old & ~PTE_PS, 4 * KB, 0, PT_ENTRY_COUNT);
+        inval_start = ROUNDDOWN(inval_start, 2 * MB);
+        inval_end = ROUNDUP(inval_end, 2 * MB);
+        assert(!res);
+    }
+    pte_t *pt = KADDR(PTE_ADDR(pd[pdi0]));
 
     /* Unmap 4KB hw pages */
     size_t pti0 = PT_INDEX(addr), pti1 = PT_INDEX(end);
