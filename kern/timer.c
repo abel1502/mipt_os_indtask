@@ -97,15 +97,15 @@ acpi_find_table(const char *sign) {
     assert(rsdp->Revision >= 2);
 
     assert(rsdp->Length >= sizeof(RSDP));
-    uint8_t rsdp_checksum = 0;
+    uint32_t rsdp_checksum = 0;
     for (unsigned i = 0; i < rsdp->Length; ++i) {
         if (i == offsetof(RSDP, Length)) {
-            assert(rsdp_checksum == 0);
+            assert((rsdp_checksum & 0xff) == 0);
         }
 
         rsdp_checksum += ((uint8_t *)rsdp)[i];
     }
-    assert(rsdp_checksum == 0);
+    assert((rsdp_checksum & 0xff) == 0);
 
     physaddr_t xsdt_pa = rsdp->XsdtAddress;
 
@@ -116,11 +116,11 @@ acpi_find_table(const char *sign) {
     assert(strncmp(xsdt->h.Signature, "XSDT", sizeof(xsdt->h.Signature)) == 0);
 
     assert(xsdt->h.Length >= sizeof(XSDT));
-    uint8_t xsdt_checksum = 0;
+    uint32_t xsdt_checksum = 0;
     for (unsigned i = 0; i < xsdt->h.Length; ++i) {
         xsdt_checksum += ((uint8_t *)xsdt)[i];
     }
-    assert(xsdt_checksum == 0);
+    assert((xsdt_checksum & 0xff) == 0);
 
     // Doesn't matter where we point it now, so I chose the certainly valid XSDT header
     ACPISDTHeader *header = mmio_map_region(xsdt_pa, sizeof(ACPISDTHeader));
@@ -139,11 +139,11 @@ acpi_find_table(const char *sign) {
             void *result = mmio_remap_last_region(header_pa, header, sizeof(ACPISDTHeader), resultLen);
             assert(result);
 
-            uint8_t resultChecksum = 0;
+            uint32_t resultChecksum = 0;
             for (unsigned i = 0; i < resultLen; ++i) {
                 resultChecksum += ((uint8_t *)result)[i];
             }
-            assert(resultChecksum == 0);
+            assert((resultChecksum & 0xff) == 0);
 
             return result;
         }
