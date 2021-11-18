@@ -191,6 +191,7 @@ env_alloc(struct Env **newenv_store, envid_t parent_id, enum EnvType type) {
     return 0;
 }
 
+#if 0
 /* Pass the original ELF image to binary/size and bind all the symbols within
  * its loaded address space specified by image_start/image_end.
  * Make sure you understand why you need to check that each binding
@@ -287,6 +288,7 @@ bind_functions(struct Env *env, uint8_t *binary, size_t size, uintptr_t image_st
 
     return 0;
 }
+#endif
 
 /* Set up the initial program binary, stack, and processor flags
  * for a user process.
@@ -345,6 +347,7 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
     assert(binary);
 
     int result = 0;
+    (void)result;
     uint8_t *cur = binary;
 
     #define DEMAND_(STMT)                           \
@@ -402,9 +405,9 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
         if (ph->p_type == ELF_PROG_LOAD) {
             DEMAND_(ph->p_filesz <= ph->p_memsz);
 
-            DEMAND_(map_region(&env->address_space, ph->p_va, NULL, 0, ph->p_memsz,
-                               ALLOC_ZERO | PROT_USER_ | PROT_R | PROT_W | PROT_X)  // TODO: no X?
-                    >= 0);
+            result = map_region(&env->address_space, ph->p_va, NULL, 0, ph->p_memsz,
+                                ALLOC_ZERO | PROT_USER_ | PROT_R | PROT_W | PROT_X);  // TODO: perhaps no X?, Lazy?
+            DEMAND_(result >= 0);
 
             READ_FROM_OFFS_((uint8_t *)ph->p_va, ph->p_offset, ph->p_filesz);
 
@@ -422,7 +425,11 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
     DEMAND_(image_start <= elf_header.e_entry && elf_header.e_entry < image_end);
     env->env_tf.tf_rip = elf_header.e_entry;
 
-    result = bind_functions(env, binary, size, image_start, image_end);
+    // result = bind_functions(env, binary, size, image_start, image_end);
+    // DEMAND_(result >= 0);
+
+    result = map_region(&env->address_space, USER_STACK_TOP - USER_STACK_SIZE, NULL, 0, USER_STACK_SIZE,
+                        ALLOC_ZERO | PROT_USER_ | PROT_R | PROT_W);
     DEMAND_(result >= 0);
 
     #undef READ_
@@ -459,7 +466,6 @@ env_create(uint8_t *binary, size_t size, enum EnvType type) {
     // result = init_address_space(&env->address_space);
     // VALIDATE_("init_address_space failed");
 
-    // TODO: Maybe bad
     struct AddressSpace *old_space = switch_address_space(&env->address_space);
     result = load_icode(env, binary, size);
     switch_address_space(old_space);
@@ -620,8 +626,9 @@ env_run(struct Env *env) {
     assert(env == curenv);
 
     // LAB 8: Your code here DONE
-    struct AddressSpace *old_space = switch_address_space(&env->address_space);
-    assert(old_space == &kspace);
+    // struct AddressSpace *old_space = switch_address_space(&env->address_space);
+    // assert(old_space == &kspace);
+    switch_address_space(&env->address_space);
 
     env_pop_tf(&env->env_tf);
     panic("Shouldn't be reachable");
