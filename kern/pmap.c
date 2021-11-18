@@ -1954,8 +1954,31 @@ static uintptr_t user_mem_check_addr;
  */
 int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm) {
-    // LAB 8: Your code here
-    return -E_FAULT;
+    // LAB 8: Your code here DONE
+    uintptr_t cur_va = (uintptr_t)va;
+    uintptr_t end_va = cur_va + len;
+
+    #define DEMAND_(STMT)                   \
+        if (!(STMT)) {                      \
+            user_mem_check_addr = cur_va;   \
+            return -E_FAULT;                \
+        }
+
+    while (cur_va < end_va) {
+        struct Page *virtPage = page_lookup_virtual(env->address_space.root, cur_va, 0, false);
+        DEMAND_(virtPage);
+
+        struct Page *page = virtPage->phy;
+        DEMAND_(page);
+
+        DEMAND_((virtPage->state & PAGE_PROT(perm)) == PAGE_PROT(perm));
+
+        cur_va += CLASS_SIZE(page->class);
+    }
+
+    #undef DEMAND_
+
+    return 0;
 }
 
 void
