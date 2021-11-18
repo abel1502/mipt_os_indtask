@@ -276,7 +276,10 @@ trap_dispatch(struct Trapframe *tf) {
                 tf->tf_regs.reg_r8);
         return;
     case T_BRKPT:
-        // LAB 8: Your code here
+        // LAB 8: Your code here DONE
+        monitor(tf);
+        panic("Shouldn't be reachable");
+
         return;
     case IRQ_OFFSET + IRQ_SPURIOUS:
         /* Handle spurious interrupts
