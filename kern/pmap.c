@@ -1517,17 +1517,28 @@ int
 init_address_space(struct AddressSpace *space) {
     /* Allocte page table with alloc_pt into space->cr3
      * (remember to clean flag bits of result with PTE_ADDR) */
-    // LAB 8: Your code here
+    // LAB 8: Your code here DONE
+    int res = 0;
+
+    res = alloc_pt(&space->cr3);
+    if (res < 0)
+        return res;
+    
+    space->cr3 = PTE_ADDR(space->cr3);
 
     /* put its kernel virtual address to space->pml4 */
-    // LAB 8: Your code here
+    // LAB 8: Your code here DONE
+    space->pml4 = KADDR(space->cr3);
 
     // Allocate virtual tree root node
-    // of type INTERMEDIATE_NODE with alloc_rescriptor() of type
-    // LAB 8: Your code here
+    // of type INTERMEDIATE_NODE with alloc_descriptor() of type
+    // LAB 8: Your code here DONE
+    space->root = alloc_descriptor(INTERMEDIATE_NODE);
+    assert(space->root);
 
     /* Initialize UVPT */
-    // LAB 8: Your code here
+    // LAB 8: Your code here DONE
+    space->pml4[PML4_INDEX(UVPT)] = space->cr3 | PTE_P | PTE_U;
 
     /* Why this call is required here and what does it do? */
     propagate_one_pml4(space, &kspace);
