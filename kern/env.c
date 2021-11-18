@@ -88,17 +88,18 @@ envid2env(envid_t envid, struct Env **env_store, bool need_check_perm) {
  */
 void
 env_init(void) {
-    // LAB 8: Your code here (actually not, but the next line was deleted in their commit)
-    env_free_list = envs;  // TODO: Perhaps redundant?
     /* kzalloc_region only works with current_space != NULL */
 
     /* Allocate envs array with kzalloc_region
      * (don't forget about rounding) */
-    // LAB 8: Your code here
+    // LAB 8: Your code here DONE
+    assert(current_space == &kspace);
+    envs = kzalloc_region(NENV * sizeof(struct Env));
 
     /* Map envs to UENVS read-only,
      * but user-accessible (with PROT_USER_ set) */
-    // LAB 8: Your code here
+    // LAB 8: Your code here DONE
+    map_region(&kspace, UENVS, &kspace, (uintptr_t)envs, NENV * sizeof(struct Env), PROT_USER_ | PROT_R);
 
     memset(envs, 0, NENV * sizeof(struct Env));
 
