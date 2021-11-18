@@ -95,20 +95,63 @@ trapname(int trapno) {
     return "(unknown trap)";
 }
 
-extern void clock_thdlr(void);
-extern void timer_thdlr(void);
+
+extern void thdlr_divide ();
+extern void thdlr_debug  ();
+extern void thdlr_nmi    ();
+extern void thdlr_brkpt  ();
+extern void thdlr_oflow  ();
+extern void thdlr_bound  ();
+extern void thdlr_illop  ();
+extern void thdlr_device ();
+extern void thdlr_dblflt ();
+extern void thdlr_tss    ();
+extern void thdlr_segnp  ();
+extern void thdlr_stack  ();
+extern void thdlr_gpflt  ();
+extern void thdlr_pgflt  ();
+extern void thdlr_fperr  ();
+extern void thdlr_align  ();
+extern void thdlr_mchk   ();
+extern void thdlr_simd   ();
+
+extern void thdlr_syscall();
+
 
 void
 trap_init(void) {
-    // TODO: Uncomment
     // LAB 4: Your code here DONE
-    // idt[IRQ_OFFSET + IRQ_CLOCK] = GATE(0, GD_KT, &clock_thdlr, 0);
-    // LAB 5: Your code here DONE
-    // idt[IRQ_OFFSET + IRQ_TIMER] = GATE(0, GD_KT, &timer_thdlr, 0);
+    // idt[IRQ_OFFSET + IRQ_CLOCK] = GATE(0, GD_KT, clock_thdlr, 0);
 
+    // LAB 5: Your code here DONE
+
+    // idt[IRQ_OFFSET + IRQ_CLOCK] = GATE(0, GD_KT, clock_thdlr, 0);
+    // idt[IRQ_OFFSET + IRQ_TIMER] = GATE(0, GD_KT, timer_thdlr, 0);    
 
     /* Insert trap handlers into IDT */
-    // LAB 8: Your code here
+    // LAB 8: Your code here DONE
+
+    // TODO: Should probably set trap flag to 1, but it fails to disable interrupts then
+    idt[T_DIVIDE ] = GATE(0, GD_KT, thdlr_divide  , 0);
+    idt[T_DEBUG  ] = GATE(0, GD_KT, thdlr_debug   , 0);
+    idt[T_NMI    ] = GATE(0, GD_KT, thdlr_nmi     , 0);
+    idt[T_BRKPT  ] = GATE(0, GD_KT, thdlr_brkpt   , 3);
+    idt[T_OFLOW  ] = GATE(0, GD_KT, thdlr_oflow   , 0);
+    idt[T_BOUND  ] = GATE(0, GD_KT, thdlr_bound   , 0);
+    idt[T_ILLOP  ] = GATE(0, GD_KT, thdlr_illop   , 0);
+    idt[T_DEVICE ] = GATE(0, GD_KT, thdlr_device  , 0);
+    idt[T_DBLFLT ] = GATE(0, GD_KT, thdlr_dblflt  , 0);
+    idt[T_TSS    ] = GATE(0, GD_KT, thdlr_tss     , 0);
+    idt[T_SEGNP  ] = GATE(0, GD_KT, thdlr_segnp   , 0);
+    idt[T_STACK  ] = GATE(0, GD_KT, thdlr_stack   , 0);
+    idt[T_GPFLT  ] = GATE(0, GD_KT, thdlr_gpflt   , 0);
+    idt[T_PGFLT  ] = GATE(0, GD_KT, thdlr_pgflt   , 0);
+    idt[T_FPERR  ] = GATE(0, GD_KT, thdlr_fperr   , 0);
+    idt[T_ALIGN  ] = GATE(0, GD_KT, thdlr_align   , 0);
+    idt[T_MCHK   ] = GATE(0, GD_KT, thdlr_mchk    , 0);
+    idt[T_SIMDERR] = GATE(0, GD_KT, thdlr_simd    , 0);
+
+    idt[T_SYSCALL] = GATE(0, GD_KT, thdlr_syscall , 3);
 
     /* Setup #PF handler dedicated stack
      * It should be switched on #PF because
@@ -246,12 +289,11 @@ trap_dispatch(struct Trapframe *tf) {
         return;
     case IRQ_OFFSET + IRQ_TIMER:
     case IRQ_OFFSET + IRQ_CLOCK:
-        // LAB 5: Your code here DONE
-        // LAB 4: Your code here DONE
-        // rtc_timer_pic_handle();
+        // LAB 5: Your code here
+        // LAB 4: Your code here
         timer_for_schedule->handle_interrupts();
         sched_yield();
-
+        
         return;
     default:
         print_trapframe(tf);
