@@ -197,9 +197,11 @@ env_alloc(struct Env **newenv_store, envid_t parent_id, enum EnvType type) {
  */
 static int
 bind_functions(struct Env *env, uint8_t *binary, size_t size, uintptr_t image_start, uintptr_t image_end) {
-    #define DEMAND_(STMT)           \
-        if (!(STMT)) {              \
-            return -E_INVALID_EXE;  \
+    assert(current_space == &env->address_space);
+
+    #define DEMAND_(STMT)                       \
+        if (!(STMT)) {                          \
+            return -E_INVALID_EXE;              \
         }
 
     DEMAND_(size > sizeof(struct Elf));
@@ -277,11 +279,7 @@ bind_functions(struct Env *env, uint8_t *binary, size_t size, uintptr_t image_st
 
         cprintf("bind_functions: Bound %s() (st_info=%hhX) to %p\n", func_name, symtab[i].st_info, (void *)relocation);
 
-        // decltype(&cprintf)
-        // typedef void (*funcptr_t_)();
-        // void (*)(void)
-        // int (*)(const char *fmt, ...)
-        *(uintptr_t *)relocation = function;
+        *(uintptr_t *)relocation = function;  // Warning: relies on the env's address space being selected
     }
 
     #undef DEMAND_
@@ -339,6 +337,8 @@ bind_functions(struct Env *env, uint8_t *binary, size_t size, uintptr_t image_st
  *   What?  (See env_run() and env_pop_tf() below.) */
 static int
 load_icode(struct Env *env, uint8_t *binary, size_t size) {
+    // LAB 8: Your code here DONE
+
     assert(env);
     assert(binary);
 
@@ -400,9 +400,10 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
         if (ph->p_type == ELF_PROG_LOAD) {
             DEMAND_(ph->p_filesz <= ph->p_memsz);
 
-            READ_FROM_OFFS_((uint8_t *)ph->p_va, ph->p_offset, ph->p_filesz);
+            uint8_t *region = map_region(&env->address_space, ph->p_va, NULL, 0, ph->p_memsz,
+                                         ALLOC_ZERO | PROT_USER_ | PROT_R | PROT_W | PROT_X);  // TODO: no X?
 
-            memset((uint8_t *)ph->p_va + ph->p_filesz, 0, ph->p_memsz - ph->p_filesz);
+            READ_FROM_OFFS_(region, ph->p_offset, ph->p_filesz);
 
             if (ph->p_va < image_start) {
                 image_start = ph->p_va;
@@ -418,7 +419,10 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
     DEMAND_(image_start <= elf_header.e_entry && elf_header.e_entry < image_end);
     env->env_tf.tf_rip = elf_header.e_entry;
 
+    // TODO: Maybe bad
+    struct AddressSpace *old_space = switch_address_space(&env->address_space);
     result = bind_functions(env, binary, size, image_start, image_end);
+    switch_address_space(old_space);
     DEMAND_(result >= 0);
 
     #undef READ_
@@ -426,7 +430,6 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
     #undef READ_FROM_OFFS_
     #undef DEMAND_
 
-    // LAB 8: Your code here
     return 0;
 }
 
