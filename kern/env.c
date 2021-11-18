@@ -95,6 +95,7 @@ env_init(void) {
     // LAB 8: Your code here DONE
     assert(current_space == &kspace);
     envs = kzalloc_region(NENV * sizeof(struct Env));
+    env_free_list = envs;
 
     /* Map envs to UENVS read-only,
      * but user-accessible (with PROT_USER_ set) */
@@ -339,6 +340,7 @@ static int
 load_icode(struct Env *env, uint8_t *binary, size_t size) {
     // LAB 8: Your code here DONE
 
+    assert(&env->address_space == current_space);
     assert(env);
     assert(binary);
 
@@ -400,10 +402,11 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
         if (ph->p_type == ELF_PROG_LOAD) {
             DEMAND_(ph->p_filesz <= ph->p_memsz);
 
-            uint8_t *region = map_region(&env->address_space, ph->p_va, NULL, 0, ph->p_memsz,
-                                         ALLOC_ZERO | PROT_USER_ | PROT_R | PROT_W | PROT_X);  // TODO: no X?
+            DEMAND_(map_region(&env->address_space, ph->p_va, NULL, 0, ph->p_memsz,
+                               ALLOC_ZERO | PROT_USER_ | PROT_R | PROT_W | PROT_X)  // TODO: no X?
+                    >= 0);
 
-            READ_FROM_OFFS_(region, ph->p_offset, ph->p_filesz);
+            READ_FROM_OFFS_((uint8_t *)ph->p_va, ph->p_offset, ph->p_filesz);
 
             if (ph->p_va < image_start) {
                 image_start = ph->p_va;
@@ -419,10 +422,7 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
     DEMAND_(image_start <= elf_header.e_entry && elf_header.e_entry < image_end);
     env->env_tf.tf_rip = elf_header.e_entry;
 
-    // TODO: Maybe bad
-    struct AddressSpace *old_space = switch_address_space(&env->address_space);
     result = bind_functions(env, binary, size, image_start, image_end);
-    switch_address_space(old_space);
     DEMAND_(result >= 0);
 
     #undef READ_
@@ -454,12 +454,18 @@ env_create(uint8_t *binary, size_t size, enum EnvType type) {
     VALIDATE_("env_alloc failed");
     assert(env);
     
-    // LAB 8: Your code here
+    // LAB 8: Your code here DONE
+    // The following is, apparently, already included in env_alloc
+    // result = init_address_space(&env->address_space);
+    // VALIDATE_("init_address_space failed");
 
+    // TODO: Maybe bad
+    struct AddressSpace *old_space = switch_address_space(&env->address_space);
     result = load_icode(env, binary, size);
+    switch_address_space(old_space);
     VALIDATE_("load_icode failed");
 
-    env->env_type = ENV_TYPE_KERNEL;
+    env->env_type = ENV_TYPE_KERNEL;  // TODO: ?
 
     #undef VALIDATE_
 }
@@ -511,6 +517,7 @@ env_destroy(struct Env *env) {
     if (env == curenv) {
         sched_yield();
     }
+
     // LAB 8: Your code here (set in_page_fault = 0)
 }
 
@@ -595,26 +602,27 @@ env_run(struct Env *env) {
         cprintf("[%08X] env started: %s\n", env->env_id, state[env->env_status]);
     }
 
-    if (env->env_status == ENV_RUNNING) {
-        assert(env == curenv);
-        env_pop_tf(&env->env_tf);
-    }
+    if (env->env_status != ENV_RUNNING) {
+        assert(env->env_status == ENV_RUNNABLE);
 
-    assert(env->env_status == ENV_RUNNABLE);
-
-    if (env != curenv && curenv) {
-        // TODO: Maybe save curenv trapframe
-        if (curenv->env_status == ENV_RUNNING) {
-            curenv->env_status = ENV_RUNNABLE;
+        if (env != curenv && curenv) {
+            // TODO: Maybe save curenv trapframe
+            if (curenv->env_status == ENV_RUNNING) {
+                curenv->env_status = ENV_RUNNABLE;
+            }
         }
+
+        curenv = env;
+        env->env_status = ENV_RUNNING;
+        env->env_runs++;
     }
 
-    curenv = env;
-    env->env_status = ENV_RUNNING;
-    env->env_runs++;
+    assert(env == curenv);
+
+    // LAB 8: Your code here DONE
+    struct AddressSpace *old_space = switch_address_space(&env->address_space);
+    assert(old_space == &kspace);
 
     env_pop_tf(&env->env_tf);
-    // LAB 8: Your code here
-
     panic("Shouldn't be reachable");
 }
