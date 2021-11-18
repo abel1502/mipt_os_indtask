@@ -89,10 +89,14 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
      * kernel debug info provided by bootloader
      * depending on whether addr is pointing to userspace
      * or kernel space */
-    // LAB 8: Your code here:
+    // LAB 8: Your code here DONE
 
     struct Dwarf_Addrs addrs;
-    load_kernel_dwarf_info(&addrs);
+    if (addr < KERN_BASE_ADDR) {
+        load_user_dwarf_info(&addrs);
+    } else {
+        load_kernel_dwarf_info(&addrs);
+    }
 
     Dwarf_Off offset = 0, line_offset = 0;
     int res = info_by_address(&addrs, addr, &offset);

@@ -82,23 +82,49 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf) {
     // TODO: Maybe print the backtrace for the trapframe?
     cprintf("Stack backtrace:\n");
 
-    uintptr_t rbp = read_rbp();
-    uintptr_t rip = 0;
+    bool backtrace_tf = 1;
+    struct AddressSpace *old_space = current_space;
+
+    if (backtrace_tf && !tf) {
+        cprintf("Trap frame not available, defaulting to kernel stack backtrace.\n");
+
+        backtrace_tf = 0;
+    }
+
+    if (backtrace_tf && curenv) {
+        old_space = switch_address_space(&curenv->address_space);
+    }
+
+    if (!backtrace_tf) {
+        assert(current_space == &kspace);
+    }
+
+    uintptr_t rbp = backtrace_tf ? tf->tf_regs.reg_rbp : read_rbp();
+    uintptr_t rip = backtrace_tf ? tf->tf_rip : *((uintptr_t *)(rbp) + 1);
 
     struct Ripdebuginfo dbg_info = {};
 
     while (rbp) {  // When rbp is 0, we've reached entry.S's value
-        rip = *((uintptr_t *)(rbp) + 1);
-
         debuginfo_rip(rip, &dbg_info);
 
         cprintf("  rbp %016zx  rip %016zx\n"
                 "    %*s:%d: %*s+%zu\n", rbp, rip,
                 dbg_info.rip_filelen, dbg_info.rip_file, dbg_info.rip_line,
                 dbg_info.rip_fn_namelen, dbg_info.rip_fn_name, rip - dbg_info.rip_fn_addr);
+
+        // (void)dbg_info;
+        // cprintf("  rbp %016zx  rip %016zx\n", rbp, rip);
         
         rbp = *(uintptr_t *)(rbp);
+        if (!rbp)
+            break;
+
+        rip = *((uintptr_t *)(rbp) + 1);
+        // if (!rip)
+        //     break;
     }
+
+    switch_address_space(old_space);
 
     return 0;
 }
