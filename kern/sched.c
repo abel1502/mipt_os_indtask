@@ -25,7 +25,7 @@ sched_yield(void) {
      * below to halt the cpu */
 
     struct Env *env_initial = curenv ? curenv : envs + NENV - 1;
-    struct Env *env_cur = env_initial + 1;
+    struct Env *env_cur = env_initial;
 
     /*const char *state[] = {"FREE", "DYING", "RUNNABLE", "RUNNING", "NOT_RUNNABLE"};
 
@@ -38,6 +38,7 @@ sched_yield(void) {
     }*/
 
     do {
+        env_cur++;
         if (env_cur >= envs + NENV) {
             env_cur = envs;
         }
@@ -48,8 +49,6 @@ sched_yield(void) {
         if (env_cur->env_status == ENV_RUNNABLE) {
             break;
         }
-
-        env_cur++;
     } while (env_cur != env_initial);
 
     if (env_cur->env_status == ENV_RUNNABLE || env_cur->env_status == ENV_RUNNING) {
@@ -68,6 +67,8 @@ sched_yield(void) {
  * timer interrupt wakes it up. This function never returns */
 _Noreturn void
 sched_halt(void) {
+    /* Mark that no environment is running on CPU */
+    curenv = NULL;
 
     /* For debugging and testing purposes, if there are no runnable
      * environments in the system, then drop into the kernel monitor */
@@ -75,13 +76,11 @@ sched_halt(void) {
     for (i = 0; i < NENV; i++)
         if (envs[i].env_status == ENV_RUNNABLE ||
             envs[i].env_status == ENV_RUNNING) break;
+    
     if (i == NENV) {
         cprintf("No runnable environments in the system!\n");
         for (;;) monitor(NULL);
     }
-
-    /* Mark that no environment is running on CPU */
-    curenv = NULL;
 
     /* Reset stack pointer, enable interrupts and then halt */
     asm volatile(
