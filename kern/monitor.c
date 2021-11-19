@@ -77,6 +77,37 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf) {
     return 0;
 }
 
+static const uintptr_t RIP_AUTO = -1ull;
+
+static void
+print_backtrace(uintptr_t rbp, uintptr_t rip) {
+    struct Ripdebuginfo dbg_info = {};
+
+    if (rip == RIP_AUTO) {
+        rip = *((uintptr_t *)(rbp) + 1);
+    }
+
+    while (rbp) {  // When rbp is 0, we've reached the stack bottom
+        debuginfo_rip(rip, &dbg_info);
+
+        cprintf("  rbp %016zx  rip %016zx\n"
+                "    %*s:%d: %*s+%zu\n", rbp, rip,
+                dbg_info.rip_filelen, dbg_info.rip_file, dbg_info.rip_line,
+                dbg_info.rip_fn_namelen, dbg_info.rip_fn_name, rip - dbg_info.rip_fn_addr);
+
+        // (void)dbg_info;
+        // cprintf("  rbp %016zx  rip %016zx\n", rbp, rip);
+        
+        rbp = *(uintptr_t *)(rbp);
+        if (!rbp)
+            break;
+
+        rip = *((uintptr_t *)(rbp) + 1);
+        // if (!rip)
+        //     break;
+    }
+}
+
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf) {
     // TODO: Maybe print the backtrace for the trapframe?
@@ -98,30 +129,11 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf) {
     if (!backtrace_tf) {
         assert(current_space == &kspace);
     }
-
-    uintptr_t rbp = backtrace_tf ? tf->tf_regs.reg_rbp : read_rbp();
-    uintptr_t rip = backtrace_tf ? tf->tf_rip : *((uintptr_t *)(rbp) + 1);
-
-    struct Ripdebuginfo dbg_info = {};
-
-    while (rbp) {  // When rbp is 0, we've reached entry.S's value
-        debuginfo_rip(rip, &dbg_info);
-
-        cprintf("  rbp %016zx  rip %016zx\n"
-                "    %*s:%d: %*s+%zu\n", rbp, rip,
-                dbg_info.rip_filelen, dbg_info.rip_file, dbg_info.rip_line,
-                dbg_info.rip_fn_namelen, dbg_info.rip_fn_name, rip - dbg_info.rip_fn_addr);
-
-        // (void)dbg_info;
-        // cprintf("  rbp %016zx  rip %016zx\n", rbp, rip);
-        
-        rbp = *(uintptr_t *)(rbp);
-        if (!rbp)
-            break;
-
-        rip = *((uintptr_t *)(rbp) + 1);
-        // if (!rip)
-        //     break;
+    
+    if (!backtrace_tf) {
+        print_backtrace(read_rbp(), RIP_AUTO);
+    } else {
+        print_backtrace(tf->tf_regs.reg_rbp, tf->tf_rip);
     }
 
     switch_address_space(old_space);

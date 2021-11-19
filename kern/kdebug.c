@@ -32,16 +32,16 @@ load_kernel_dwarf_info(struct Dwarf_Addrs *addrs) {
 void
 load_user_dwarf_info(struct Dwarf_Addrs *addrs) {
     assert(curenv);
+    assert(current_space == &curenv->address_space);
 
     uint8_t *binary = curenv->binary;
     assert(curenv->binary);
-    (void)binary;
 
     struct {
         const uint8_t **end;
         const uint8_t **start;
         const char *name;
-    } sections[] = {
+    } searched_sections[] = {
             {&addrs->aranges_end, &addrs->aranges_begin, ".debug_aranges"},
             {&addrs->abbrev_end, &addrs->abbrev_begin, ".debug_abbrev"},
             {&addrs->info_end, &addrs->info_begin, ".debug_info"},
@@ -50,12 +50,28 @@ load_user_dwarf_info(struct Dwarf_Addrs *addrs) {
             {&addrs->pubnames_end, &addrs->pubnames_begin, ".debug_pubnames"},
             {&addrs->pubtypes_end, &addrs->pubtypes_begin, ".debug_pubtypes"},
     };
-    (void)sections;
+    const size_t searched_sections_cnt = sizeof(searched_sections) / sizeof(searched_sections[0]);
 
     memset(addrs, 0, sizeof(*addrs));
 
     /* Load debug sections from curenv->binary elf image */
-    // LAB 8: Your code here
+    // LAB 8: Your code here DONE
+
+    struct Elf *elf_header = (struct Elf *)binary;
+
+    struct Secthdr *sections = (struct Secthdr *)(binary + elf_header->e_shoff);
+
+    const char *shstrtab = (const char *)(binary + sections[elf_header->e_shstrndx].sh_offset);
+
+    for (size_t i = 0; i < searched_sections_cnt; ++i) {
+        for (uint16_t curSect = 0; curSect < elf_header->e_shnum; ++curSect) {
+            if (strcmp(shstrtab + sections[curSect].sh_name, searched_sections[i].name) == 0) {
+                const uint8_t *start = binary + sections[curSect].sh_offset;
+                *searched_sections[i].start = start;
+                *searched_sections[i].end   = start + sections[curSect].sh_size;
+            }
+        }
+    }
 }
 
 #define UNKNOWN       "<unknown>"
@@ -183,7 +199,7 @@ symtab_address_by_fname(const char *fname, uintptr_t *offset) {
     DEMAND_(symtab_end >= cur_symbol);
 
     const char *strtab     = (const char *)uefi_lp->StringTableStart;
-    const char *strtab_end = (const char *)uefi_lp->SymbolTableEnd;
+    const char *strtab_end = (const char *)uefi_lp->StringTableEnd;
 
     DEMAND_(strtab_end >= strtab);
 

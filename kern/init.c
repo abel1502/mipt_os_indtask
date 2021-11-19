@@ -127,6 +127,7 @@ early_boot_pml4_init(void) {
 
 void
 i386_init(void) {
+
     early_boot_pml4_init();
 
     /* Initialize the console.
@@ -153,21 +154,14 @@ i386_init(void) {
     /* User environment initialization functions */
     env_init();
 
-    /* Choose the timer used for scheduling: hpet or pit */
-    timers_schedule("rtc");
-
-    //panic("OK");
-
 #ifdef CONFIG_KSPACE
-#if LAB <= 5
     /* Touch all you want */
-    ENV_CREATE_KERNEL_TYPE(prog_test1);
-    ENV_CREATE_KERNEL_TYPE(prog_test2);
-    ENV_CREATE_KERNEL_TYPE(prog_test3);
-    ENV_CREATE_KERNEL_TYPE(prog_test4);
-    ENV_CREATE_KERNEL_TYPE(prog_test5);
-    ENV_CREATE_KERNEL_TYPE(prog_test6);
-#endif
+    // ENV_CREATE_KERNEL_TYPE(prog_test1);
+    // ENV_CREATE_KERNEL_TYPE(prog_test2);
+    // ENV_CREATE_KERNEL_TYPE(prog_test3);
+    // ENV_CREATE_KERNEL_TYPE(prog_test4);
+    // ENV_CREATE_KERNEL_TYPE(prog_test5);
+    // ENV_CREATE_KERNEL_TYPE(prog_test6);
 #else
 
 #if LAB >= 10
@@ -182,6 +176,9 @@ i386_init(void) {
     ENV_CREATE(user_hello, ENV_TYPE_USER);
 #endif /* TEST* */
 #endif
+
+    /* Choose the timer used for scheduling: hpet or pit */
+    // timers_schedule("hpet0");
 
     /* Schedule and run the first user environment! */
     sched_yield();
