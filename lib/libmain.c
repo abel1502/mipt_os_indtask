@@ -23,7 +23,7 @@ libmain(int argc, char **argv) {
     while (ctor < &__ctors_end) (*ctor++)();
 
     /* Set thisenv to point at our Env structure in envs[]. */
-    // LAB 8: Your code here DONE?
+    // LAB 8: Your code here DONE
     thisenv = ((struct Env *)UENVS) + ENVX(sys_getenvid());
 
     /* Save the name of the program so that panic() can use it */
