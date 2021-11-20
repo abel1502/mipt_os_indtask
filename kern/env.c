@@ -523,15 +523,15 @@ env_destroy(struct Env *env) {
     assert(env);
     // cprintf("KILL %08X\n", env->env_id);
 
+    // LAB 8: Your code here DONE (set in_page_fault = 0)
+    in_page_fault = 0;
+
     // env->env_status = ENV_DYING;
     env_free(env);
 
     if (env == curenv) {
         sched_yield();
     }
-
-    // LAB 8: Your code here DONE (set in_page_fault = 0)
-    in_page_fault = 0;
 }
 
 #ifdef CONFIG_KSPACE

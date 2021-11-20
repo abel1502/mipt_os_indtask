@@ -43,8 +43,8 @@ sched_yield(void) {
             env_cur = envs;
         }
 
-        //if (env_cur->env_status != ENV_FREE)
-        //    cprintf(">>> %08X %s\n",  env_cur->env_id, state[env_cur->env_status]);
+        // if (env_cur->env_status != ENV_FREE)
+        //     cprintf("Env %08X %s\n",  env_cur->env_id, state[env_cur->env_status]);
 
         if (env_cur->env_status == ENV_RUNNABLE) {
             break;
