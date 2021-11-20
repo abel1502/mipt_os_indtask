@@ -98,7 +98,7 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
 
     /* Temporarily load kernel cr3 and return back once done.
     * Make sure that you fully understand why it is necessary. */
-    // LAB 8: Your code here
+    // LAB 8: Your code here DONE
 
     /* Load dwarf section pointers from either
      * currently running program binary or use
