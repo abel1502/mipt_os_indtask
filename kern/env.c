@@ -124,7 +124,7 @@ env_init(void) {
  */
 int
 env_alloc(struct Env **newenv_store, envid_t parent_id, enum EnvType type) {
-    struct Env *env;
+    struct Env *env = NULL;
     if (!(env = env_free_list))
         return -E_NO_FREE_ENV;
 
@@ -521,16 +521,17 @@ env_destroy(struct Env *env) {
      * ENV_DYING. A zombie environment will be freed the next time
      * it traps to the kernel. */
     assert(env);
-    //cprintf("KILL %08X\n", env->env_id);
+    // cprintf("KILL %08X\n", env->env_id);
 
-    //env->env_status = ENV_DYING;
+    // env->env_status = ENV_DYING;
     env_free(env);
 
     if (env == curenv) {
         sched_yield();
     }
 
-    // LAB 8: Your code here (set in_page_fault = 0)
+    // LAB 8: Your code here DONE (set in_page_fault = 0)
+    in_page_fault = 0;
 }
 
 #ifdef CONFIG_KSPACE
