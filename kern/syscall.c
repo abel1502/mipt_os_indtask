@@ -164,7 +164,17 @@ sys_env_set_status(envid_t envid, int status) {
  *      or the caller doesn't have permission to change envid. */
 static int
 sys_env_set_pgfault_upcall(envid_t envid, void *func) {
-    // LAB 9: Your code here:
+    // LAB 9: Your code here DONE
+    int res = 0;
+    struct Env *env = NULL;
+
+    res = envid2env(envid, &env, true);
+    if (res < 0) {
+        return res;
+    }
+    assert(env);
+
+    env->env_pgfault_upcall = func;
 
     return 0;
 }
@@ -253,7 +263,7 @@ sys_alloc_region(envid_t envid, uintptr_t addr, size_t size, int perm) {
 static int
 sys_map_region(envid_t srcenvid, uintptr_t srcva,
                envid_t dstenvid, uintptr_t dstva, size_t size, int perm) {
-    // LAB 9: Your code here
+    // LAB 9: Your code here DONE (FIXME!)
     int res = 0;
     struct Env *src_env = NULL,
                *dst_env = NULL;
@@ -449,6 +459,12 @@ syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t
 
     case SYS_unmap_region:
         return sys_unmap_region((envid_t)a1, (uintptr_t)a2, (size_t)a3);
+
+    case SYS_env_set_pgfault_upcall:
+        return sys_env_set_pgfault_upcall((envid_t)a1, (void *)a2);
+
+    case SYS_region_refs:
+        return sys_region_refs((uintptr_t)a1, (size_t)a2, (uintptr_t)a3, (size_t)a4);
 
     case SYS_yield:
         sys_yield();
