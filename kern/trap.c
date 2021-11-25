@@ -279,7 +279,8 @@ trap_dispatch(struct Trapframe *tf) {
         return;
     case T_PGFLT:
         /* Handle processor exceptions. */
-        // LAB 9: Your code here.
+        // LAB 9: Your code here DONE
+        page_fault_handler(tf);
         return;
     case T_BRKPT:
         // LAB 8: Your code here DONE
@@ -404,10 +405,14 @@ trap(struct Trapframe *tf) {
 
 static _Noreturn void
 page_fault_handler(struct Trapframe *tf) {
-    // LAB 9: Your code here:
+    // LAB 9: Your code here DONE
+
+    int res = 0;
 
     uintptr_t cr2 = rcr2();
-    (void)cr2;
+
+    assert(tf);
+    assert(curenv);
 
     /* Handle kernel-mode page faults. */
     if (!(tf->tf_err & FEC_U)) {
@@ -453,20 +458,74 @@ page_fault_handler(struct Trapframe *tf) {
 
     /* Force allocation of exception stack page to prevent memcpy from
      * causing pagefault during another pagefault */
-    // LAB 9: Your code here:
+    // LAB 9: Your code here DONE
+    assert(current_space == &curenv->address_space);
+    res = force_alloc_page(current_space, USER_EXCEPTION_STACK_TOP - USER_EXCEPTION_STACK_SIZE, MAX_ALLOCATION_CLASS);
+    // assert(res == 0);  // Apparently not needed
 
     /* Assert existance of exception stack using user mem assert */
-    // LAB 9: Your code here:
+    // LAB 9: Your code here DONE
+    // We only validate one page here, since the availability of more will be deduced later
+    user_mem_assert(curenv, (const void *)(USER_EXCEPTION_STACK_TOP - PAGE_SIZE),
+                    PAGE_SIZE, /*0*/ PROT_R | PROT_W | PROT_USER_);
+    
+    if (!curenv->env_pgfault_upcall) {
+        cprintf("[%08x] user fault va %08zx ip %08zx\n",
+                curenv->env_id, cr2, tf->tf_rip);
+        print_trapframe(tf);
+        env_destroy(curenv);
+        sched_yield();
+    }
 
     /* Build local copy of UTrapframe */
-    // LAB 9: Your code here:
+    // LAB 9: Your code here DONE
+    struct UTrapframe user_tf = {};
+    user_tf.utf_err = tf->tf_err;
+    user_tf.utf_fault_va = cr2;
+    user_tf.utf_regs = tf->tf_regs;
+    user_tf.utf_rflags = tf->tf_rflags;
+    user_tf.utf_rip = tf->tf_rip;
+    user_tf.utf_rsp = tf->tf_rsp;
 
     /* And then copy it userspace (nosan_memcpy) */
-    // LAB 9: Your code here:
+    // LAB 9: Your code here DONE
+    void *stack_top = (void *)USER_EXCEPTION_STACK_TOP;
+
+    if (USER_EXCEPTION_STACK_TOP - USER_EXCEPTION_STACK_SIZE <= tf->tf_rsp && tf->tf_rsp < USER_EXCEPTION_STACK_TOP) {
+        stack_top = (void *)tf->tf_rsp;
+    }
+
+    size_t requiredStackSpace = sizeof(uintptr_t) + sizeof(struct UTrapframe);
+    user_mem_assert(curenv, stack_top - requiredStackSpace, requiredStackSpace, PROT_R | PROT_W | PROT_USER_);
+
+    res = force_alloc_page(current_space, USER_EXCEPTION_STACK_TOP - PAGE_SIZE, 0);  // As an extra precaution
+
+    // cprintf("> cur top %zx, cur bottom %zx\n"
+    //         "> top %zx, bottom %zx, shallow bottom %zx\n",
+    //         (uintptr_t)stack_top, (uintptr_t)(stack_top - requiredStackSpace),
+    //         (uintptr_t)USER_EXCEPTION_STACK_TOP, (uintptr_t)(USER_EXCEPTION_STACK_TOP - USER_EXCEPTION_STACK_SIZE), 
+    //         (uintptr_t)(USER_EXCEPTION_STACK_TOP - PAGE_SIZE));
+
+    stack_top -= sizeof(uintptr_t);
+    nosan_memset((void*)(stack_top), 0, sizeof(uintptr_t));
+
+    stack_top -= sizeof(struct UTrapframe);
+    nosan_memcpy(stack_top, &user_tf, sizeof(struct UTrapframe));
+
+    /*uintptr_t user_tf_ptr = (uintptr_t)stack_top;
+    stack_top -= sizeof(uintptr_t);
+    nosan_memcpy(stack_top, &user_tf_ptr, sizeof(uintptr_t));*/
 
     /* Reset in_page_fault flag */
-    // LAB 9: Your code here:
+    // LAB 9: Your code here DONE
+    in_page_fault = false;
 
     /* Rerun current environment */
-    // LAB 9: Your code here:
+    // LAB 9: Your code here DONE
+
+    curenv->env_tf.tf_rsp = (uintptr_t)stack_top;
+    curenv->env_tf.tf_rip = (uintptr_t)curenv->env_pgfault_upcall;
+    env_run(curenv);
+
+    #undef TRACE_
 }
