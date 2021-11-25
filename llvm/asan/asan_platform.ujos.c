@@ -88,7 +88,6 @@ asan_unpoison_shared_region(void *start, void *end, void *arg) {
 
 void
 platform_asan_init() {
-
     asan_internal_shadow_start = (uint8_t *)SANITIZE_USER_SHADOW_BASE;
     asan_internal_shadow_end = (uint8_t *)SANITIZE_USER_SHADOW_BASE + SANITIZE_USER_SHADOW_SIZE;
     asan_internal_shadow_off = (uint8_t *)SANITIZE_USER_SHADOW_OFF;
@@ -102,6 +101,7 @@ platform_asan_init() {
 
     /* 1. Program segments (text, data, rodata, bss) */
     // LAB 8: Your code here DONE
+
     platform_asan_unpoison(&__text_start,   &__text_end   - &__text_start  );
     platform_asan_unpoison(&__data_start,   &__data_end   - &__data_start  );
     platform_asan_unpoison(&__rodata_start, &__rodata_end - &__rodata_start);

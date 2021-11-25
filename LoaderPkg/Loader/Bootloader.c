@@ -105,7 +105,7 @@ InitGraphics (
   }
 
   //
-  // LAB 1: Your code here.
+  // LAB 1: Your code here DONE
   //
   // Switch to the maximum or any other resolution of your preference.
   // Refer to Graphics Output Protocol description in UEFI spec for

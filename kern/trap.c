@@ -298,8 +298,8 @@ trap_dispatch(struct Trapframe *tf) {
         return;
     case IRQ_OFFSET + IRQ_TIMER:
     case IRQ_OFFSET + IRQ_CLOCK:
-        // LAB 5: Your code here
-        // LAB 4: Your code here
+        // LAB 5: Your code here DONE
+        // LAB 4: Your code here DONE
         timer_for_schedule->handle_interrupts();
         sched_yield();
         

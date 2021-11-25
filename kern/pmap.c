@@ -605,7 +605,7 @@ check_virtual_tree(struct Page *page, int class) {
  */
 void
 dump_virtual_tree(struct Page *node, int class) {
-    // LAB 7: Your code here
+    // LAB 7: Your code here DONE
     if (!node || node->refc == 0)
         return;
 
