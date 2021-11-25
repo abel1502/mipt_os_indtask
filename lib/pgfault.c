@@ -41,8 +41,16 @@ add_pgfault_handler(pf_handler_t handler) {
     int res = 0;
     if (!_pfhandler_inititiallized) {
         /* First time through! */
-        // LAB 9: Your code here:
-        goto end;
+        // LAB 9: Your code here DONE?
+        res = sys_alloc_region(0, (void *)(USER_EXCEPTION_STACK_TOP - USER_EXCEPTION_STACK_SIZE),
+                               USER_EXCEPTION_STACK_SIZE, PROT_RW);
+        if (res < 0)
+            goto end;
+        
+        res = sys_env_set_pgfault_upcall(0, _pgfault_upcall);
+        if (res < 0)
+            goto end;
+
         _pfhandler_inititiallized = 1;
     }
 
