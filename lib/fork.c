@@ -17,11 +17,44 @@
  */
 envid_t
 fork(void) {
-    // LAB 9: Your code here
+    // LAB 9: Your code here DONE
 
-    panic("fork() is not implemented");
+    envid_t envid = 0;
+    int res = 0;
 
-    return 0;
+    /* Allocate a new child environment.
+     * The kernel will initialize it with a copy of our register state,
+     * so that the child will appear to have called sys_exofork() too -
+     * except that in the child, this "fake" call to sys_exofork()
+     * will return 0 instead of the envid of the child. */
+    envid = sys_exofork();
+    if (envid < 0)
+        panic("sys_exofork: %i", envid);
+    if (envid == 0) {
+        /* We're the child.
+         * The copied value of the global variable 'thisenv'
+         * is no longer valid (it refers to the parent!).
+         * Fix it and return 0. */
+        thisenv = &envs[ENVX(sys_getenvid())];
+        return 0;
+    }
+
+    /* We're the parent.
+     * Eagerly lazily copy our entire address space into the child. */
+    if ((res = sys_map_region(0, NULL, envid, NULL, MAX_USER_ADDRESS,
+                              PROT_ALL | PROT_LAZY | PROT_COMBINE)) < 0) {
+        panic("sys_map_region: %i", res);
+    }
+
+    if ((res = sys_env_set_pgfault_upcall(envid, thisenv->env_pgfault_upcall)) < 0) {
+        panic("sys_env_set_pgfault_upcall: %i", res);
+    }
+
+    /* Start the child environment running */
+    if ((res = sys_env_set_status(envid, ENV_RUNNABLE)) < 0)
+        panic("sys_env_set_status: %i", res);
+
+    return envid;
 }
 
 envid_t
