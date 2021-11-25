@@ -64,19 +64,31 @@ _pgfault_upcall:
     # may find that you have to rearrange your code in non-obvious
     # ways as registers become unavailable as scratch space.
 
-    # LAB 9: Your code here
+    # LAB 9: Your code here DONE
+    // rcx = trap_rsp,
+    // rdx = trap_rip
+    movq UTRAP_RSP(%rsp), %rcx
+    movq UTRAP_RIP(%rsp), %rdx
+    subq $8, %rcx
+    movq %rdx, (%rcx)
+    movq %rcx, UTRAP_RSP(%rsp)
 
     # Restore the trap-time registers.  After you do this, you
     # can no longer modify any general-purpose registers (POPA).
-    # LAB 9: Your code here
+    # LAB 9: Your code here DONE
+    addq $16, %rsp
+    POPA
 
     # Restore rflags from the stack.  After you do this, you can
     # no longer use arithmetic operations or anything else that
     # modifies rflags.
-    # LAB 9: Your code here
+    # LAB 9: Your code here DONE
+    addq $8, %rsp
+    popf
 
     # Switch back to the adjusted trap-time stack.
-    # LAB 9: Your code here
+    # LAB 9: Your code here DONE
+    popq %rsp
 
     # Return to re-execute the instruction that faulted.
     ret
