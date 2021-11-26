@@ -30,7 +30,7 @@ sys_cputs(const char *s, size_t len) {
         cprintf("%*s", (int)MAX_POS_INT, s);
         len -= MAX_POS_INT;
     }
-    cprintf("%*s\n", (int)len, s);
+    cprintf("%*s" /*"\n"*/, (int)len, s);
 
     return 0;
 }
