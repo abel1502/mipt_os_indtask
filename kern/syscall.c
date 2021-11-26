@@ -380,13 +380,57 @@ sys_unmap_region(envid_t envid, uintptr_t va, size_t size) {
  *      (see sys_page_alloc).
  *  -E_INVAL if srcva < MAX_USER_ADDRESS but srcva is not mapped in the caller's
  *      address space.
- *  -E_INVAL if (perm & PTE_W), but srcva is read-only in the
+ *  -E_INVAL if (perm & PROT_W), but srcva is read-only in the
  *      current environment's address space.
  *  -E_NO_MEM if there's not enough memory to map srcva in envid's
  *      address space. */
 static int
 sys_ipc_try_send(envid_t envid, uint32_t value, uintptr_t srcva, size_t size, int perm) {
-    // LAB 9: Your code here
+    // LAB 9: Your code here DONE
+    int res = 0;
+    struct Env *env = NULL;
+
+    res = envid2env(envid, &env, false);
+    if (res < 0) {
+        return res;
+    }
+    assert(env);
+
+    if (!env->env_ipc_recving)
+        return -E_IPC_NOT_RECV;
+    
+    env->env_ipc_perm = 0;
+    
+    if (srcva < MAX_USER_ADDRESS) {
+        if (srcva & CLASS_MASK(0))
+            return -E_INVAL;
+        
+        if (!size)
+            return -E_INVAL;
+
+        if (size & CLASS_MASK(0))
+            return -E_INVAL;
+        
+        res = user_mem_check(env, (void *)srcva, size, perm | PROT_USER_);
+        if (res < 0)
+            return -E_INVAL;
+        
+        size = MIN(size, env->env_ipc_maxsz);
+
+        res = map_region(&env->address_space, env->env_ipc_dstva, &curenv->address_space, srcva, size, perm | PROT_SHARE | PROT_USER_);
+        if (res < 0)
+            return res;
+        
+        env->env_ipc_perm = perm;
+    }
+
+    env->env_ipc_from = curenv->env_id;
+    env->env_ipc_maxsz = size;
+    env->env_ipc_recving = false;
+    env->env_ipc_value = value;
+
+    env->env_status = ENV_RUNNABLE;
+    env->env_tf.tf_regs.reg_rax = 0;
     return 0;
 }
 
@@ -406,8 +450,27 @@ sys_ipc_try_send(envid_t envid, uint32_t value, uintptr_t srcva, size_t size, in
  */
 static int
 sys_ipc_recv(uintptr_t dstva, uintptr_t maxsize) {
-    // LAB 9: Your code here
-    return 0;
+    // LAB 9: Your code here DONE
+    if (dstva < MAX_USER_ADDRESS) {
+        if (dstva & CLASS_MASK(0))
+            return -E_INVAL;
+        
+        if (!maxsize)
+            return -E_INVAL;
+
+        if (maxsize & CLASS_MASK(0))
+            return -E_INVAL;
+    }
+
+    curenv->env_ipc_dstva   = dstva;
+    curenv->env_ipc_maxsz   = maxsize;
+    curenv->env_ipc_recving = true;
+    curenv->env_ipc_value   = 0;
+
+    curenv->env_status = ENV_NOT_RUNNABLE;
+    sched_yield();
+
+    panic("Shouldn't be reachable");
 }
 
 /*
@@ -431,7 +494,7 @@ syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t
      * Return any appropriate return value. */
 
     // LAB 8: Your code here DONE
-    // LAB 9: Your code here
+    // LAB 9: Your code here DONE
     switch (syscallno) {
     case SYS_cgetc:
         return sys_cgetc();
@@ -463,8 +526,14 @@ syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t
     case SYS_env_set_pgfault_upcall:
         return sys_env_set_pgfault_upcall((envid_t)a1, (void *)a2);
 
-    case SYS_region_refs:
-        return sys_region_refs((uintptr_t)a1, (size_t)a2, (uintptr_t)a3, (size_t)a4);
+    // case SYS_region_refs:
+    //     return sys_region_refs((uintptr_t)a1, (size_t)a2, (uintptr_t)a3, (size_t)a4);
+
+    case SYS_ipc_recv:
+        return sys_ipc_recv((uintptr_t)a1, (uintptr_t)a2);
+
+    case SYS_ipc_try_send:
+        return sys_ipc_try_send((envid_t)a1, (uint32_t)a2, (uintptr_t)a3, (size_t)a4, (int)a5);
 
     case SYS_yield:
         sys_yield();
