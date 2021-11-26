@@ -460,14 +460,20 @@ page_fault_handler(struct Trapframe *tf) {
      * causing pagefault during another pagefault */
     // LAB 9: Your code here DONE
     assert(current_space == &curenv->address_space);
-    res = force_alloc_page(current_space, USER_EXCEPTION_STACK_TOP - USER_EXCEPTION_STACK_SIZE, MAX_ALLOCATION_CLASS);
+    void *stack_top = (void *)USER_EXCEPTION_STACK_TOP;
+
+    if (USER_EXCEPTION_STACK_TOP - USER_EXCEPTION_STACK_SIZE <= tf->tf_rsp && tf->tf_rsp < USER_EXCEPTION_STACK_TOP) {
+        stack_top = (void *)tf->tf_rsp;
+    }
+
+    size_t requiredStackSpace = sizeof(uintptr_t) + sizeof(struct UTrapframe);
+    res = force_alloc_page(current_space, USER_EXCEPTION_STACK_TOP - PAGE_SIZE, 0);  // As an extra precaution
     // assert(res == 0);  // Apparently not needed
 
     /* Assert existance of exception stack using user mem assert */
     // LAB 9: Your code here DONE
     // We only validate one page here, since the availability of more will be deduced later
-    user_mem_assert(curenv, (const void *)(USER_EXCEPTION_STACK_TOP - PAGE_SIZE),
-                    PAGE_SIZE, /*0*/ PROT_R | PROT_W | PROT_USER_);
+    user_mem_assert(curenv, stack_top - requiredStackSpace, requiredStackSpace, PROT_R | PROT_W | PROT_USER_);
     
     if (!curenv->env_pgfault_upcall) {
         cprintf("[%08x] user fault va %08zx ip %08zx\n",
@@ -489,16 +495,6 @@ page_fault_handler(struct Trapframe *tf) {
 
     /* And then copy it userspace (nosan_memcpy) */
     // LAB 9: Your code here DONE
-    void *stack_top = (void *)USER_EXCEPTION_STACK_TOP;
-
-    if (USER_EXCEPTION_STACK_TOP - USER_EXCEPTION_STACK_SIZE <= tf->tf_rsp && tf->tf_rsp < USER_EXCEPTION_STACK_TOP) {
-        stack_top = (void *)tf->tf_rsp;
-    }
-
-    size_t requiredStackSpace = sizeof(uintptr_t) + sizeof(struct UTrapframe);
-    user_mem_assert(curenv, stack_top - requiredStackSpace, requiredStackSpace, PROT_R | PROT_W | PROT_USER_);
-
-    res = force_alloc_page(current_space, USER_EXCEPTION_STACK_TOP - PAGE_SIZE, 0);  // As an extra precaution
 
     // cprintf("> cur top %zx, cur bottom %zx\n"
     //         "> top %zx, bottom %zx, shallow bottom %zx\n",
