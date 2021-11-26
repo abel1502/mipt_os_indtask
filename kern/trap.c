@@ -119,6 +119,9 @@ extern void thdlr_simd   ();
 
 extern void thdlr_syscall();
 
+extern void thdlr_timer();
+extern void thdlr_clock();
+
 
 void
 trap_init(void) {
@@ -154,6 +157,9 @@ trap_init(void) {
     idt[T_SIMDERR] = GATE(0, GD_KT, thdlr_simd    , 0);
 
     idt[T_SYSCALL] = GATE(0, GD_KT, thdlr_syscall , 3);
+
+    idt[IRQ_OFFSET + IRQ_CLOCK] = GATE(0, GD_KT, thdlr_clock, 0);
+    idt[IRQ_OFFSET + IRQ_TIMER] = GATE(0, GD_KT, thdlr_timer, 0);   
 
     /* Setup #PF handler dedicated stack
      * It should be switched on #PF because

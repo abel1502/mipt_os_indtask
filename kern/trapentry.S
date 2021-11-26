@@ -105,6 +105,9 @@ TRAPHANDLER_NOEC(thdlr_simd    , T_SIMDERR)
 
 TRAPHANDLER_NOEC(thdlr_syscall , T_SYSCALL)
 
+TRAPHANDLER_NOEC(thdlr_timer   , IRQ_OFFSET + IRQ_TIMER)
+TRAPHANDLER_NOEC(thdlr_clock   , IRQ_OFFSET + IRQ_CLOCK)
+
 
 
 #endif
