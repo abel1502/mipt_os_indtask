@@ -164,6 +164,7 @@ i386_init(void) {
 #else
 
 #if LAB >= 10
+    // LAB 10: Uncomment DONE
     ENV_CREATE(fs_fs, ENV_TYPE_FS);
 #endif
 
