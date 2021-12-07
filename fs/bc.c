@@ -59,8 +59,19 @@ flush_block(void *addr) {
     if (blockno && super && blockno >= super->s_nblocks)
         panic("reading non-existent block %08x out of %08x\n", blockno, super->s_nblocks);
 
-    // LAB 10: Your code here.
+    // LAB 10: Your code here DONE
+    void *disk_addr = diskaddr(blockno);
 
+    if (!is_page_present(addr) || !is_page_dirty(addr)) {
+        return;
+    }
+
+    int res = ide_write(blockno * BLKSECTS, disk_addr, BLKSECTS);
+    assert(res >= 0);
+
+    // To clear the dirty flag
+    res = sys_map_region(0, disk_addr, 0, disk_addr, BLKSIZE, PROT_COMBINE);
+    assert(res >= 0);
 
     assert(!is_page_dirty(addr));
 }
