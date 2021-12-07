@@ -31,7 +31,14 @@ bc_pgfault(struct UTrapframe *utf) {
      * of the block from the disk into that page.
      * Hint: first round addr to page boundary. fs/ide.c has code to read
      * the disk. */
-    // LAB 10: Your code here
+    // LAB 10: Your code here DONE
+
+    void *disk_addr = diskaddr(blockno);
+
+    int res = sys_alloc_region(0, disk_addr, BLKSIZE, PROT_RW);
+    assert(res >= 0);
+    res = ide_read(blockno * BLKSECTS, disk_addr, BLKSECTS);
+    assert(res >= 0);
 
     return 1;
 }
