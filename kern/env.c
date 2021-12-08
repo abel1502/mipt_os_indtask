@@ -411,11 +411,27 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
         if (ph->p_type == ELF_PROG_LOAD) {
             DEMAND_(ph->p_filesz <= ph->p_memsz);
 
+            int prot = PROT_USER_;
+            if (ph->p_flags & ELF_PROG_FLAG_READ) {
+                prot |= PROT_R;
+            }
+            if (ph->p_flags & ELF_PROG_FLAG_WRITE) {
+                prot |= PROT_W;
+            }
+            if (ph->p_flags & ELF_PROG_FLAG_EXEC) {
+                prot |= PROT_X;
+            }
+
             result = map_region(&env->address_space, ph->p_va, NULL, 0, ph->p_memsz,
-                                ALLOC_ZERO | PROT_USER_ | PROT_R | PROT_W | PROT_X);  // TODO: perhaps no X?, Lazy?
+                                ALLOC_ZERO | prot /*| PROT_R*/ | PROT_W);
             DEMAND_(result >= 0);
 
             READ_FROM_OFFS_((uint8_t *)ph->p_va, ph->p_offset, ph->p_filesz);
+
+            result = map_region(&env->address_space, ph->p_va,
+                                &env->address_space, ph->p_va,
+                                ph->p_memsz, prot);
+            DEMAND_(result >= 0);
 
             if (ph->p_va < image_start) {
                 image_start = ph->p_va;
