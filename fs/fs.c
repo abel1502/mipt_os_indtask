@@ -59,9 +59,18 @@ alloc_block(void) {
      * contains the in-use bits for BLKBITSIZE blocks.  There are
      * super->s_nblocks blocks in the disk altogether. */
 
-    // LAB 10: Your code here
+    // LAB 10: Your code here DONE
+    blockno_t blockno = 2;
+    for (; blockno < super->s_nblocks; ++blockno) {
+        if (TSTBIT(bitmap, blockno)) {
+            break;
+        }
+    }
 
-    return 0;
+    CLRBIT(bitmap, blockno);
+    flush_block(bitmap + blockno / (sizeof(bitmap[0]) * 8));
+
+    return blockno;
 }
 
 /* Validate the file system bitmap.
