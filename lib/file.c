@@ -100,6 +100,8 @@ devfile_flush(struct Fd *fd) {
     return fsipc(FSREQ_FLUSH, NULL);
 }
 
+static const bool REPEAT_DEVFILE_RW = false;
+
 /* Read at most 'n' bytes from 'fd' at the current position into 'buf'.
  *
  * Returns:
@@ -108,13 +110,40 @@ devfile_flush(struct Fd *fd) {
 static ssize_t
 devfile_read(struct Fd *fd, void *buf, size_t n) {
     /* Make an FSREQ_READ request to the file system server after
-   * filling fsipcbuf.read with the request arguments.  The
-   * bytes read will be written back to fsipcbuf by the file
-   * system server. */
+     * filling fsipcbuf.read with the request arguments.  The
+     * bytes read will be written back to fsipcbuf by the file
+     * system server. */
 
-    // LAB 10: Your code here:
+    // LAB 10: Your code here DONE
+    assert(fd);
+    assert(buf);
 
-    return 0;
+    size_t total_read = 0;
+
+    do {
+        fsipcbuf.read.req_fileid = fd->fd_file.id;
+        fsipcbuf.read.req_n = n;
+
+        int res = fsipc(FSREQ_READ, NULL);
+        if (res < 0) {
+            return res;
+        }
+        assert(res <= n);
+        assert(res <= sizeof(fsipcbuf.readRet.ret_buf));
+
+        if (!res) {
+            // We must've hit EOF
+            break;
+        }
+
+        memcpy(buf, fsipcbuf.readRet.ret_buf, res);
+
+        total_read += res;
+        buf += res;
+        n -= res;
+    } while (n && REPEAT_DEVFILE_RW);
+
+    return total_read;
 }
 
 /* Write at most 'n' bytes from 'buf' to 'fd' at the current seek position.
@@ -125,12 +154,32 @@ devfile_read(struct Fd *fd, void *buf, size_t n) {
 static ssize_t
 devfile_write(struct Fd *fd, const void *buf, size_t n) {
     /* Make an FSREQ_WRITE request to the file system server.  Be
-   * careful: fsipcbuf.write.req_buf is only so large, but
-   * remember that write is always allowed to write *fewer*
-   * bytes than requested. */
-    // LAB 10: Your code here:
+     * careful: fsipcbuf.write.req_buf is only so large, but
+     * remember that write is always allowed to write *fewer*
+     * bytes than requested. */
 
-    return 0;
+    // LAB 10: Your code here
+    assert(fd);
+    assert(buf);
+
+    size_t total_written = 0;
+
+    do {
+        fsipcbuf.write.req_fileid = fd->fd_file.id;
+        fsipcbuf.write.req_n = n;
+        memcpy(fsipcbuf.write.req_buf, buf, MIN(n, sizeof(fsipcbuf.write.req_buf)));
+
+        int res = fsipc(FSREQ_WRITE, NULL);
+        if (res < 0) {
+            return res;
+        }
+
+        total_written += res;
+        buf += res;
+        n -= res;
+    } while (n && REPEAT_DEVFILE_RW);
+    
+    return total_written;
 }
 
 /* Get file information */
