@@ -493,11 +493,6 @@ env_create(uint8_t *binary, size_t size, enum EnvType type) {
     switch_address_space(old_space);
     VALIDATE_("load_icode failed");
 
-    // LAB 10: Your code here DONE
-    if (type == ENV_TYPE_FS) {
-        env->env_tf.tf_rflags = (env->env_tf.tf_rflags & ~FL_IOPL_MASK) | FL_IOPL_3;
-    }
-
     #undef VALIDATE_
 }
 
