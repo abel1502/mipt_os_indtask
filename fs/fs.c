@@ -70,6 +70,9 @@ alloc_block(void) {
     CLRBIT(bitmap, blockno);
     flush_block(bitmap + blockno / (sizeof(bitmap[0]) * 8));
 
+    // TODO: ?
+    memset(diskaddr(blockno), 0, BLKSIZE);
+
     return blockno;
 }
 
@@ -135,10 +138,41 @@ fs_init(void) {
  * Analogy: This is like pgdir_walk for files.
  * Hint: Don't forget to clear any block you allocate. */
 int
-file_block_walk(struct File *f, blockno_t filebno, blockno_t **ppdiskbno, bool alloc) {
-    // LAB 10: Your code here
+file_block_walk(struct File *f, uint32_t filebno, blockno_t **ppdiskbno, bool alloc) {
+    // LAB 10: Your code here DONE
 
-    *ppdiskbno = 0;
+    assert(f);
+    assert(ppdiskbno);
+
+    if (filebno < NDIRECT) {
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+        *ppdiskbno = &f->f_direct[filebno];
+        #pragma GCC diagnostic pop
+
+        return 0;
+    }
+
+    if (filebno >= NDIRECT + NINDIRECT) {
+        return -E_INVAL;
+    }
+
+    if (alloc && !f->f_indirect) {
+        f->f_indirect = alloc_block();
+        
+        if (!f->f_indirect) {
+            return -E_NO_DISK;
+        }
+    }
+
+    if (!f->f_indirect) {
+        return -E_NOT_FOUND;
+    }
+
+    blockno_t *indirect_blocks = (blockno_t *)diskaddr(f->f_indirect);
+    assert(indirect_blocks);
+
+    *ppdiskbno = &indirect_blocks[filebno - NDIRECT];
 
     return 0;
 }
@@ -153,9 +187,25 @@ file_block_walk(struct File *f, blockno_t filebno, blockno_t **ppdiskbno, bool a
  * Hint: Use file_block_walk and alloc_block. */
 int
 file_get_block(struct File *f, uint32_t filebno, char **blk) {
-    // LAB 10: Your code here
+    // LAB 10: Your code here DONE
+    int res = 0;
+    blockno_t *blockno = NULL;
 
-    *blk = 0;
+    res = file_block_walk(f, filebno, &blockno, true);
+    if (res < 0) {
+        return res;
+    }
+    assert(blockno);
+
+    if (!*blockno) {
+        *blockno = alloc_block();
+
+        if (!*blockno) {
+            return -E_NO_DISK;
+        }
+    }
+
+    *blk = diskaddr(*blockno);
 
     return 0;
 }
@@ -359,7 +409,7 @@ file_write(struct File *f, const void *buf, size_t count, off_t offset) {
 /* Remove a block from file f.  If it's not there, just silently succeed.
  * Returns 0 on success, < 0 on error. */
 static int
-file_free_block(struct File *f, uint32_t filebno) {
+file_free_block(struct File *f, blockno_t filebno) {
     blockno_t *ptr;
     int res = file_block_walk(f, filebno, &ptr, 0);
     if (res < 0) return res;
