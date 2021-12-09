@@ -3,7 +3,7 @@
 
 /* Return the virtual address of this disk block. */
 void *
-diskaddr(uint32_t blockno) {
+diskaddr(blockno_t blockno) {
     if (blockno == 0 || (super && blockno >= super->s_nblocks))
         panic("bad block number %08x in diskaddr", blockno);
     void *r = (void *)(uintptr_t)(DISKMAP + blockno * BLKSIZE);
