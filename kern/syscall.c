@@ -399,21 +399,25 @@ sys_ipc_try_send(envid_t envid, uint32_t value, uintptr_t srcva, size_t size, in
     if (!env->env_ipc_recving)
         return -E_IPC_NOT_RECV;
     
-    env->env_ipc_perm = 0;
-    
-    if (srcva < MAX_USER_ADDRESS) {
+    if (srcva < MAX_USER_ADDRESS && size) {
         if (srcva & CLASS_MASK(0))
             return -E_INVAL;
-        
-        if (!size)
-            return -E_INVAL;
+    
+        // if (!size)
+        //     return -E_INVAL;
 
         if (size & CLASS_MASK(0))
             return -E_INVAL;
         
-        res = user_mem_check(env, (void *)srcva, size, perm | PROT_USER_);
+        res = user_mem_check(curenv, (void *)srcva, size, PROT_R | PROT_USER_);
         if (res < 0)
             return -E_INVAL;
+
+        if (perm & PROT_W) {
+            res = user_mem_check(curenv, (void *)srcva, size, PROT_W | PROT_USER_);
+            if (res < 0)
+                return -E_INVAL;
+        }
         
         size = MIN(size, env->env_ipc_maxsz);
 
@@ -422,6 +426,9 @@ sys_ipc_try_send(envid_t envid, uint32_t value, uintptr_t srcva, size_t size, in
             return res;
         
         env->env_ipc_perm = perm;
+    } else {
+        env->env_ipc_perm = 0;
+        size = 0;
     }
 
     env->env_ipc_from = curenv->env_id;
@@ -535,8 +542,8 @@ syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t
     case SYS_env_set_pgfault_upcall:
         return sys_env_set_pgfault_upcall((envid_t)a1, (void *)a2);
 
-    // case SYS_region_refs:
-    //     return sys_region_refs((uintptr_t)a1, (size_t)a2, (uintptr_t)a3, (size_t)a4);
+    case SYS_region_refs:
+        return sys_region_refs((uintptr_t)a1, (size_t)a2, (uintptr_t)a3, (size_t)a4);
 
     case SYS_ipc_recv:
         return sys_ipc_recv((uintptr_t)a1, (uintptr_t)a2);
