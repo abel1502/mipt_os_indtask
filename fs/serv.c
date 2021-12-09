@@ -53,7 +53,6 @@ serve_init(void) {
 /* Allocate an open file. */
 int
 openfile_alloc(struct OpenFile **o) {
-
     /* Find an available open-file table entry */
     for (size_t i = 0; i < MAXOPEN; i++) {
         switch (sys_region_refs(opentab[i].o_fd, PAGE_SIZE)) {
@@ -69,6 +68,7 @@ openfile_alloc(struct OpenFile **o) {
             return (*o)->o_fileid;
         }
     }
+    
     return -E_MAX_OPEN;
 }
 
@@ -78,8 +78,9 @@ openfile_lookup(envid_t envid, uint32_t fileid, struct OpenFile **po) {
     struct OpenFile *o;
 
     o = &opentab[fileid % MAXOPEN];
-    if (sys_region_refs(o->o_fd, PAGE_SIZE) <= 1 || o->o_fileid != fileid)
+    if (sys_region_refs(o->o_fd, PAGE_SIZE) <= 1 || o->o_fileid != fileid) {
         return -E_INVAL;
+    }
     *po = o;
     return 0;
 }
@@ -189,15 +190,42 @@ serve_set_size(envid_t envid, union Fsipc *ipc) {
 int
 serve_read(envid_t envid, union Fsipc *ipc) {
     struct Fsreq_read *req = &ipc->read;
+    struct OpenFile *o = NULL;
+    struct Fd *fd = NULL;
+    int res = 0;
 
     if (debug) {
         cprintf("serve_read %08x %08x %08x\n",
                 envid, req->req_fileid, (uint32_t)req->req_n);
     }
 
-    // LAB 10: Your code here
+    // LAB 10: Your code here DONE
+    res = openfile_lookup(envid, req->req_fileid, &o);
+    if (res < 0) {
+        return res;
+    }
+    assert(o);
 
-    return 0;
+    fd = o->o_fd;
+    assert(fd);
+
+    if ((fd->fd_omode & O_ACCMODE) == O_WRONLY) {
+        return -E_INVAL;
+    }
+
+    ssize_t size_read = file_read(o->o_file, &ipc->readRet.ret_buf,
+                                  MIN(sizeof(ipc->readRet.ret_buf), req->req_n),
+                                  fd->fd_offset);
+    assert(size_read < INT32_MAX);
+    assert(size_read > INT32_MIN);
+
+    if (size_read < 0) {
+        return (int)size_read;
+    }
+
+    fd->fd_offset += size_read;
+
+    return (int)size_read;
 }
 
 /* Write req->req_n bytes from req->req_buf to req_fileid, starting at
@@ -207,12 +235,41 @@ serve_read(envid_t envid, union Fsipc *ipc) {
 int
 serve_write(envid_t envid, union Fsipc *ipc) {
     struct Fsreq_write *req = &ipc->write;
-    if (debug)
+    struct OpenFile *o = NULL;
+    struct Fd *fd = NULL;
+    int res = 0;
+
+    if (debug) {
         cprintf("serve_write %08x %08x %08x\n", envid, req->req_fileid, (uint32_t)req->req_n);
+    }
 
-    // LAB 10: Your code here
+    // LAB 10: Your code here DONE
+    res = openfile_lookup(envid, req->req_fileid, &o);
+    if (res < 0) {
+        return res;
+    }
+    assert(o);
 
-    return 0;
+    fd = o->o_fd;
+    assert(fd);
+
+    if ((fd->fd_omode & O_ACCMODE) == O_RDONLY) {
+        return -E_INVAL;
+    }
+
+    ssize_t size_read = file_write(o->o_file, &req->req_buf,
+                                   MIN(sizeof(req->req_buf), req->req_n),
+                                   fd->fd_offset);
+    assert(size_read < INT32_MAX);
+    assert(size_read > INT32_MIN);
+
+    if (size_read < 0) {
+        return (int)size_read;
+    }
+
+    fd->fd_offset += size_read;
+
+    return (int)size_read;
 }
 
 /* Stat ipc->stat.req_fileid.  Return the file's struct Stat to the
