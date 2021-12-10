@@ -33,19 +33,25 @@ typedef uint32_t blockno_t;
 #define TSTBIT(v, n) ((v)[(n / 32)] & (1U << ((n) % 32)))
 
 struct File {
-    char f_name[MAXNAMELEN]; /* filename */
-    off_t f_size;            /* file size in bytes */
-    uint32_t f_type;         /* file type */
+    union {
+        struct {
+            char f_name[MAXNAMELEN]; /* filename */
+            off_t f_size;            /* file size in bytes */
+            uint32_t f_type;         /* file type */
 
-    /* Block pointers. */
-    /* A block is allocated iff its value is != 0. */
-    blockno_t f_direct[NDIRECT]; /* direct blocks */
-    blockno_t f_indirect;        /* indirect block */
+            /* Block pointers. */
+            /* A block is allocated iff its value is != 0. */
+            blockno_t f_direct[NDIRECT]; /* direct blocks */
+            blockno_t f_indirect;        /* indirect block */
+        };
 
-    /* Pad out to 256 bytes; must do arithmetic in case we're compiling
-     * fsformat on a 64-bit machine. */
-    uint8_t f_pad[256 - MAXNAMELEN - 8 - 4 * NDIRECT - 4];
-} __attribute__((packed)); /* required only on some 64-bit machines */
+        /* Pad out to 256 bytes; must do arithmetic in case we're compiling
+         * fsformat on a 64-bit machine. */
+        uint8_t f_pad[256];
+    };
+};
+
+_Static_assert(sizeof(struct File) == 256);
 
 /* An inode block contains exactly BLKFILES 'struct File's */
 #define BLKFILES (BLKSIZE / sizeof(struct File))

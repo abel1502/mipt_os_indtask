@@ -145,10 +145,7 @@ file_block_walk(struct File *f, uint32_t filebno, blockno_t **ppdiskbno, bool al
     assert(ppdiskbno);
 
     if (filebno < NDIRECT) {
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Waddress-of-packed-member"
         *ppdiskbno = &f->f_direct[filebno];
-        #pragma GCC diagnostic pop
 
         return 0;
     }
