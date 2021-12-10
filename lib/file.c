@@ -100,7 +100,7 @@ devfile_flush(struct Fd *fd) {
     return fsipc(FSREQ_FLUSH, NULL);
 }
 
-static const bool REPEAT_DEVFILE_RW = false;
+static const bool REPEAT_DEVFILE_RW = true;
 
 /* Read at most 'n' bytes from 'fd' at the current position into 'buf'.
  *
