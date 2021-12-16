@@ -51,7 +51,7 @@ struct File {
     };
 };
 
-_Static_assert(sizeof(struct File) == 256);
+_Static_assert(sizeof(struct File) == 256, "struct File misaligned");
 
 /* An inode block contains exactly BLKFILES 'struct File's */
 #define BLKFILES (BLKSIZE / sizeof(struct File))
