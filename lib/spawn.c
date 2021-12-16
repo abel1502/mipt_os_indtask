@@ -266,7 +266,7 @@ map_segment(envid_t child, uintptr_t va, size_t memsz,
             int fd, size_t filesz, off_t fileoffset, int perm) {
 
     //cprintf("map_segment %x+%x\n", va, memsz);
-
+    
     /* Fixup unaligned destination */
     int res = PAGE_OFFSET(va);
     if (res) {
@@ -276,14 +276,50 @@ map_segment(envid_t child, uintptr_t va, size_t memsz,
         fileoffset -= res;
     }
 
-    // LAB 11: Your code here
+    // LAB 11: Your code here DONE
+
+    if (filesz > memsz) {
+        return -E_INVAL;
+    }
+
+    if (!memsz) {
+        return 0;
+    }
 
     /* Allocate filesz - memsz in child */
+    // ^ This comment is wrong
+
     /* Allocate filesz in parent to UTEMP */
+    res = sys_alloc_region(0, UTEMP, memsz, PROT_ALL);
+    if (res < 0) {
+        return res;
+    }
+
     /* seek() fd to fileoffset  */
+    res = seek(fd, fileoffset);
+    if (res < 0) {
+        return res;
+    }
+
     /* read filesz to UTEMP */
-    /* Map read section conents to child */
+    ssize_t res_ = readn(fd, UTEMP, filesz);
+    if (res_ < 0) {
+        assert(res_ >= INT32_MIN);
+        res = (int)res_;
+        return res;
+    }
+
+    /* Map read section contents to child */
+    res = sys_map_region(0, UTEMP, child, (void *)va, memsz, perm);
+    if (res < 0) {
+        return res;
+    }
+
     /* Unmap it from parent */
+    res = sys_unmap_region(0, UTEMP, memsz);
+    if (res < 0) {
+        return res;
+    }
 
     return 0;
 }
