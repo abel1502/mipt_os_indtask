@@ -148,7 +148,6 @@ sys_env_set_status(envid_t envid, int status) {
         return -E_INVAL;
     }
 
-    cprintf("Set status %x %u\n", env->env_id, env->env_status);
     env->env_status = status;
 
     return 0;
@@ -492,7 +491,37 @@ sys_ipc_recv(uintptr_t dstva, uintptr_t maxsize) {
  */
 static int
 sys_env_set_trapframe(envid_t envid, struct Trapframe *tf) {
-    // LAB 11: Your code here
+    // LAB 11: Your code here DONE
+
+    int res = 0;
+    struct Env *env = NULL;
+
+    res = envid2env(envid, &env, true);
+    if (res < 0) {
+        return res;
+    }
+    assert(env);
+
+    res = user_mem_check(env, tf, sizeof(*tf), PROT_R | PROT_USER_);
+    if (res < 0) {
+        return res;
+    }
+
+    struct Trapframe kern_tf = {};
+    nosan_memcpy(&kern_tf, tf, sizeof(*tf));
+
+    kern_tf.tf_ds = GD_UD | 3;
+    kern_tf.tf_es = GD_UD | 3;
+    kern_tf.tf_ss = GD_UD | 3;
+    kern_tf.tf_cs = GD_UT | 3;
+
+    uint64_t old_rflags = env->env_tf.tf_rflags;
+    kern_tf.tf_rflags = (kern_tf.tf_rflags & ~FL_IOPL_MASK & ~FL_RF & ~FL_VM) | 
+                        (old_rflags & FL_IOPL_MASK) | (old_rflags & FL_RF) |
+                        (old_rflags & FL_VM) | FL_IF;
+
+    env->env_tf = kern_tf;
+
     return 0;
 }
 
@@ -527,7 +556,7 @@ syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t
 
     // LAB 8: Your code here DONE
     // LAB 9: Your code here DONE
-    // LAB 11: Your code here
+    // LAB 11: Your code here DONE
     switch (syscallno) {
     case SYS_cgetc:
         return sys_cgetc();
@@ -567,6 +596,9 @@ syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t
 
     case SYS_ipc_try_send:
         return sys_ipc_try_send((envid_t)a1, (uint32_t)a2, (uintptr_t)a3, (size_t)a4, (int)a5);
+
+    case SYS_env_set_trapframe:
+        return sys_env_set_trapframe((envid_t)a1, (struct Trapframe *)a2);
 
     case SYS_yield:
         sys_yield();
