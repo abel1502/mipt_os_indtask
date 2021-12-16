@@ -41,6 +41,72 @@ is_page_present(void *va) {
 int
 foreach_shared_region(int (*fun)(void *start, void *end, void *arg), void *arg) {
     /* Calls fun() for every shared region */
-    // LAB 11: Your code here
+    // LAB 11: Your code here DONE
+    assert(fun);
+
+    uint64_t addr = 0;
+    
+    static_assert(sizeof(uint64_t) == sizeof(void *), "I assumed we were on x64");
+
+    #define LEVEL_OFFS_(LEVEL) \
+        (12 + 9 * (LEVEL - 1))
+
+    #define LEVEL_MASK_(LEVEL) \
+        (0b111111111ull << LEVEL_OFFS_(LEVEL))
+
+    #define ADDR_GET_(LEVEL) \
+        (0b111111111ull & (addr >> LEVEL_OFFS_(LEVEL)))
+    
+    #define ADDR_SET_(LEVEL, VALUE) \
+        addr = (addr & ~LEVEL_MASK_(LEVEL)) | (((uint64_t)(VALUE) << LEVEL_OFFS_(LEVEL)) & LEVEL_MASK_(LEVEL))
+
+    #define ADDR_INC_(LEVEL) \
+        ADDR_SET_(LEVEL, ADDR_GET_(LEVEL) + 1)
+
+    static const size_t SIZES[5] = {1ull, 1ull << 12, 1ull << 21, 1ull << 30, 1ull << 39};
+
+    #define LOOP_(LEVEL, TABLE, MACRO, ...)                                     \
+        for (unsigned i##LEVEL = 0; i##LEVEL < PT_ENTRY_COUNT; ++i##LEVEL) {    \
+            pte = TABLE[MACRO(addr)];                                           \
+                                                                                \
+            if (!(pte & PTE_P)) {                                               \
+                ADDR_INC_(LEVEL);                                               \
+                continue;                                                       \
+            }                                                                   \
+                                                                                \
+            if (LEVEL == 1 || (LEVEL != 4 && (pte & PTE_PS))) {                 \
+                if (pte & PTE_SHARE) {                                          \
+                    fun((void *)addr, (void *)addr + SIZES[LEVEL], arg);        \
+                }                                                               \
+                                                                                \
+                ADDR_INC_(LEVEL);                                               \
+                continue;                                                       \
+            }                                                                   \
+                                                                                \
+            { __VA_ARGS__; }                                                    \
+                                                                                \
+            ADDR_INC_(LEVEL);                                                   \
+        }
+
+    pte_t pte = 0;
+    LOOP_(4, uvpml4, VPML4,
+        LOOP_(3, uvpdp, VPDP,
+            LOOP_(2, uvpd, VPD,
+                LOOP_(1, uvpt, VPT,
+                );
+            );
+        );
+    );
+
+    #undef LOOP_
+
+    assert(addr == 0);
+
+    #undef ADDR_INC_
+    #undef ADDR_SET_
+    #undef ADDR_GET_
+    #undef LEVEL_MASK_
+    #undef LEVEL_OFFS_
+
     return 0;
 }
