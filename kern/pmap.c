@@ -1415,12 +1415,14 @@ do_map_region_one_page(struct AddressSpace *dspace, uintptr_t dst, struct Addres
         if (page1->phy && page1->phy->class > class) {
             /* We need to split physical page if part of it is remapped */
             struct Page *page = page_lookup(page1->phy, src, class, PARTIAL_NODE, 1);
-            return do_map_page(dspace, dst, sspace, src, page, page1->state & PROT_ALL, flags);
+            // TODO: Was do_map_page(dspace, dst, sspace, src, page, page1->state & PROT_ALL, flags);
+            return do_map_page(dspace, dst, sspace, src, page, page1->state, flags & PROT_ALL);
         } else {
             check_virtual_class(page1, class);
             /* If more than one physical page need to be mapped,
              * we should do it recursively */
-            return do_map_subtree(dspace, dst, sspace, src, page1, class, flags);
+            // TODO: Was do_map_subtree(dspace, dst, sspace, src, page1, class, flags);
+            return do_map_subtree(dspace, dst, sspace, src, page1, class, flags & PROT_ALL);
         }
     }
 
@@ -1429,9 +1431,17 @@ do_map_region_one_page(struct AddressSpace *dspace, uintptr_t dst, struct Addres
 
 int
 map_region(struct AddressSpace *dspace, uintptr_t dst, struct AddressSpace *sspace, uintptr_t src, uintptr_t size, int flags) {
-    if (src & CLASS_MASK(0) || (!sspace && !(flags & (ALLOC_ZERO | ALLOC_ONE)))) return -E_INVAL;
-    if (dst & CLASS_MASK(0) || !dspace) return -E_INVAL;
-    if (size & CLASS_MASK(0) || !size) return -E_INVAL;
+    if (src & CLASS_MASK(0) || (!sspace && !(flags & (ALLOC_ZERO | ALLOC_ONE)))) {
+        return -E_INVAL;
+    }
+
+    if (dst & CLASS_MASK(0) || !dspace) {
+        return -E_INVAL;
+    }
+
+    if (size & CLASS_MASK(0) || !size) {
+        return -E_INVAL;
+    }
 
     /* FIXME This thing does not properly handle
      * remapping overlapping regions to higher addresses */
@@ -1442,7 +1452,9 @@ map_region(struct AddressSpace *dspace, uintptr_t dst, struct AddressSpace *sspa
     for (; class < max_class && dst + CLASS_SIZE(class) <= end; class ++) {
         if (dst & CLASS_SIZE(class)) {
             res = do_map_region_one_page(dspace, dst, sspace, src, class, flags);
-            if (res < 0) return res;
+            if (res < 0){
+                return res;
+            }
             dst += CLASS_SIZE(class);
             src += CLASS_SIZE(class);
         }
@@ -1451,7 +1463,9 @@ map_region(struct AddressSpace *dspace, uintptr_t dst, struct AddressSpace *sspa
     for (; class >= 0 && dst < end; class --) {
         while (dst + CLASS_SIZE(class) <= end) {
             res = do_map_region_one_page(dspace, dst, sspace, src, class, flags);
-            if (res < 0) return res;
+            if (res < 0){
+                return res;
+            }
             dst += CLASS_SIZE(class);
             src += CLASS_SIZE(class);
         }
