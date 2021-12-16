@@ -122,6 +122,9 @@ extern void thdlr_syscall();
 extern void thdlr_timer();
 extern void thdlr_clock();
 
+extern void thdlr_keybrd();
+extern void thdlr_serial();
+
 
 void
 trap_init(void) {
@@ -159,16 +162,18 @@ trap_init(void) {
     idt[T_SYSCALL] = GATE(0, GD_KT, thdlr_syscall , 3);
 
     idt[IRQ_OFFSET + IRQ_CLOCK] = GATE(0, GD_KT, thdlr_clock, 0);
-    idt[IRQ_OFFSET + IRQ_TIMER] = GATE(0, GD_KT, thdlr_timer, 0);   
+    idt[IRQ_OFFSET + IRQ_TIMER] = GATE(0, GD_KT, thdlr_timer, 0);
 
+    // LAB 11: Your code here DONE
+    idt[IRQ_OFFSET + IRQ_KBD]    = GATE(0, GD_KT, thdlr_keybrd, 0);
+    idt[IRQ_OFFSET + IRQ_SERIAL] = GATE(0, GD_KT, thdlr_serial, 0);
+    
     /* Setup #PF handler dedicated stack
      * It should be switched on #PF because
      * #PF is the only kind of exception that
      * can legally happen during normal kernel
      * code execution */
     idt[T_PGFLT].gd_ist = 1;
-
-    // LAB 11: Your code here
 
     /* Per-CPU setup */
     trap_init_percpu();
@@ -314,7 +319,17 @@ trap_dispatch(struct Trapframe *tf) {
         
         return;
         /* Handle keyboard and serial interrupts. */
-        // LAB 11: Your code here
+
+    case IRQ_OFFSET + IRQ_KBD:
+        // LAB 11: Your code here DONE
+        kbd_intr();
+        return;
+
+    case IRQ_OFFSET + IRQ_SERIAL:
+        // LAB 11: Your code here DONE
+        serial_intr();
+        return;
+        
     default:
         print_trapframe(tf);
         if (!(tf->tf_cs & 3))
