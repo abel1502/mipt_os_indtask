@@ -158,7 +158,7 @@ devfile_write(struct Fd *fd, const void *buf, size_t n) {
      * remember that write is always allowed to write *fewer*
      * bytes than requested. */
 
-    // LAB 10: Your code here
+    // LAB 10: Your code here DONE
     assert(fd);
     assert(buf);
 

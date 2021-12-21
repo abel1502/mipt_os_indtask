@@ -25,12 +25,11 @@ sys_cputs(const char *s, size_t len) {
     * Destroy the environment if not. */
     user_mem_assert(curenv, s, len, PROT_R);
     
-    const size_t MAX_POS_INT = (-1u) >> 1;
-    while (len > MAX_POS_INT) {
-        cprintf("%*s", (int)MAX_POS_INT, s);
-        len -= MAX_POS_INT;
+    while (len > INT32_MAX) {
+        cprintf("%.*s", (int)INT32_MAX, s);
+        len -= INT32_MAX;
     }
-    cprintf("%*s" /*"\n"*/, (int)len, s);
+    cprintf("%.*s" /*"\n"*/, (int)len, s);
 
     return 0;
 }

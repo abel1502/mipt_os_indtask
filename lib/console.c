@@ -68,7 +68,7 @@ static ssize_t
 devcons_read(struct Fd *fd, void *vbuf, size_t n) {
     if (!n) return 0;
 
-    int c;
+    int c = 0;
     while (!(c = sys_cgetc())) sys_yield();
     if (c < 0) return c;
 
@@ -85,13 +85,14 @@ static ssize_t
 devcons_write(struct Fd *fd, const void *vbuf, size_t n) {
     int res = 0;
 
-    int inc;
-    char buf[WRITEBUFSZ];
+    int inc = 0;
+    char buf[WRITEBUFSZ] = {};
     /* Mistake: Have to nul-terminate arg to sys_cputs,
      * so we have to copy vbuf into buf in chunks and nul-terminate. */
     for (res = 0; res < n; res += inc) {
         inc = MIN(n - res, WRITEBUFSZ - 1);
         memmove(buf, (char *)vbuf + res, inc);
+        // buf[inc] = 0;
         sys_cputs(buf, inc);
     }
 
