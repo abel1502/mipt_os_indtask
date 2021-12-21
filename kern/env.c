@@ -32,7 +32,7 @@ struct Env *envs = NULL;
 #endif
 
 /* Virtual syscall page address */
-volatile int *vsys;
+volatile int *vsys = NULL;
 
 /* Free environment list
  * (linked by Env->env_link) */
@@ -93,8 +93,6 @@ envid2env(envid_t envid, struct Env **env_store, bool need_check_perm) {
  */
 void
 env_init(void) {
-    // LAB 12: Your code here
-
     /* kzalloc_region only works with current_space != NULL */
 
     /* Allocate envs array with kzalloc_region
@@ -107,7 +105,8 @@ env_init(void) {
     /* Map envs to UENVS read-only,
      * but user-accessible (with PROT_USER_ set) */
     // LAB 8: Your code here DONE
-    map_region(&kspace, UENVS, &kspace, (uintptr_t)envs, NENV * sizeof(struct Env), PROT_USER_ | PROT_R);
+    int res = map_region(&kspace, UENVS, &kspace, (uintptr_t)envs, NENV * sizeof(struct Env), PROT_USER_ | PROT_R);
+    assert(res == 0);
 
     memset(envs, 0, NENV * sizeof(struct Env));
 
@@ -118,6 +117,11 @@ env_init(void) {
     }
 
     envs[NENV - 1].env_link = NULL;
+
+    // LAB 12: Your code here DONE
+    vsys = kzalloc_region(UVSYS_SIZE);
+    res = map_region(&kspace, UVSYS, &kspace, (uintptr_t)vsys, UVSYS_SIZE, PROT_R | PROT_USER_);
+    assert(res == 0);
 }
 
 /* Allocates and initializes a new environment.

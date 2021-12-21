@@ -1,10 +1,15 @@
 #include <inc/vsyscall.h>
 #include <inc/lib.h>
 
-static inline uint64_t
+// Was `static inline uint64_t`
+static inline int
 vsyscall(int num) {
-    // LAB 12: Your code here
-    return 0;
+    // LAB 12: Your code here DONE
+    if (num < 0 || num >= NVSYSCALLS) {
+        return -E_NO_SYS;
+    }
+
+    return vsys[num];
 }
 
 int

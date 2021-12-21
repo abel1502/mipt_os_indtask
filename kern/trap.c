@@ -314,9 +314,11 @@ trap_dispatch(struct Trapframe *tf) {
         return;
     case IRQ_OFFSET + IRQ_TIMER:
     case IRQ_OFFSET + IRQ_CLOCK:
+        // LAB 12: Your code here DONE
+        vsys[VSYS_gettime] = gettime();
+
         // LAB 5: Your code here DONE
         // LAB 4: Your code here DONE
-        // LAB 12: Your code here
         timer_for_schedule->handle_interrupts();
         sched_yield();
         

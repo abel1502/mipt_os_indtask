@@ -7,6 +7,7 @@
 #include <kern/timer.h>
 #include <kern/trap.h>
 #include <kern/picirq.h>
+#include <inc/time.h>
 
 /* HINT: Note that selected CMOS
  * register is reset to the first one
@@ -109,11 +110,8 @@ get_time(void) {
 
 int
 gettime(void) {
-    // LAB 12: your code here
-    int res = 0;
-
-
-    return res;
+    // LAB 12: Your code here DONE
+    return get_time();
 }
 
 void
