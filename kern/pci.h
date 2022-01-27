@@ -33,6 +33,12 @@
 
 #define PCI_MSI_CAPABILITY 0x11
 
+struct pci_addr_t {
+	uint8_t bus;
+	uint8_t slot;
+	uint8_t func;
+};
+
 typedef struct pci_header_00 {
 	uint16_t vendor_id;
 	uint16_t device_id;
@@ -60,8 +66,8 @@ typedef struct pci_header_00 {
 	uint8_t  max_latency;
 } pci_header_00;
 
-void pci_header00_read(pci_header_00* header, uint8_t bus, uint8_t slot, uint8_t func);
-void pci_header00_print(pci_header_00* header);
+void pci_header00_read(pci_header_00 *header, uint8_t bus, uint8_t slot, uint8_t func);
+void pci_header00_print(pci_header_00 *header);
 
 void pci_scan_msi_x_capability(uint8_t bus, uint8_t slot, uint8_t func, uint8_t cap_index);
 void pci_scan_capabilities(uint8_t bus, uint8_t slot, uint8_t func, uint8_t capabilities);
