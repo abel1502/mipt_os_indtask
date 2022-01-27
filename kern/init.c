@@ -18,6 +18,7 @@
 #include <kern/kclock.h>
 #include <kern/kdebug.h>
 #include <kern/traceopt.h>
+#include <kern/pci.h>
 
 void
 timers_init(void) {
@@ -152,6 +153,9 @@ i386_init(void) {
 
     /* User environment initialization functions */
     env_init();
+
+    list_pci();
+    configure_virtio_vga();
 
 #ifdef CONFIG_KSPACE
     /* Touch all you want */
