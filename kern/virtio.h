@@ -5,6 +5,20 @@
 #include <kern/pci.h>
 
 
+/* Status byte for guest to report progress, and synchronize features. */
+/* We have seen device and processed generic fields (VIRTIO_CONFIG_F_VIRTIO) */
+#define VIRTIO_CONFIG_S_ACKNOWLEDGE	1
+/* We have found a driver for the device. */
+#define VIRTIO_CONFIG_S_DRIVER		2
+/* Driver has used its parts of the config, and is happy */
+#define VIRTIO_CONFIG_S_DRIVER_OK	4
+/* Driver has finished configuring features */
+#define VIRTIO_CONFIG_S_FEATURES_OK	8
+/* Device entered invalid state, driver must reset it */
+#define VIRTIO_CONFIG_S_NEEDS_RESET	0x40
+/* We've given up on this device. */
+#define VIRTIO_CONFIG_S_FAILED		0x80
+
 /* Common configuration */
 #define VIRTIO_PCI_CAP_COMMON_CFG 1
 /* Notifications */
@@ -43,6 +57,7 @@
 
 
 // Everything is little-endian, unless otherwise specified
+// TODO: Somehow assert that our compiler is little-endian as well
 
 typedef uint8_t  virtio_le8_t;
 typedef uint16_t virtio_le16_t;
@@ -90,11 +105,6 @@ struct virtio_pci_common_cfg {
 };
 
 
-struct virtio_config {
-    // TODO
-};
-
-
 /* Virtqueue descriptors: 16 bytes.
 * These can chain together via "next". */
 struct virtq_desc {
@@ -138,7 +148,27 @@ struct virtq {
 };
 
 
-int 
+struct virtio_device {
+    struct {
+        uint8_t bus;
+        uint8_t slot;
+        uint8_t func;
+    } pci_device;
+
+    unsigned seen_config_generation;
+    struct virtio_pci_common_cfg *cfg;  // TODO: Remove if Artyom doesn't implement pci over mmio
+    struct virtio_pci_common_cfg cfg_cache;
+
+
+    struct virtq *queues;
+
+    // TODO
+};
+
+
+int virtio_init(struct virtio_device *device, uint16_t pci_device_id);
+int virtio_pull_cfg_cache(struct virtio_device *device);
+int virtio_force_pull_cfg_cache(struct virtio_device *device);
 
 
 #endif
