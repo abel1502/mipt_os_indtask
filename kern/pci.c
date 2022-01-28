@@ -379,7 +379,7 @@ list_pci() {
 }
 
 void pci_header00_read(pci_header_00 *header, uint8_t bus, uint8_t slot, uint8_t func) {
-    static_assert(sizeof(pci_header_00) % 8 == 0);
+    static_assert(sizeof(pci_header_00) % 8 == 0, "Bad pci header size");
 
     for(int i = 0 ; i < sizeof(pci_header_00); i += 8) {
         uint64_t data = pci_read_confspc_qword((struct pci_addr_t){bus, slot, func}, i);
