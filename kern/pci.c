@@ -349,8 +349,6 @@ list_pci() {
 
     cprintf("PCI device listing:\n");
 
-    #define B_ cprintf("[DBG] Hit %u\n", __LINE__);
-
     for (unsigned bus = 0; bus < 256; bus++) {
         for (unsigned slot = 0; slot < 32; slot++) {
             unsigned func = 0;
@@ -374,8 +372,6 @@ list_pci() {
             }
         }
     }
-
-    #undef B_
 }
 
 void pci_header00_read(pci_header_00 *header, uint8_t bus, uint8_t slot, uint8_t func) {
@@ -388,6 +384,8 @@ void pci_header00_read(pci_header_00 *header, uint8_t bus, uint8_t slot, uint8_t
 }
 
 void pci_scan_msi_x_capability(uint8_t bus, uint8_t slot, uint8_t func, uint8_t cap_index) {
+    // TODO: Fix. Broken as hell due to unaligned reads
+
     uint32_t table_offset = (uint32_t) pci_read_confspc_word((struct pci_addr_t){bus, slot, func}, cap_index + 2) |
                             (uint32_t) pci_read_confspc_word((struct pci_addr_t){bus, slot, func}, cap_index + 3) << 16;
     uint32_t pending_bit_offset = (uint32_t) pci_read_confspc_word((struct pci_addr_t){bus, slot, func}, cap_index + 4) |
@@ -412,10 +410,12 @@ void pci_scan_capabilities(uint8_t bus, uint8_t slot, uint8_t func, uint8_t capa
         uint8_t capability_index = (uint8_t) capability;
         uint8_t next_capability = (uint8_t)(capability >> 8);
 
-        cprintf(" - [%02x]: Capability #%02x, metadata = %04x\n", cap_index, capability_index, (uint16_t) pci_read_confspc_word((struct pci_addr_t){bus, slot, func}, cap_index + 1));
+        cprintf(" - [%02x]: Capability #%02x, metadata = %04x\n",
+            cap_index, capability_index,
+            (uint16_t)((pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, cap_index) >> 8) & 0xffff));
 
         if(capability_index == PCI_MSI_CAPABILITY) {
-            pci_scan_msi_x_capability(bus, slot, func, cap_index);
+            // pci_scan_msi_x_capability(bus, slot, func, cap_index);
         }
 
         cap_index = next_capability;
@@ -480,7 +480,7 @@ int configure_virtio_vga() {
 
     pci_header00_print(&controller_data);
 
-    cprintf("Capabilities:\n");
+    cprintf("Capabilities (%hhu):\n", controller_data.capabilities);
 
     pci_scan_capabilities(bus, slot, func, controller_data.capabilities);
 
