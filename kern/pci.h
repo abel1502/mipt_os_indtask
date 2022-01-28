@@ -34,36 +34,36 @@
 #define PCI_MSI_CAPABILITY 0x11
 
 struct pci_addr_t {
-	uint8_t bus;
-	uint8_t slot;
-	uint8_t func;
+    uint8_t bus;
+    uint8_t slot;
+    uint8_t func;
 };
 
 typedef struct pci_header_00 {
-	uint16_t vendor_id;
-	uint16_t device_id;
+    uint16_t vendor_id;
+    uint16_t device_id;
     uint16_t command;
     uint16_t status;
-	uint8_t  revision;
-	uint8_t  prog_if;
-	uint8_t  subclass_id;
-	uint8_t  class_id;
-	uint8_t  cache_line_size;
-	uint8_t  latency_timer;
-	uint8_t  hdr_type;
-	uint8_t  bist;
-	uint32_t bar[6];
-	uint32_t cardbus_cis_ptr;
-	uint16_t subsys_vendor;
-	uint16_t subsys_id;
-	uint32_t expansion_rom;
-	uint8_t  capabilities;
-	uint8_t  reserved[3];
-	uint32_t reserved2;
-	uint8_t  int_line;
-	uint8_t  int_pin;
-	uint8_t  min_grant;
-	uint8_t  max_latency;
+    uint8_t  revision;
+    uint8_t  prog_if;
+    uint8_t  subclass_id;
+    uint8_t  class_id;
+    uint8_t  cache_line_size;
+    uint8_t  latency_timer;
+    uint8_t  hdr_type;
+    uint8_t  bist;
+    uint32_t bar[6];
+    uint32_t cardbus_cis_ptr;
+    uint16_t subsys_vendor;
+    uint16_t subsys_id;
+    uint32_t expansion_rom;
+    uint8_t  capabilities;
+    uint8_t  reserved[3];
+    uint32_t reserved2;
+    uint8_t  int_line;
+    uint8_t  int_pin;
+    uint8_t  min_grant;
+    uint8_t  max_latency;
 } pci_header_00;
 
 void pci_header00_read(pci_header_00 *header, uint8_t bus, uint8_t slot, uint8_t func);
