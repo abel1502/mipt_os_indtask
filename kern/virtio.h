@@ -55,6 +55,9 @@
 /* Arbitrary descriptor layouts. */
 #define VIRTIO_F_ANY_LAYOUT 27
 
+#define VIRTIO_PCI_VENDOR 0x1AF4
+#define VIRTIO_PCI_DEVICE_ID_BASE 0x1040
+
 
 // Everything is little-endian, unless otherwise specified
 // TODO: Somehow assert that our compiler is little-endian as well
@@ -74,12 +77,12 @@ struct virtio_pci_cap {
     virtio_le8_t  padding[3]; /* Pad to full dword. */
     virtio_le32_t offset; /* Offset within bar. */
     virtio_le32_t length; /* Length of the structure, in bytes. */
-};
+} __attribute__((packed));
 
 struct virtio_pci_notify_cap {
     struct virtio_pci_cap cap;
     virtio_le32_t notify_off_multiplier; /* Multiplier for queue_notify_off. */
-};
+} __attribute__((packed));
 
 
 struct virtio_pci_common_cfg {
@@ -102,7 +105,7 @@ struct virtio_pci_common_cfg {
     virtio_le64_t queue_desc; /* read-write */
     virtio_le64_t queue_driver; /* read-write */
     virtio_le64_t queue_device; /* read-write */
-};
+} __attribute__((packed));
 
 
 /* Virtqueue descriptors: 16 bytes.
@@ -116,14 +119,14 @@ struct virtq_desc {
     virtio_le16_t flags;
     /* We chain unused descriptors via this, too */
     virtio_le16_t next;
-};
+} __attribute__((packed));
 
 struct virtq_avail {
     virtio_le16_t flags;
     virtio_le16_t idx;
     virtio_le16_t ring[];
     /* Only if VIRTIO_F_EVENT_IDX: virtio_le16_t used_event; */
-};
+} __attribute__((packed));
 
 /* le32 is used here for ids for padding reasons. */
 struct virtq_used_elem {
@@ -131,44 +134,60 @@ struct virtq_used_elem {
     virtio_le32_t id;
     /* Total length of the descriptor chain which was written to. */
     virtio_le32_t len;
-};
+} __attribute__((packed));
 
 struct virtq_used {
     virtio_le16_t flags;
     virtio_le16_t idx;
     struct virtq_used_elem ring[];
     /* Only if VIRTIO_F_EVENT_IDX: virtio_le16_t avail_event; */
-};
+} __attribute__((packed));
 
 struct virtq {
-    unsigned size;
-    struct virtq_desc *desc;
+    struct virtio_device *device;
+    unsigned idx;
+
+    unsigned capacity;
+
+    struct virtq_desc  *desc;
     struct virtq_avail *avail;
-    struct virtq_used *used;
+    struct virtq_used  *used;
 };
 
 
 struct virtio_device {
-    struct {
-        uint8_t bus;
-        uint8_t slot;
-        uint8_t func;
-    } pci_device;
+    struct pci_addr_t pci_device_addr;
 
-    unsigned seen_config_generation;
-    struct virtio_pci_common_cfg *cfg;  // TODO: Remove if Artyom doesn't implement pci over mmio
+    unsigned cfg_seen_generation;
+    // struct virtio_pci_common_cfg *cfg;  // TODO: Uncomment if Artyom implements pci over mmio
     struct virtio_pci_common_cfg cfg_cache;
+    struct pci_addr_t cfg_addr;
 
-
+    unsigned num_queues;
     struct virtq *queues;
 
     // TODO
 };
 
 
-int virtio_init(struct virtio_device *device, uint16_t pci_device_id);
-int virtio_pull_cfg_cache(struct virtio_device *device);
-int virtio_force_pull_cfg_cache(struct virtio_device *device);
+int virtio_init(struct virtio_device *device, uint16_t virtio_device_id);
+// int virtio_pull_cfg_cache(struct virtio_device *device);
+// int virtio_force_pull_cfg_cache(struct virtio_device *device);
+// TODO: Writing to cfg
+unsigned virtio_get_cfg_generation(struct virtio_device *device);
+int virtio_read_cfg(struct virtio_device *device);
+int virtio_update_cfg(struct virtio_device *device);  // Only reads it to the cache if the generation has changed
+int virtio_reset(struct virtio_device *device);
+unsigned virtio_get_status(struct virtio_device *device);
+int virtio_fail(struct virtio_device *device);
+int virtio_notify_avail(struct virtio_device *device, unsigned virtq_idx);
+// TODO: Handle incoming notifications
+void virtio_deinit(struct virtio_device *device);
+
+int virtq_init(struct virtq *queue);
+int virtq_write(struct virtq *queue, const char *data, unsigned size, unsigned max_resp_size);
+// TODO: other methods
+int virtq_deinit(struct virtq *queue);
 
 
 #endif
