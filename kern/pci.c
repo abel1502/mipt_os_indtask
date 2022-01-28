@@ -2,7 +2,8 @@
 #include "pci.h"
 #include <inc/x86.h>
 #include <inc/stdio.h>
-#include <stdint.h>
+#include <inc/types.h>
+#include <inc/assert.h>
 
 static struct {
     uint8_t dev_class, dev_subclass;
@@ -112,62 +113,132 @@ static struct {
     { 0, NULL }
 };
 
-void pci_write_confspc_word(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset, uint16_t data)
-{
-    uint32_t addr;
-    uint32_t bus32 = bus;
-    uint32_t slot32 = slot;
-    uint32_t func32 = function;
-    addr = (uint32_t)((bus32 << 16) | (slot32 << 11) |
-                      (func32 << 8) | (offset & 0xfc) | ((uint32_t)0x80000000));
+uint8_t
+pci_read_confspc_byte(struct pci_addr_t addr, uint8_t offset) {
+    assert(!(offset & 0));
 
-    outl(PCI_ADDRESS_PORT, addr);
-    uint32_t current_data = inl(PCI_DATA_PORT);
-    if(offset & 1) {
-        current_data &= 0x0000FFFF;
-        current_data |= data << 8;
-    } else {
-        current_data &= 0xFFFF0000;
-        current_data |= data;
+    uint16_t word = pci_read_confspc_word(addr, offset & ~0b1);
+
+    if (offset & 0b1) {
+        word >>= 8;
     }
-    outl(PCI_DATA_PORT, current_data);
+
+    return (uint8_t)(word & 0xff);
 }
 
-uint16_t pci_read_confspc_word(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset)
-{
-    uint32_t addr;
-    uint32_t bus32 = bus;
-    uint32_t slot32 = slot;
-    uint32_t func32 = function;
-    addr = (uint32_t)((bus32 << 16) | (slot32 << 11) |
-                      (func32 << 8) | (offset & 0xfc) | ((uint32_t)0x80000000));
-    outl(PCI_ADDRESS_PORT, addr);
-    return (uint16_t)((inl(PCI_DATA_PORT) >> ((offset & 2) * 8)) & 0xffff);
+uint16_t
+pci_read_confspc_word(struct pci_addr_t addr, uint8_t offset) {
+    assert(!(offset & 0b1));
+
+    uint32_t dword = pci_read_confspc_dword(addr, offset & ~0b11);
+
+    if (offset & 0b10) {
+        dword >>= 16;
+    }
+
+    return (uint16_t)(dword & 0xffff);
 }
+
+uint32_t
+pci_read_confspc_dword(struct pci_addr_t addr, uint8_t offset) {
+    assert(!(offset & 0b11));
+
+    uint32_t address = ((uint32_t)0x80000000) |
+        (((uint32_t)addr.bus ) << 16) |
+        (((uint32_t)addr.slot) << 11) |
+        (((uint32_t)addr.func) <<  8) |
+        ((uint32_t)offset);
+
+    outl(PCI_ADDRESS_PORT, address);
+    return inl(PCI_DATA_PORT);
+}
+
+uint64_t
+pci_read_confspc_qword(struct pci_addr_t addr, uint8_t offset) {
+    assert(!(offset & 0b111));
+
+    uint64_t dword0 = (uint64_t)pci_read_confspc_dword(addr, offset);
+    uint64_t dword1 = (uint64_t)pci_read_confspc_dword(addr, offset + 4);
+
+    return dword0 | (dword1 << 32);
+}
+
+void
+pci_write_confspc_byte(struct pci_addr_t addr, uint8_t offset, uint8_t data) {
+    assert(!(offset & 0));
+
+    uint16_t word = pci_read_confspc_word(addr, offset & ~0b1);
+
+    if (offset & 0b1) {
+        word = (word & 0x00ff) | (((uint16_t)data) << 8);
+    } else {
+        word = (word & 0xff00) | ((uint16_t)data);
+    }
+
+    pci_write_confspc_word(addr, offset & ~0b1, word);
+}
+
+void
+pci_write_confspc_word(struct pci_addr_t addr, uint8_t offset, uint16_t data) {
+    assert(!(offset & 0b1));
+
+    uint32_t dword = pci_read_confspc_dword(addr, offset & ~0b11);
+
+    if (offset & 0b10) {
+        dword = (dword & 0x0000ffff) | (((uint32_t)data) << 16);
+    } else {
+        dword = (dword & 0xffff0000) | ((uint32_t)data);
+    }
+
+    pci_write_confspc_word(addr, offset & ~0b11, dword);
+}
+
+void
+pci_write_confspc_dword(struct pci_addr_t addr, uint8_t offset, uint32_t data) {
+    assert(!(offset & 0b11));
+
+    uint32_t address = ((uint32_t)0x80000000) |
+        (((uint32_t)addr.bus ) << 16) |
+        (((uint32_t)addr.slot) << 11) |
+        (((uint32_t)addr.func) <<  8) |
+        ((uint32_t)offset);
+
+    outl(PCI_ADDRESS_PORT, address);
+    outl(PCI_DATA_PORT, data);
+}
+
+void
+pci_write_confspc_qword(struct pci_addr_t addr, uint8_t offset, uint64_t data) {
+    assert(!(offset & 0b111));
+
+    pci_write_confspc_dword(addr, offset    , (uint32_t)(data      ));
+    pci_write_confspc_dword(addr, offset + 4, (uint32_t)(data << 32));
+}
+
 
 uint8_t
 pci_get_class(uint8_t bus, uint8_t slot, uint8_t function) {
-    return (uint8_t) (pci_read_confspc_word(bus, slot, function, 10) >> 8) /* shifting to leave only class id in the variable. */;
+    return pci_read_confspc_byte((struct pci_addr_t){bus, slot, function}, offsetof(pci_header_00, class_id));
 }
 
 uint8_t
 pci_get_subclass(uint8_t bus, uint8_t slot, uint8_t function) {
-    return (uint8_t) pci_read_confspc_word(bus, slot, function, 10);
+    return pci_read_confspc_byte((struct pci_addr_t){bus, slot, function}, offsetof(pci_header_00, subclass_id));
 }
 
 uint8_t
 pci_get_hdr_type(uint8_t bus, uint8_t slot, uint8_t function) {
-    return (uint8_t) (pci_read_confspc_word(bus, slot, function, 0x0E));
+    return pci_read_confspc_byte((struct pci_addr_t){bus, slot, function}, offsetof(pci_header_00, hdr_type));
 }
 
 uint16_t
 pci_get_vendor(uint8_t bus, uint8_t slot, uint8_t function) {
-    return pci_read_confspc_word(bus, slot, function, 0);
+    return pci_read_confspc_word((struct pci_addr_t){bus, slot, function}, offsetof(pci_header_00, vendor_id));
 }
 
 uint16_t
 pci_get_device(uint8_t bus, uint8_t slot, uint8_t function) {
-    return pci_read_confspc_word(bus, slot, function, 2);
+    return pci_read_confspc_word((struct pci_addr_t){bus, slot, function}, offsetof(pci_header_00, device_id));
 }
 
 const char *
@@ -195,29 +266,20 @@ pci_get_vendor_name(uint16_t vendor, int* found) {
 
 uint32_t
 pci_get_bar(uint8_t hdrtype, uint8_t bus, uint8_t slot, uint8_t func, uint8_t bar_number, uint8_t *bar_type) {
-    if((hdrtype & ~0x80) == 0)
-    {
-        uint8_t off = bar_number * 2;
-        uint16_t bar_low  = pci_read_confspc_word(bus, slot, func, 0x10 + off);
-        uint16_t bar_high = pci_read_confspc_word(bus, slot, func, 0x10 + off + 1);
-        if((bar_low & 1) == 0)
-        {
-            if((bar_low & ~0b110) == 0x00) //32-bit bar, we don't support other :P
-            {
-                uint32_t ret = (uint32_t) bar_low | (uint32_t) (bar_high << 16);
-                ret &= ~0b1111;
+    if ((hdrtype & ~0x80) == 0) {
+        uint8_t off = bar_number * sizeof(uint32_t);
+        uint32_t bar  = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, offsetof(pci_header_00, bar) + off);
+        if ((bar & 1) == 0) {
+            if((bar & 0xffff0000 & ~0b110) == 0x00) { // 32-bit bar, we don't support other :P
                 *bar_type = 0;
-                return ret;
+                return bar & ~0b1111;
             }
-        }
-        if((bar_low & 1) == 1)
-        {
-            uint32_t ret = (uint32_t) bar_low | (uint32_t) (bar_high << 16);
-            ret &= ~0b11;
+        } else {
             *bar_type = 1;
-            return ret;
+            return bar & ~0b11;
         }
     }
+
     return 0;
 }
 
@@ -243,8 +305,27 @@ pci_find_device(uint16_t vendor, uint8_t device_class, uint8_t device_subclass, 
 }
 
 void
-pci_print_device(unsigned bus, unsigned slot, unsigned func) {
+pci_find_device_by_id(uint16_t vendor, uint16_t device_id, uint8_t *bus_ret, uint8_t *slot_ret, uint8_t *func_ret) {
+    for (unsigned bus = 0; bus < 256; bus++) {
+        for (unsigned slot = 0; slot < 32; slot++) {
+            for (unsigned func = 0; func < 8; func++) {
+                if (pci_get_device(bus, slot, func) == device_id &&
+                    pci_get_vendor(bus, slot, func) == vendor) {
 
+                    *bus_ret  = bus;
+                    *slot_ret = slot;
+                    *func_ret = func;
+                    return;
+                }
+            }
+        }
+    }
+
+    *bus_ret = *slot_ret = *func_ret = 0xFF;
+}
+
+void
+pci_print_device(unsigned bus, unsigned slot, unsigned func) {
     uint8_t clid = pci_get_class(bus, slot, func);
     uint8_t sclid = pci_get_subclass(bus, slot, func);
     uint16_t vendor = pci_get_vendor(bus, slot, func);
@@ -262,53 +343,55 @@ pci_print_device(unsigned bus, unsigned slot, unsigned func) {
 
 void
 list_pci() {
-
     uint8_t hdrtype;
     uint8_t clid;
     uint16_t vendor;
 
     cprintf("PCI device listing:\n");
 
-    for(unsigned bus = 0; bus < 256; bus++)
-    {
-        for(unsigned slot = 0; slot < 32; slot++)
-        {
+    #define B_ cprintf("[DBG] Hit %u\n", __LINE__);
+
+    for (unsigned bus = 0; bus < 256; bus++) {
+        for (unsigned slot = 0; slot < 32; slot++) {
             unsigned func = 0;
             hdrtype = pci_get_hdr_type(bus, slot, func);
             clid = pci_get_class(bus, slot, func);
             vendor = pci_get_vendor(bus, slot, func);
 
-            if(clid != 0xFF && vendor != 0xFFFF) {
+            if (clid != 0xFF && vendor != 0xFFFF) {
                 pci_print_device(bus, slot, func);
             }
 
-            if((hdrtype & 0x80) == 0) {
-                for(func = 1; func < 8; func++) {
+            if ((hdrtype & 0x80) == 0) {
+                for (func = 1; func < 8; func++) {
                     clid = pci_get_class(bus, slot, func);
                     vendor = pci_get_vendor(bus, slot, func);
 
-                    if(clid != 0xFF && vendor != 0xFFFF) {
+                    if (clid != 0xFF && vendor != 0xFFFF) {
                         pci_print_device(bus, slot, func);
                     }
                 }
             }
         }
     }
+
+    #undef B_
 }
 
-void pci_header00_read(pci_header_00* header, uint8_t bus, uint8_t slot, uint8_t func) {
-    for(int i = 0 ; i < sizeof(pci_header_00); i += 2) {
-        uint16_t data = pci_read_confspc_word(bus, slot, func, i);
-        ((char*)header)[i]     = (uint8_t)(data);
-        ((char*)header)[i + 1] = (uint8_t)(data >> 8);
+void pci_header00_read(pci_header_00 *header, uint8_t bus, uint8_t slot, uint8_t func) {
+    static_assert(sizeof(pci_header_00) % 8 == 0);
+
+    for(int i = 0 ; i < sizeof(pci_header_00); i += 8) {
+        uint64_t data = pci_read_confspc_qword((struct pci_addr_t){bus, slot, func}, i);
+        ((uint64_t *)header)[i / 8] = data;
     }
 }
 
 void pci_scan_msi_x_capability(uint8_t bus, uint8_t slot, uint8_t func, uint8_t cap_index) {
-    uint32_t table_offset       = (uint32_t) pci_read_confspc_word(bus, slot, func, cap_index + 2) |
-                            (uint32_t) pci_read_confspc_word(bus, slot, func, cap_index + 3) << 16;
-    uint32_t pending_bit_offset = (uint32_t) pci_read_confspc_word(bus, slot, func, cap_index + 4) |
-                                  (uint32_t) pci_read_confspc_word(bus, slot, func, cap_index + 5) << 16;
+    uint32_t table_offset = (uint32_t) pci_read_confspc_word((struct pci_addr_t){bus, slot, func}, cap_index + 2) |
+                            (uint32_t) pci_read_confspc_word((struct pci_addr_t){bus, slot, func}, cap_index + 3) << 16;
+    uint32_t pending_bit_offset = (uint32_t) pci_read_confspc_word((struct pci_addr_t){bus, slot, func}, cap_index + 4) |
+                                  (uint32_t) pci_read_confspc_word((struct pci_addr_t){bus, slot, func}, cap_index + 5) << 16;
     uint8_t bir = table_offset & 3;
     uint8_t pending_bit_bir = pending_bit_offset & 3;
 
@@ -324,12 +407,12 @@ void pci_scan_capabilities(uint8_t bus, uint8_t slot, uint8_t func, uint8_t capa
     cap_index &= ~3;
 
     while(cap_index != 0) {
-        uint16_t capability = pci_read_confspc_word(bus, slot, func, cap_index);
+        uint16_t capability = pci_read_confspc_word((struct pci_addr_t){bus, slot, func}, cap_index);
 
         uint8_t capability_index = (uint8_t) capability;
         uint8_t next_capability = (uint8_t)(capability >> 8);
 
-        cprintf(" - [%02x]: Capability #%02x, metadata = %04x\n", cap_index, capability_index, (uint16_t) pci_read_confspc_word(bus, slot, func, cap_index + 1));
+        cprintf(" - [%02x]: Capability #%02x, metadata = %04x\n", cap_index, capability_index, (uint16_t) pci_read_confspc_word((struct pci_addr_t){bus, slot, func}, cap_index + 1));
 
         if(capability_index == PCI_MSI_CAPABILITY) {
             pci_scan_msi_x_capability(bus, slot, func, cap_index);
@@ -376,7 +459,6 @@ void pci_header00_print(pci_header_00* header) {
 }
 
 int configure_virtio_vga() {
-
     uint8_t bus, slot, func;
 
     pci_find_device(PCI_VENDOR_VIRTIO, 0x03, 0x00, &bus, &slot, &func);

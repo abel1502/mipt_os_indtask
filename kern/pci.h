@@ -1,6 +1,8 @@
 #ifndef PCI_H
 #define PCI_H
-#include <stdint.h>
+
+#include <inc/types.h>
+
 #define CLASS_DEVICE_TOO_OLD 0x00
 #define CLASS_MASS_STORAGE 0x01
 #define CLASS_NETWORK_CTRLR 0x02
@@ -64,7 +66,7 @@ typedef struct pci_header_00 {
     uint8_t  int_pin;
     uint8_t  min_grant;
     uint8_t  max_latency;
-} pci_header_00;
+} __attribute__((packed)) pci_header_00;
 
 void pci_header00_read(pci_header_00 *header, uint8_t bus, uint8_t slot, uint8_t func);
 void pci_header00_print(pci_header_00 *header);
@@ -74,6 +76,7 @@ void pci_scan_capabilities(uint8_t bus, uint8_t slot, uint8_t func, uint8_t capa
 
 void list_pci();
 void pci_find_device(uint16_t vendor, uint8_t device_class, uint8_t device_subclass, uint8_t *bus_ret, uint8_t *slot_ret, uint8_t *func_ret);
+void pci_find_device_by_id(uint16_t vendor, uint16_t device_id, uint8_t *bus_ret, uint8_t *slot_ret, uint8_t *func_ret);
 uint32_t pci_get_bar(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t *);
 uint8_t pci_get_class(uint8_t, uint8_t, uint8_t);
 uint8_t pci_get_subclass(uint8_t, uint8_t, uint8_t);
@@ -81,8 +84,23 @@ uint8_t pci_get_hdr_type(uint8_t, uint8_t, uint8_t);
 uint16_t pci_get_vendor(uint8_t, uint8_t, uint8_t);
 uint16_t pci_get_device(uint8_t, uint8_t, uint8_t);
 const char *pci_get_device_type(uint8_t, uint8_t);
-uint16_t pci_read_confspc_word(uint8_t, uint8_t, uint8_t, uint8_t);
-void pci_write_confspc_word(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset, uint16_t data);
+
+uint8_t  pci_read_confspc_byte (struct pci_addr_t addr, uint8_t offset);
+uint16_t pci_read_confspc_word (struct pci_addr_t addr, uint8_t offset);
+uint32_t pci_read_confspc_dword(struct pci_addr_t addr, uint8_t offset);
+uint64_t pci_read_confspc_qword(struct pci_addr_t addr, uint8_t offset);
+
+void pci_write_confspc_byte (struct pci_addr_t addr, uint8_t offset, uint8_t  data);
+void pci_write_confspc_word (struct pci_addr_t addr, uint8_t offset, uint16_t data);
+void pci_write_confspc_dword(struct pci_addr_t addr, uint8_t offset, uint32_t data);
+void pci_write_confspc_qword(struct pci_addr_t addr, uint8_t offset, uint64_t data);
+
 int configure_virtio_vga();
+
+static inline bool is_valid_pci_addr(struct pci_addr_t *addr) {
+    return addr->bus  != 0xff &&
+           addr->slot != 0xff &&
+		   addr->func != 0xff;
+}
 
 #endif
