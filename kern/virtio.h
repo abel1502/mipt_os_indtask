@@ -57,6 +57,7 @@
 
 #define VIRTIO_PCI_VENDOR 0x1AF4
 #define VIRTIO_PCI_DEVICE_ID_BASE 0x1040
+#define VIRTIO_PCI_CAP_VENDOR 0x09
 
 
 // Everything is little-endian, unless otherwise specified
@@ -158,28 +159,41 @@ struct virtq {
 struct virtio_device {
     struct pci_addr_t pci_device_addr;
 
-    unsigned cfg_seen_generation;
-    // struct virtio_pci_common_cfg *cfg;  // TODO: Uncomment if Artyom implements pci over mmio
-    struct virtio_pci_common_cfg cfg_cache;
-    struct pci_addr_t cfg_addr;
+    // ---- MMIO locations:
+    // General configuration
+    struct virtio_pci_common_cfg *mmio_cfg;
+    size_t mmio_cfg_size;
+
+    // Notifications
+    void *mmio_ntf;
+    size_t mmio_ntf_size;
+
+    // ISR status
+    uint8_t *mmio_isr;
+    size_t mmio_isr_size;
+
+    // Device-specific configuration
+    void *mmio_dev;
+    size_t mmio_dev_size;
+    // ----
+
+    unsigned cfg_active_generation;
 
     unsigned num_queues;
     struct virtq *queues;
+    uint32_t vq_notify_off_mul;
 
     // TODO
 };
 
 
 int virtio_init(struct virtio_device *device, uint16_t virtio_device_id);
-// int virtio_pull_cfg_cache(struct virtio_device *device);
-// int virtio_force_pull_cfg_cache(struct virtio_device *device);
-// TODO: Writing to cfg
-unsigned virtio_get_cfg_generation(struct virtio_device *device);
-int virtio_read_cfg(struct virtio_device *device);
-int virtio_update_cfg(struct virtio_device *device);  // Only reads it to the cache if the generation has changed
-int virtio_reset(struct virtio_device *device);
-unsigned virtio_get_status(struct virtio_device *device);
-int virtio_fail(struct virtio_device *device);
+bool virtio_is_cfg_up_to_date(struct virtio_device *device);
+void virtio_mark_cfg_up_to_date(struct virtio_device *device);
+void virtio_reset(struct virtio_device *device);
+uint8_t virtio_get_status(struct virtio_device *device);
+void virtio_fail(struct virtio_device *device);
+bool virtio_needs_reset(struct virtio_device *device);
 int virtio_notify_avail(struct virtio_device *device, unsigned virtq_idx);
 // TODO: Handle incoming notifications
 void virtio_deinit(struct virtio_device *device);
