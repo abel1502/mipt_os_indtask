@@ -216,6 +216,65 @@ pci_write_confspc_qword(struct pci_addr_t addr, uint8_t offset, uint64_t data) {
 }
 
 
+void pci_read_confspc_data(struct pci_addr_t addr, uint8_t offset, void *dst, unsigned size) {
+    assert(dst);
+    assert((unsigned)offset + size < 0x100);
+
+    #define READ_FWD_(TYPE, NAME)                                       \
+        if (size >= sizeof(TYPE)) {                                     \
+            *((TYPE *)dst++) = pci_read_confspc_##NAME(addr, offset);   \
+            offset += sizeof(TYPE);                                     \
+            size -= sizeof(TYPE);                                       \
+        }
+
+    if (offset & 0b01) { READ_FWD_(uint8_t,  byte); }
+    if (offset & 0b10) { READ_FWD_(uint16_t, word); }
+
+    while (size >= sizeof(uint32_t)) {
+        *((uint32_t *)dst++) = pci_read_confspc_dword(addr, offset);
+
+        size -= sizeof(uint32_t);
+        offset += sizeof(uint32_t);
+    }
+
+    READ_FWD_(uint16_t, word);
+    READ_FWD_(uint8_t,  byte);
+
+    #undef READ_FWD_
+
+    assert(size == 0);
+}
+
+void pci_write_confspc_data(struct pci_addr_t addr, uint8_t offset, const void *src, unsigned size) {
+    assert(src);
+    assert((unsigned)offset + size < 0x100);
+
+    #define READ_FWD_(TYPE, NAME)                                       \
+        if (size >= sizeof(TYPE)) {                                     \
+            pci_write_confspc_##NAME(addr, offset, *((TYPE *)src++));   \
+            offset += sizeof(TYPE);                                     \
+            size -= sizeof(TYPE);                                       \
+        }
+
+    if (offset & 0b01) { READ_FWD_(uint8_t,  byte); }
+    if (offset & 0b10) { READ_FWD_(uint16_t, word); }
+
+    while (size >= sizeof(uint32_t)) {
+        pci_write_confspc_dword(addr, offset, *((uint32_t *)src++));
+
+        size -= sizeof(uint32_t);
+        offset += sizeof(uint32_t);
+    }
+
+    READ_FWD_(uint16_t, word);
+    READ_FWD_(uint8_t,  byte);
+
+    #undef READ_FWD_
+
+    assert(size == 0);
+}
+
+
 uint8_t
 pci_get_class(uint8_t bus, uint8_t slot, uint8_t function) {
     return pci_read_confspc_byte((struct pci_addr_t){bus, slot, function}, offsetof(pci_header_00, class_id));
@@ -266,6 +325,12 @@ pci_get_vendor_name(uint16_t vendor, int* found) {
 
 uint32_t
 pci_get_bar(uint8_t hdrtype, uint8_t bus, uint8_t slot, uint8_t func, uint8_t bar_number, uint8_t *bar_type) {
+    uint8_t bar_type_placeholder = 0;
+
+    if (!bar_type) {
+        bar_type = &bar_type_placeholder;
+    }
+
     if ((hdrtype & ~0x80) == 0) {
         uint8_t off = bar_number * sizeof(uint32_t);
         uint32_t bar  = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, offsetof(pci_header_00, bar) + off);

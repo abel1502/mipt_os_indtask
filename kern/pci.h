@@ -97,9 +97,12 @@ void pci_write_confspc_word (struct pci_addr_t addr, uint8_t offset, uint16_t da
 void pci_write_confspc_dword(struct pci_addr_t addr, uint8_t offset, uint32_t data);
 void pci_write_confspc_qword(struct pci_addr_t addr, uint8_t offset, uint64_t data);
 
+void pci_read_confspc_data(struct pci_addr_t addr, uint8_t offset, void *dst, unsigned size);
+void pci_write_confspc_data(struct pci_addr_t addr, uint8_t offset, const void *src, unsigned size);
+
 int configure_virtio_vga();
 
-static inline bool is_valid_pci_addr(struct pci_addr_t *addr) {
+static inline bool is_valid_pci_addr(const struct pci_addr_t *addr) {
     return addr->bus  != 0xff &&
            addr->slot != 0xff &&
 		   addr->func != 0xff;
