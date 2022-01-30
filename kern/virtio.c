@@ -19,7 +19,7 @@ virtio_init() {
     virtio_devices = kzalloc_region(sizeof(struct virtio_device) * VIRTIO_MAX_DEVICES);
     virtio_num_devices = 0;
 
-    return 0;
+    return;
 }
 
 struct virtio_device *
@@ -136,6 +136,85 @@ virtio_identify_capabilities(struct virtio_device *device) {
 static int
 virtio_init_device_virtqs(struct virtio_device *device) {
     assert(device);
+    assert(device->mmio_cfg);
+
+    unsigned vq_cnt = device->mmio_cfg->num_queues;
+
+    if (vq_cnt > VIRTIO_MAX_VIRTQS) {
+        return -E_INVAL;
+    }
+
+    device->num_queues = vq_cnt;
+
+    for (unsigned i = 0; i < vq_cnt; ++i) {
+        device->mmio_cfg->queue_select = i;
+
+        unsigned vq_size = device->mmio_cfg->queue_size;
+        assert(vq_size);
+        
+        if (vq_size > VIRTIO_MAX_VQ_SIZE) {
+            vq_size = VIRTIO_MAX_VQ_SIZE;
+            device->mmio_cfg->queue_size = vq_size;
+        }
+
+        device->mmio_cfg->queue_msix_vector = VIRTIO_MSI_NO_VECTOR;
+
+        device->queues[i].idx = i;
+        device->queues[i].capacity = vq_size;
+        device->queues[i].notify_offset = device->mmio_cfg->queue_notify_off;
+
+        /*
+          Now we allocate the queue parts. We're gonna use the split virtq format.
+          The regions are listed in a table below. It's important for every one of
+          them to be physically contiguous in memory, and I'm not quite sure how 
+          to ensure that...
+          I guess kzalloc_region with a size equaling to CLASS_SIZE(...)
+          provides a contiguous segment of space...
+        */
+        // |------------------|-----------|---------------------|
+        // | Virtqueue Part   | Alignment | Size                |
+        // |------------------|-----------|---------------------|
+        // | Descriptor Table | 16        | 16∗(Queue Size)     |
+        // | Available Ring   | 2         | 6 + 2∗(Queue Size)  |
+        // | Used Ring        | 4         | 6 + 8∗(Queue Size)  |
+        // |------------------|-----------|---------------------|
+
+        // Page-aligned, so 16 as well.
+        size_t desc_size = 16 * vq_size;
+        size_t desc_offs = 0;
+        // 16-aligned, so 2 as well
+        size_t avail_size = 6 + 2 * vq_size;
+        size_t avail_offs = desc_offs + desc_size;
+        // 2-aligned, might need a 2-byte padding
+        size_t used_size = 6 + 8 * vq_size;
+        size_t used_offs = avail_offs + avail_size;
+        if (used_offs % 4) {
+            used_offs += 2;
+            assert(used_offs % 4 == 0);
+        }
+
+        size_t total_min_size = used_offs + used_size;
+        unsigned class = 0;
+        while (class < MAX_CLASS && CLASS_SIZE(class) < total_min_size) {
+            ++class;
+        }
+        assert(class < MAX_CLASS);
+
+        size_t total_size = CLASS_SIZE(class);
+
+        cprintf("Allocating %llu bytes-large page for a virtiqueue\n", CLASS_SIZE(class));
+
+        void *vq_region = kzalloc_region(total_size);
+        physaddr_t vq_phys_region = lookup_physaddr(vq_region, total_size);
+
+        device->queues[i].desc  = (struct virtq_desc  *)(vq_region + desc_offs);
+        device->queues[i].avail = (struct virtq_avail *)(vq_region + avail_offs);
+        device->queues[i].used  = (struct virtq_used  *)(vq_region + used_offs);
+
+        device->mmio_cfg->queue_desc   = vq_phys_region + desc_offs;
+        device->mmio_cfg->queue_driver = vq_phys_region + avail_offs;
+        device->mmio_cfg->queue_device = vq_phys_region + used_offs;
+    }
 
     return 0;
 }
@@ -191,7 +270,12 @@ virtio_init_device(struct virtio_device *device, uint16_t virtio_device_id) {
 
     // 7. Perform device-specific setup, including discovery of virtqueues for the device, optional per-bus setup,
     // reading and possibly writing the device’s virtio configuration space, and population of virtqueues.
-    // TODO: Finish!!!
+    device->mmio_cfg->msix_config = VIRTIO_MSI_NO_VECTOR;
+
+    res = virtio_init_device_virtqs(device);
+    if (res < 0) {
+        return res;
+    }
 
     // 8. Set the DRIVER_OK status bit. At this point the device is “live”.
     device->mmio_cfg->device_status |= VIRTIO_CONFIG_S_DRIVER_OK;

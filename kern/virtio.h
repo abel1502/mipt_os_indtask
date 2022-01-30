@@ -59,7 +59,11 @@
 #define VIRTIO_PCI_DEVICE_ID_BASE 0x1040
 #define VIRTIO_PCI_CAP_VENDOR 0x09
 // VIRTIO_IRQ defined in trap.h
-#define VIRTIO_MAX_DEVICES 0x10
+
+// Arbitrary limits to keep the size small
+#define VIRTIO_MAX_DEVICES 0x8
+#define VIRTIO_MAX_VIRTQS 0x8
+#define VIRTIO_MAX_VQ_SIZE 0x1000
 
 
 // Everything is little-endian, unless otherwise specified
@@ -155,6 +159,8 @@ struct virtq {
     struct virtq_desc  *desc;
     struct virtq_avail *avail;
     struct virtq_used  *used;
+
+    size_t notify_offset;
 };
 
 
@@ -182,7 +188,7 @@ struct virtio_device {
     unsigned cfg_active_generation;
 
     unsigned num_queues;
-    struct virtq *queues;
+    struct virtq queues[VIRTIO_MAX_VIRTQS];
     uint32_t vq_notify_off_mul;
 
     // TODO
@@ -211,7 +217,6 @@ void virtio_intr();
 int virtq_init(struct virtq *queue);
 int virtq_write(struct virtq *queue, const char *data, unsigned size, unsigned max_resp_size);
 // TODO: other methods
-int virtq_deinit(struct virtq *queue);
 
 
 #endif
