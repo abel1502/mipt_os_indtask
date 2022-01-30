@@ -157,6 +157,8 @@ i386_init(void) {
     list_pci();
     configure_virtio_vga();
 
+    virtio_init();
+
 #ifdef CONFIG_KSPACE
     /* Touch all you want */
     // ENV_CREATE_KERNEL_TYPE(prog_test1);

@@ -58,6 +58,8 @@
 #define VIRTIO_PCI_VENDOR 0x1AF4
 #define VIRTIO_PCI_DEVICE_ID_BASE 0x1040
 #define VIRTIO_PCI_CAP_VENDOR 0x09
+// VIRTIO_IRQ defined in trap.h
+#define VIRTIO_MAX_DEVICES 0x10
 
 
 // Everything is little-endian, unless otherwise specified
@@ -186,8 +188,14 @@ struct virtio_device {
     // TODO
 };
 
+// TODO: Some way to keep track of all deivces
+extern struct virtio_device *virtio_devices;
+extern unsigned virtio_num_devices;
 
-int virtio_init(struct virtio_device *device, uint16_t virtio_device_id);
+
+void virtio_init();
+struct virtio_device *virtio_create_device();
+int virtio_init_device(struct virtio_device *device, uint16_t virtio_device_id);
 bool virtio_is_cfg_up_to_date(struct virtio_device *device);
 void virtio_mark_cfg_up_to_date(struct virtio_device *device);
 void virtio_reset(struct virtio_device *device);
@@ -195,8 +203,10 @@ uint8_t virtio_get_status(struct virtio_device *device);
 void virtio_fail(struct virtio_device *device);
 bool virtio_needs_reset(struct virtio_device *device);
 int virtio_notify_avail(struct virtio_device *device, unsigned virtq_idx);
-// TODO: Handle incoming notifications
+// TODO: Implement deinit?
 void virtio_deinit(struct virtio_device *device);
+// TODO: Handle incoming notifications
+void virtio_intr();
 
 int virtq_init(struct virtq *queue);
 int virtq_write(struct virtq *queue, const char *data, unsigned size, unsigned max_resp_size);

@@ -2,8 +2,36 @@
 #include <inc/string.h>
 #include <inc/assert.h>
 
+#include <kern/trap.h>
+#include <kern/picirq.h>
 #include <kern/pmap.h>
 #include <kern/virtio.h>
+
+
+struct virtio_device *virtio_devices = NULL;
+unsigned virtio_num_devices = 0;
+
+
+void
+virtio_init() {
+    assert(virtio_devices == 0);
+
+    virtio_devices = kzalloc_region(sizeof(struct virtio_device) * VIRTIO_MAX_DEVICES);
+    virtio_num_devices = 0;
+
+    return 0;
+}
+
+struct virtio_device *
+virtio_create_device() {
+    assert(virtio_devices);
+
+    if (virtio_num_devices == VIRTIO_MAX_DEVICES) {
+        return NULL;
+    }
+
+    return &virtio_devices[virtio_num_devices++];
+}
 
 
 static int
@@ -105,14 +133,15 @@ virtio_identify_capabilities(struct virtio_device *device) {
     return 0;
 }
 
-int virtio_init_virtqs(struct virtio_device *device) {
+static int
+virtio_init_device_virtqs(struct virtio_device *device) {
     assert(device);
 
     return 0;
 }
 
 int
-virtio_init(struct virtio_device *device, uint16_t virtio_device_id) {
+virtio_init_device(struct virtio_device *device, uint16_t virtio_device_id) {
     assert(device);
 
     int res = 0;
@@ -167,6 +196,8 @@ virtio_init(struct virtio_device *device, uint16_t virtio_device_id) {
     // 8. Set the DRIVER_OK status bit. At this point the device is “live”.
     device->mmio_cfg->device_status |= VIRTIO_CONFIG_S_DRIVER_OK;
 
+    pic_irq_unmask(IRQ_VIRTIO);
+
     return 0;
 }
 
@@ -216,4 +247,38 @@ virtio_needs_reset(struct virtio_device *device) {
     assert(device->mmio_cfg);
 
     return device->mmio_cfg->device_status & VIRTIO_CONFIG_S_NEEDS_RESET;
+}
+
+static void
+virtio_on_virtqs_update(struct virtio_device *device) {
+    cprintf("Virtio device %p virtq used bufs returned\n", device);
+
+    // TODO: Actually process
+}
+
+static void
+virtio_on_cfg_update(struct virtio_device *device) {
+    cprintf("Virtio device %p cfg update\n", device);
+}
+
+void
+virtio_intr() {
+    assert(virtio_devices);
+
+    for (unsigned i = 0; i < virtio_num_devices; ++i) {
+        struct virtio_device *device = &virtio_devices[i];
+        uint8_t isr = *device->mmio_isr;
+
+        if (isr & 0b01) {
+            virtio_on_virtqs_update(device);
+        }
+
+        if (isr & 0b10) {
+            virtio_on_cfg_update(device);
+        }
+    }
+
+    // Do I even need it?
+    // pic_send_eoi(IRQ_VIRTIO);
+    cprintf("Virtio notification hit");
 }
