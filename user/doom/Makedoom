@@ -1,0 +1,96 @@
+DOOM_OBJFILES := \
+		$(OBJDIR)/user/doom/i_main.o 		\
+        $(OBJDIR)/user/doom/dummy.o 		\
+        $(OBJDIR)/user/doom/am_map.o 		\
+        $(OBJDIR)/user/doom/doomdef.o 		\
+        $(OBJDIR)/user/doom/doomstat.o 		\
+        $(OBJDIR)/user/doom/dstrings.o 		\
+        $(OBJDIR)/user/doom/d_event.o 		\
+        $(OBJDIR)/user/doom/d_items.o 		\
+        $(OBJDIR)/user/doom/d_iwad.o 		\
+        $(OBJDIR)/user/doom/d_loop.o 		\
+        $(OBJDIR)/user/doom/d_main.o 		\
+        $(OBJDIR)/user/doom/d_mode.o 		\
+        $(OBJDIR)/user/doom/d_net.o 		\
+        $(OBJDIR)/user/doom/f_finale.o 		\
+        $(OBJDIR)/user/doom/f_wipe.o 		\
+        $(OBJDIR)/user/doom/g_game.o 		\
+        $(OBJDIR)/user/doom/hu_lib.o 		\
+        $(OBJDIR)/user/doom/hu_stuff.o 		\
+        $(OBJDIR)/user/doom/info.o 			\
+        $(OBJDIR)/user/doom/i_cdmus.o 		\
+        $(OBJDIR)/user/doom/i_endoom.o 		\
+        $(OBJDIR)/user/doom/i_joystick.o 	\
+        $(OBJDIR)/user/doom/i_scale.o 		\
+        $(OBJDIR)/user/doom/i_sound.o 		\
+        $(OBJDIR)/user/doom/i_system.o 		\
+        $(OBJDIR)/user/doom/i_timer.o 		\
+        $(OBJDIR)/user/doom/memio.o 		\
+        $(OBJDIR)/user/doom/m_argv.o 		\
+        $(OBJDIR)/user/doom/m_bbox.o 		\
+        $(OBJDIR)/user/doom/m_cheat.o 		\
+        $(OBJDIR)/user/doom/m_config.o 		\
+        $(OBJDIR)/user/doom/m_controls.o 	\
+        $(OBJDIR)/user/doom/m_fixed.o 		\
+        $(OBJDIR)/user/doom/m_menu.o 		\
+        $(OBJDIR)/user/doom/m_misc.o 		\
+        $(OBJDIR)/user/doom/m_random.o 		\
+        $(OBJDIR)/user/doom/p_ceilng.o 		\
+        $(OBJDIR)/user/doom/p_doors.o 		\
+        $(OBJDIR)/user/doom/p_enemy.o 		\
+        $(OBJDIR)/user/doom/p_floor.o 		\
+        $(OBJDIR)/user/doom/p_inter.o 		\
+        $(OBJDIR)/user/doom/p_lights.o 		\
+        $(OBJDIR)/user/doom/p_map.o 		\
+        $(OBJDIR)/user/doom/p_maputl.o 		\
+        $(OBJDIR)/user/doom/p_mobj.o 		\
+        $(OBJDIR)/user/doom/p_plats.o 		\
+        $(OBJDIR)/user/doom/p_pspr.o 		\
+        $(OBJDIR)/user/doom/p_saveg.o 		\
+        $(OBJDIR)/user/doom/p_setup.o 		\
+        $(OBJDIR)/user/doom/p_sight.o 		\
+        $(OBJDIR)/user/doom/p_spec.o 		\
+        $(OBJDIR)/user/doom/p_switch.o 		\
+        $(OBJDIR)/user/doom/p_telept.o 		\
+        $(OBJDIR)/user/doom/p_tick.o 		\
+        $(OBJDIR)/user/doom/p_user.o 		\
+        $(OBJDIR)/user/doom/r_bsp.o 		\
+        $(OBJDIR)/user/doom/r_data.o 		\
+        $(OBJDIR)/user/doom/r_draw.o 		\
+        $(OBJDIR)/user/doom/r_main.o 		\
+        $(OBJDIR)/user/doom/r_plane.o 		\
+        $(OBJDIR)/user/doom/r_segs.o 		\
+        $(OBJDIR)/user/doom/r_sky.o 		\
+        $(OBJDIR)/user/doom/r_things.o 		\
+        $(OBJDIR)/user/doom/sha1.o 			\
+        $(OBJDIR)/user/doom/sounds.o 		\
+        $(OBJDIR)/user/doom/statdump.o 		\
+        $(OBJDIR)/user/doom/st_lib.o 		\
+        $(OBJDIR)/user/doom/st_stuff.o 		\
+        $(OBJDIR)/user/doom/s_sound.o 		\
+        $(OBJDIR)/user/doom/tables.o 		\
+        $(OBJDIR)/user/doom/v_video.o 		\
+        $(OBJDIR)/user/doom/wi_stuff.o 		\
+        $(OBJDIR)/user/doom/w_checksum.o 	\
+        $(OBJDIR)/user/doom/w_file.o 		\
+        $(OBJDIR)/user/doom/w_main.o 		\
+        $(OBJDIR)/user/doom/w_wad.o 		\
+        $(OBJDIR)/user/doom/z_zone.o 		\
+        $(OBJDIR)/user/doom/w_file_stdc.o 	\
+        $(OBJDIR)/user/doom/i_input.o 		\
+        $(OBJDIR)/user/doom/i_video.o 		\
+        $(OBJDIR)/user/doom/doomgeneric.o
+
+
+CFLAGS += -I../../pdclib/include
+
+$(OBJDIR)/user/doom/%.o: user/doom/%.c
+	@echo [Compiling $<]
+	$(V)$(CC) $(CFLAGS) -c $< -o $@
+
+
+$(OBJDIR)/user/Doom: $(DOOM_OBJFILES) $(OBJDIR)/lib/entry.o $(USERLIBS:%=$(OBJDIR)/lib/lib%.a) $(USER_EXTRA_OBJFILES) user/user.ld
+	@echo + ld $@
+	$(V)$(LD) -o $@ $(ULDFLAGS) $(LDFLAGS) $(USER_SAN_LDFLAGS) -nostdlib $(OBJDIR)/lib/entry.o $(USER_EXTRA_OBJFILES) $(DOOM_OBJFILES) -L$(OBJDIR)/lib $(USERLIBS:%=-l%) $(GCC_LIB)
+	$(V)$(OBJDUMP) -S $@ > $@.asm
+	$(V)$(NM) -n $@ > $@.sym
