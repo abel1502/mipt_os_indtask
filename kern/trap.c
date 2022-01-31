@@ -16,6 +16,7 @@
 #include <kern/timer.h>
 #include <kern/vsyscall.h>
 #include <kern/traceopt.h>
+#include <kern/virtio.h>
 
 static struct Taskstate ts;
 
@@ -127,6 +128,7 @@ extern void thdlr_clock();
 extern void thdlr_keybrd();
 extern void thdlr_serial();
 
+extern void thdlr_virtio();
 
 void
 trap_init(void) {
@@ -169,6 +171,8 @@ trap_init(void) {
     // LAB 11: Your code here DONE
     idt[IRQ_OFFSET + IRQ_KBD]    = GATE(0, GD_KT, thdlr_keybrd, 0);
     idt[IRQ_OFFSET + IRQ_SERIAL] = GATE(0, GD_KT, thdlr_serial, 0);
+
+    idt[IRQ_OFFSET + IRQ_VIRTIO] = GATE(0, GD_KT, thdlr_virtio, 0);
     
     /* Setup #PF handler dedicated stack
      * It should be switched on #PF because
@@ -333,6 +337,10 @@ trap_dispatch(struct Trapframe *tf) {
     case IRQ_OFFSET + IRQ_SERIAL:
         // LAB 11: Your code here DONE
         serial_intr();
+        return;
+
+    case IRQ_OFFSET + IRQ_VIRTIO:
+        virtio_intr();
         return;
         
     default:

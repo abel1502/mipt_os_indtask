@@ -2004,3 +2004,20 @@ user_mem_assert(struct Env *env, const void *va, size_t len, int perm) {
         env_destroy(env); /* may not return */
     }
 }
+
+physaddr_t
+lookup_physaddr(const void *region, size_t size) {
+    int class = 0;
+    while (class < MAX_CLASS && CLASS_SIZE(class) < size) {
+        ++class;
+    }
+
+    assert(class != MAX_CLASS);
+    assert(CLASS_SIZE(class) == size);
+
+    struct Page *page = page_lookup(NULL, (uintptr_t)region, class, PARTIAL_NODE, false);
+    assert(page);
+    assert(page->class == class);
+
+    return page2pa(page);
+}
