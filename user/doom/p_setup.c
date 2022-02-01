@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -143,7 +143,7 @@ void P_LoadVertexes (int lump)
 	li->y = SHORT(ml->y)<<FRACBITS;
     }
 
-    // Free buffer memory.
+    // libc_free buffer memory.
     W_ReleaseLumpNum(lump);
 }
 
@@ -691,7 +691,7 @@ static void PadRejectArray(byte *array, unsigned int len)
 
     if (len > sizeof(rejectpad))
     {
-        fprintf(stderr, "PadRejectArray: REJECT lump too short to pad! (%i > %i)\n",
+        libc_fprintf(libc_stderr, "PadRejectArray: REJECT lump too short to pad! (%i > %i)\n",
                         len, (int) sizeof(rejectpad));
 
         // Pad remaining space with 0 (or 0xff, if specified on command line).
@@ -835,7 +835,7 @@ P_SetupLevel
     if (precache)
 	R_PrecacheLevel ();
 
-    //printf ("free memory: 0x%x\n", Z_FreeMemory());
+    //libc_printf ("libc_free memory: 0x%x\n", Z_FreeMemory());
 
 }
 

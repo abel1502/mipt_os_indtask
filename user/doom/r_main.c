@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -22,7 +22,7 @@
 
 
 
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 #include <math.h>
 
 
@@ -262,7 +262,7 @@ R_PointOnSegSide
 // R_PointToAngle
 // To get a global angle from cartesian coordinates,
 //  the coordinates are flipped until they are in
-//  the first octant of the coordinate system, then
+//  the first octant of the coordinate libc_system, then
 //  the y (<=x) is scaled and divided by x to get a
 //  tangent (slope) value which is looked up in the
 //  tantoangle[] table.
@@ -384,8 +384,8 @@ R_PointToDist
     fixed_t	dist;
     fixed_t     frac;
 	
-    dx = abs(x - viewx);
-    dy = abs(y - viewy);
+    dx = libc_abs(x - viewx);
+    dy = libc_abs(y - viewy);
 	
     if (dy>dx)
     {
@@ -467,7 +467,7 @@ fixed_t R_ScaleFromGlobalAngle (angle_t visangle)
     sinv = finesine[(visangle-rw_normalangle)>>ANGLETOFINESHIFT];	
     dist = FixedDiv (rw_distance, sinv);
     cosv = finecosine[(viewangle-visangle)>>ANGLETOFINESHIFT];
-    z = abs(FixedMul (dist, cosv));
+    z = libc_abs(FixedMul (dist, cosv));
     scale = FixedDiv(projection, z);
     return scale;
 }
@@ -726,13 +726,13 @@ void R_ExecuteSetViewSize (void)
     for (i=0 ; i<viewheight ; i++)
     {
 	dy = ((i-viewheight/2)<<FRACBITS)+FRACUNIT/2;
-	dy = abs(dy);
+	dy = libc_abs(dy);
 	yslope[i] = FixedDiv ( (viewwidth<<detailshift)/2*FRACUNIT, dy);
     }
 	
     for (i=0 ; i<viewwidth ; i++)
     {
-	cosadj = abs(finecosine[xtoviewangle[i]>>ANGLETOFINESHIFT]);
+	cosadj = libc_abs(finecosine[xtoviewangle[i]>>ANGLETOFINESHIFT]);
 	distscale[i] = FixedDiv (FRACUNIT,cosadj);
     }
     
@@ -767,21 +767,21 @@ void R_ExecuteSetViewSize (void)
 void R_Init (void)
 {
     R_InitData ();
-    printf (".");
+    libc_printf (".");
     R_InitPointToAngle ();
-    printf (".");
+    libc_printf (".");
     R_InitTables ();
     // viewwidth / viewheight / detailLevel are set by the defaults
-    printf (".");
+    libc_printf (".");
 
     R_SetViewSize (screenblocks, detailLevel);
     R_InitPlanes ();
-    printf (".");
+    libc_printf (".");
     R_InitLightTables ();
-    printf (".");
+    libc_printf (".");
     R_InitSkyMap ();
     R_InitTranslationTables ();
-    printf (".");
+    libc_printf (".");
 	
     framecount = 0;
 }

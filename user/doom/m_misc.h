@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -21,7 +21,7 @@
 #define __M_MISC__
 
 // #include <stdio.h>
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 
 #include <stdarg.h>
 
@@ -31,8 +31,8 @@ boolean M_WriteFile(char *name, void *source, int length);
 int M_ReadFile(char *name, byte **buffer);
 void M_MakeDirectory(char *dir);
 char *M_TempFile(char *s);
-boolean M_FileExists(char *file);
-long M_FileLength(FILE *handle);
+boolean M_FileExists(char *libc_FILE);
+long M_FileLength(libc_FILE *handle);
 boolean M_StrToInt(const char *str, int *result);
 void M_ExtractFileBase(char *path, char *dest);
 void M_ForceUppercase(char *text);

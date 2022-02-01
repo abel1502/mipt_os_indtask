@@ -3,9 +3,9 @@
 // Copyright(C) 1993-2008 Raven Software
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -19,11 +19,11 @@
 
 
 // #include <stdio.h>
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 
-#include <string.h>
-#include <ctype.h>
-#include <errno.h>
+#include <inc/string.h>
+// #include <ctype.h>
+// #include <errno.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -56,52 +56,53 @@
 void M_MakeDirectory(char *path)
 {
 #ifdef _WIN32
-    mkdir(path);
+    libc_mkdir(path);
 #else
-    mkdir(path, 0755);
+    libc_mkdir(path, 0755);
 #endif
 }
 
-// Check if a file exists
+// Check if a libc_FILE exists
 
 boolean M_FileExists(char *filename)
 {
-    FILE *fstream;
+    libc_FILE *fstream;
 
-    fstream = fopen(filename, "r");
+    fstream = libc_fopen(filename, "r");
 
     if (fstream != NULL)
     {
-        fclose(fstream);
+        libc_fclose(fstream);
         return true;
     }
     else
     {
-        // If we can't open because the file is a directory, the 
-        // "file" exists at least!
+        // If we can't open because the libc_FILE is a directory, the 
+        // "libc_FILE" exists at least!
 
-        return errno == EISDIR;
+        // return errno == EISDIR;
+        return false;
     }
 }
 
 //
-// Determine the length of an open file.
+// Determine the length of an open libc_FILE.
 //
 
-long M_FileLength(FILE *handle)
+long M_FileLength(libc_FILE *handle)
 { 
     long savedpos;
     long length;
 
-    // save the current position in the file
-    savedpos = ftell(handle);
+    // save the current position in the libc_FILE
+    savedpos = libc_ftell(handle);
     
     // jump to the end and find the length
-    fseek(handle, 0, SEEK_END);
-    length = ftell(handle);
+    libc_fseek(handle, 0, SEEK_END);
+    length = libc_ftell(handle);
 
     // go back to the old location
-    fseek(handle, savedpos, SEEK_SET);
+    libc_fseek(handle, savedpos, SEEK_SET);
 
     return length;
 }
@@ -112,16 +113,16 @@ long M_FileLength(FILE *handle)
 
 boolean M_WriteFile(char *name, void *source, int length)
 {
-    FILE *handle;
+    libc_FILE *handle;
     int	count;
 	
-    handle = fopen(name, "wb");
+    handle = libc_fopen(name, "wb");
 
     if (handle == NULL)
 	return false;
 
-    count = fwrite(source, 1, length, handle);
-    fclose(handle);
+    count = libc_fwrite(source, 1, length, handle);
+    libc_fclose(handle);
 	
     if (count < length)
 	return false;
@@ -136,32 +137,32 @@ boolean M_WriteFile(char *name, void *source, int length)
 
 int M_ReadFile(char *name, byte **buffer)
 {
-    FILE *handle;
+    libc_FILE *handle;
     int	count, length;
     byte *buf;
 	
-    handle = fopen(name, "rb");
+    handle = libc_fopen(name, "rb");
     if (handle == NULL)
-	I_Error ("Couldn't read file %s", name);
+	I_Error ("Couldn't read libc_FILE %s", name);
 
-    // find the size of the file by seeking to the end and
+    // find the size of the libc_FILE by seeking to the end and
     // reading the current position
 
     length = M_FileLength(handle);
     
     buf = Z_Malloc (length, PU_STATIC, NULL);
-    count = fread(buf, 1, length, handle);
-    fclose (handle);
+    count = libc_fread(buf, 1, length, handle);
+    libc_fclose (handle);
 	
     if (count < length)
-	I_Error ("Couldn't read file %s", name);
+	I_Error ("Couldn't read libc_FILE %s", name);
 		
     *buffer = buf;
     return length;
 }
 
-// Returns the path to a temporary file of the given name, stored
-// inside the system temporary directory.
+// Returns the path to a temporary libc_FILE of the given name, stored
+// inside the libc_system temporary directory.
 //
 // The returned value must be freed with Z_Free after use.
 
@@ -190,10 +191,10 @@ char *M_TempFile(char *s)
 
 boolean M_StrToInt(const char *str, int *result)
 {
-    return sscanf(str, " 0x%x", result) == 1
-        || sscanf(str, " 0X%x", result) == 1
-        || sscanf(str, " 0%o", result) == 1
-        || sscanf(str, " %d", result) == 1;
+    return libc_sscanf(str, " 0x%x", result) == 1
+        || libc_sscanf(str, " 0X%x", result) == 1
+        || libc_sscanf(str, " 0%o", result) == 1
+        || libc_sscanf(str, " %d", result) == 1;
 }
 
 void M_ExtractFileBase(char *path, char *dest)
@@ -214,7 +215,7 @@ void M_ExtractFileBase(char *path, char *dest)
 
     // Copy up to eight characters
     // Note: Vanilla Doom exits with an error if a filename is specified
-    // with a base of more than eight characters.  To remove the 8.3
+    // with a base of more than eight characters.  To libc_remove the 8.3
     // filename limit, instead we simply truncate the name.
 
     length = 0;
@@ -224,7 +225,7 @@ void M_ExtractFileBase(char *path, char *dest)
     {
         if (length >= 8)
         {
-            printf("Warning: Truncated '%s' lump name to '%.8s'.\n",
+            libc_printf("Warning: Truncated '%s' lump name to '%.8s'.\n",
                    filename, dest);
             break;
         }
@@ -254,7 +255,7 @@ void M_ForceUppercase(char *text)
 //
 // M_StrCaseStr
 //
-// Case-insensitive version of strstr()
+// Case-insensitive version of libc_strstr()
 //
 
 char *M_StrCaseStr(char *haystack, char *needle)
@@ -286,7 +287,7 @@ char *M_StrCaseStr(char *haystack, char *needle)
 }
 
 //
-// Safe version of strdup() that checks the string was successfully
+// Safe version of libc_strdup() that checks the string was successfully
 // allocated.
 //
 
@@ -294,7 +295,7 @@ char *M_StringDuplicate(const char *orig)
 {
     char *result;
 
-    result = strdup(orig);
+    result = libc_strdup(orig);
 
     if (result == NULL)
     {
@@ -324,7 +325,7 @@ char *M_StringReplace(const char *haystack, const char *needle,
 
     for (;;)
     {
-        p = strstr(p, needle);
+        p = libc_strstr(p, needle);
         if (p == NULL)
         {
             break;
@@ -336,7 +337,7 @@ char *M_StringReplace(const char *haystack, const char *needle,
 
     // Construct new string.
 
-    result = malloc(result_len);
+    result = libc_malloc(result_len);
     if (result == NULL)
     {
         I_Error("M_StringReplace: Failed to allocate new string");
@@ -446,7 +447,7 @@ char *M_StringJoin(const char *s, ...)
     }
     va_end(args);
 
-    result = malloc(result_len);
+    result = libc_malloc(result_len);
 
     if (result == NULL)
     {
@@ -472,14 +473,14 @@ char *M_StringJoin(const char *s, ...)
     return result;
 }
 
-// On Windows, vsnprintf() is _vsnprintf().
+// On Windows, libc_vsnprintf() is _vsnprintf().
 #ifdef _WIN32
 #if _MSC_VER < 1400 /* not needed for Visual Studio 2008 */
-#define vsnprintf _vsnprintf
+#define libc_vsnprintf _vsnprintf
 #endif
 #endif
 
-// Safe, portable vsnprintf().
+// Safe, portable libc_vsnprintf().
 int M_vsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
 {
     int result;
@@ -489,10 +490,10 @@ int M_vsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
         return 0;
     }
 
-    // Windows (and other OSes?) has a vsnprintf() that doesn't always
+    // Windows (and other OSes?) has a libc_vsnprintf() that doesn't always
     // append a trailing \0. So we must do it, and write into a buffer
     // that is one byte shorter; otherwise this function is unsafe.
-    result = vsnprintf(buf, buf_len, s, args);
+    result = libc_vsnprintf(buf, buf_len, s, args);
 
     // If truncated, change the final char in the buffer to a \0.
     // A negative result indicates a truncated buffer on Windows.
@@ -505,7 +506,7 @@ int M_vsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
     return result;
 }
 
-// Safe, portable snprintf().
+// Safe, portable libc_snprintf().
 int M_snprintf(char *buf, size_t buf_len, const char *s, ...)
 {
     va_list args;
@@ -524,11 +525,11 @@ char *M_OEMToUTF8(const char *oem)
     wchar_t *tmp;
     char *result;
 
-    tmp = malloc(len * sizeof(wchar_t));
+    tmp = libc_malloc(len * sizeof(wchar_t));
     MultiByteToWideChar(CP_OEMCP, 0, oem, len, tmp, len);
-    result = malloc(len * 4);
+    result = libc_malloc(len * 4);
     WideCharToMultiByte(CP_UTF8, 0, tmp, len, result, len * 4, NULL, NULL);
-    free(tmp);
+    libc_free(tmp);
 
     return result;
 }

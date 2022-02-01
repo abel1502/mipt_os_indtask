@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -19,7 +19,7 @@
 //
 
 // #include <stdio.h>
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 
 #include "m_random.h"
 #include "i_system.h"
@@ -394,7 +394,7 @@ void P_NewChaseDir (mobj_t*	actor)
 
     // try other directions
     if (P_Random() > 200
-	||  abs(deltay)>abs(deltax))
+	||  libc_abs(deltay)>libc_abs(deltax))
     {
 	tdir=d[1];
 	d[1]=d[2];
@@ -1127,8 +1127,8 @@ boolean PIT_VileCheck (mobj_t*	thing)
     
     maxdist = thing->info->radius + mobjinfo[MT_VILE].radius;
 	
-    if ( abs(thing->x - viletryx) > maxdist
-	 || abs(thing->y - viletryy) > maxdist )
+    if ( libc_abs(thing->x - viletryx) > maxdist
+	 || libc_abs(thing->y - viletryy) > maxdist )
 	return true;		// not actually touching
 		
     corpsehit = thing;
@@ -1983,7 +1983,7 @@ void A_SpawnFly (mobj_t* mo)
     // telefrag anything in this spot
     P_TeleportMove (newmobj, newmobj->x, newmobj->y);
 
-    // remove self (i.e., cube).
+    // libc_remove self (i.e., cube).
     P_RemoveMobj (mo);
 }
 

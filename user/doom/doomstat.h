@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -17,7 +17,7 @@
 //   Theoretically speaking, the internal state of the engine
 //    should be found by looking at the variables collected
 //    here, and every relevant module will have to include
-//    this header file.
+//    this header libc_FILE.
 //   In practice, things are a bit messy.
 //
 
@@ -95,7 +95,7 @@ extern  skill_t         gameskill;
 extern  int		gameepisode;
 extern  int		gamemap;
 
-// If non-zero, exit the level after this number of minutes
+// If non-zero, libc_exit the level after this number of minutes
 extern  int             timelimit;
 
 // Nightmare mode flag, single player.
@@ -126,7 +126,7 @@ extern int musicVolume;
 //  in: /usr/include/linux/soundcard.h
 extern int snd_MusicDevice;
 extern int snd_SfxDevice;
-// Config file? Same disclaimer as above.
+// Config libc_FILE? Same disclaimer as above.
 extern int snd_DesiredMusicDevice;
 extern int snd_DesiredSfxDevice;
 
@@ -245,7 +245,7 @@ extern  wbstartstruct_t		wminfo;
 // Internal parameters, used for engine.
 //
 
-// File handling stuff.
+// libc_FILE handling stuff.
 extern  char *          savegamedir;
 extern	char		basedefault[1024];
 

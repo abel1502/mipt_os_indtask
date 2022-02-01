@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -348,7 +348,7 @@ void R_GenerateLookup (int texnum)
     {
 	if (!patchcount[x])
 	{
-	    printf ("R_GenerateLookup: column without a patch (%s)\n",
+	    libc_printf ("R_GenerateLookup: column without a patch (%s)\n",
 		    texture->name);
 	    return;
 	}
@@ -534,28 +534,28 @@ void R_InitTextures (void)
     temp2 = W_GetNumForName (DEH_String("S_END")) - 1;
     temp3 = ((temp2-temp1+63)/64) + ((numtextures+63)/64);
 
-    // If stdout is a real console, use the classic vanilla "filling
+    // If libc_stdout is a real console, use the classic vanilla "filling
     // up the box" effect, which uses backspace to "step back" inside
-    // the box.  If stdout is a file, don't draw the box.
+    // the box.  If libc_stdout is a libc_FILE, don't draw the box.
 
     if (I_ConsoleStdout())
     {
-        printf("[");
+        libc_printf("[");
         for (i = 0; i < temp3 + 9; i++)
-            printf(" ");
-        printf("]");
+            libc_printf(" ");
+        libc_printf("]");
         for (i = 0; i < temp3 + 10; i++)
-            printf("\b");
+            libc_printf("\b");
     }
 	
     for (i=0 ; i<numtextures ; i++, directory++)
     {
 	if (!(i&63))
-	    printf (".");
+	    libc_printf (".");
 
 	if (i == numtextures1)
 	{
-	    // Start looking in second texture file.
+	    // Start looking in second texture libc_FILE.
 	    maptex = maptex2;
 	    maxoff = maxoff2;
 	    directory = maptex+1;
@@ -668,7 +668,7 @@ void R_InitSpriteLumps (void)
     for (i=0 ; i< numspritelumps ; i++)
     {
 	if (!(i&63))
-	    printf (".");
+	    libc_printf (".");
 
 	patch = W_CacheLumpNum (firstspritelump+i, PU_CACHE);
 	spritewidth[i] = SHORT(patch->width)<<FRACBITS;
@@ -703,11 +703,11 @@ void R_InitColormaps (void)
 void R_InitData (void)
 {
     R_InitTextures ();
-    printf (".");
+    libc_printf (".");
     R_InitFlats ();
-    printf (".");
+    libc_printf (".");
     R_InitSpriteLumps ();
-    printf (".");
+    libc_printf (".");
     R_InitColormaps ();
 }
 

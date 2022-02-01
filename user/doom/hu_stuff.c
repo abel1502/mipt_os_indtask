@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -83,7 +83,7 @@ char*	player_names[] =
     HUSTR_PLRRED
 };
 
-char			chat_char; // remove later.
+char			chat_char; // libc_remove later.
 static player_t*	plr;
 patch_t*		hu_font[HU_FONTSIZE];
 static hu_textline_t	w_title;
@@ -592,7 +592,7 @@ boolean HU_Responder(event_t *ev)
 	    c = ev->data1 - '0';
 	    if (c > 9)
 		return false;
-	    // fprintf(stderr, "got here\n");
+	    // libc_fprintf(libc_stderr, "got here\n");
 	    macromessage = chat_macros[c];
 	    
 	    // kill last message with a '\n'

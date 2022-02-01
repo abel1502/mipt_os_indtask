@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -17,8 +17,8 @@
 
 
 
-#include <string.h>
-#include <inc/lib.h>
+#include <inc/string.h>
+#include <inc/libdoom.h>
 #include <math.h>
 
 #include "doomdef.h" 
@@ -100,7 +100,7 @@ boolean		respawnmonsters;
 int             gameepisode; 
 int             gamemap; 
 
-// If non-zero, exit the level after this number of minutes.
+// If non-zero, libc_exit the level after this number of minutes.
 
 int             timelimit;
 
@@ -109,7 +109,7 @@ boolean         sendpause;             	// send a pause event next tic
 boolean         sendsave;             	// send a save event next tic 
 boolean         usergame;               // ok to save / end game 
  
-boolean         timingdemo;             // if true, exit with report on completion 
+boolean         timingdemo;             // if true, libc_exit with report on completion 
 boolean         nodrawers;              // for comparative timing purposes 
 int             starttime;          	// for comparative timing purposes  	 
  
@@ -367,12 +367,12 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     { 
 	if (gamekeydown[key_right]) 
 	{
-	    // fprintf(stderr, "strafe right\n");
+	    // libc_fprintf(libc_stderr, "strafe right\n");
 	    side += sidemove[speed]; 
 	}
 	if (gamekeydown[key_left]) 
 	{
-	    //	fprintf(stderr, "strafe left\n");
+	    //	libc_fprintf(libc_stderr, "strafe left\n");
 	    side -= sidemove[speed]; 
 	}
 	if (joyxmove > 0) 
@@ -395,12 +395,12 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
  
     if (gamekeydown[key_up]) 
     {
-	// fprintf(stderr, "up\n");
+	// libc_fprintf(libc_stderr, "up\n");
 	forward += forwardmove[speed]; 
     }
     if (gamekeydown[key_down]) 
     {
-	// fprintf(stderr, "down\n");
+	// libc_fprintf(libc_stderr, "down\n");
 	forward -= forwardmove[speed]; 
     }
 
@@ -791,7 +791,7 @@ boolean G_Responder (event_t* ev)
         // Perform a low pass filter on this so that the thermometer 
         // appears to move smoothly.
 
-        testcontrols_mousespeed = abs(ev->data2);
+        testcontrols_mousespeed = libc_abs(ev->data2);
     }
 
     // If the next/previous weapon keys are pressed, set the next_weapon
@@ -1334,7 +1334,7 @@ void G_ExitLevel (void)
 // Here's for the german edition.
 void G_SecretExitLevel (void) 
 { 
-    // IF NO WOLF3D LEVELS, NO SECRET EXIT!
+    // IF NO WOLF3D LEVELS, NO SECRET libc_exit!
     if ( (gamemode == commercial)
       && (W_CheckNumForName("map31")<0))
 	secretexit = false;
@@ -1395,7 +1395,7 @@ void G_DoCompleted (void)
     if ( (gamemap == 9)
 	 && (gamemode != commercial) ) 
     {
-	// exit secret level 
+	// libc_exit secret level 
 	for (i=0 ; i<MAXPLAYERS ; i++) 
 	    players[i].didsecret = true; 
     } 
@@ -1551,7 +1551,7 @@ void G_DoLoadGame (void)
 	 
     gameaction = ga_nothing; 
 	 
-    save_stream = fopen(savename, "rb");
+    save_stream = libc_fopen(savename, "rb");
 
     if (save_stream == NULL)
     {
@@ -1562,7 +1562,7 @@ void G_DoLoadGame (void)
 
     if (!P_ReadSaveGameHeader())
     {
-        fclose(save_stream);
+        libc_fclose(save_stream);
         return;
     }
 
@@ -1582,7 +1582,7 @@ void G_DoLoadGame (void)
     if (!P_ReadSaveGameEOF())
 	I_Error ("Bad savegame");
 
-    fclose(save_stream);
+    libc_fclose(save_stream);
     
     if (setsizeneeded)
     	R_ExecuteSetViewSize ();
@@ -1617,18 +1617,18 @@ void G_DoSaveGame (void)
     temp_savegame_file = P_TempSaveGameFile();
     savegame_file = P_SaveGameFile(savegameslot);
 
-    // Open the savegame file for writing.  We write to a temporary file
-    // and then rename it at the end if it was successfully written.
+    // Open the savegame libc_FILE for writing.  We write to a temporary libc_FILE
+    // and then libc_rename it at the end if it was successfully written.
     // This prevents an existing savegame from being overwritten by 
     // a corrupted one, or if a savegame buffer overrun occurs.
-    save_stream = fopen(temp_savegame_file, "wb");
+    save_stream = libc_fopen(temp_savegame_file, "wb");
 
     if (save_stream == NULL)
     {
         // Failed to save the game, so we're going to have to abort. But
         // to be nice, save to somewhere else before we call I_Error().
         recovery_savegame_file = M_TempFile("recovery.dsg");
-        save_stream = fopen(recovery_savegame_file, "wb");
+        save_stream = libc_fopen(recovery_savegame_file, "wb");
         if (save_stream == NULL)
         {
             I_Error("Failed to open either '%s' or '%s' to write savegame.",
@@ -1650,30 +1650,30 @@ void G_DoSaveGame (void)
     // Enforce the same savegame size limit as in Vanilla Doom, 
     // except if the vanilla_savegame_limit setting is turned off.
 
-    if (vanilla_savegame_limit && ftell(save_stream) > SAVEGAMESIZE)
+    if (vanilla_savegame_limit && libc_ftell(save_stream) > SAVEGAMESIZE)
     {
         I_Error ("Savegame buffer overrun");
     }
     
-    // Finish up, close the savegame file.
+    // Finish up, close the savegame libc_FILE.
 
-    fclose(save_stream);
+    libc_fclose(save_stream);
 
     if (recovery_savegame_file != NULL)
     {
         // We failed to save to the normal location, but we wrote a
-        // recovery file to the temp directory. Now we can bomb out
+        // recovery libc_FILE to the temp directory. Now we can bomb out
         // with an error.
-        I_Error("Failed to open savegame file '%s' for writing.\n"
+        I_Error("Failed to open savegame libc_FILE '%s' for writing.\n"
                 "But your game has been saved to '%s' for recovery.",
                 temp_savegame_file, recovery_savegame_file);
     }
 
-    // Now rename the temporary savegame file to the actual savegame
-    // file, overwriting the old savegame if there was one there.
+    // Now libc_rename the temporary savegame libc_FILE to the actual savegame
+    // libc_FILE, overwriting the old savegame if there was one there.
 
-    remove(savegame_file);
-    rename(temp_savegame_file, savegame_file);
+    libc_remove(savegame_file);
+    libc_rename(temp_savegame_file, savegame_file);
     
     gameaction = ga_nothing;
     M_StringCopy(savedescription, "", sizeof(savedescription));
@@ -1944,7 +1944,7 @@ static void IncreaseDemoBuffer(void)
 
     memcpy(new_demobuffer, demobuffer, current_length);
 
-    // Free the old buffer and point the demo pointers at the new buffer.
+    // libc_free the old buffer and point the demo pointers at the new buffer.
 
     Z_Free(demobuffer);
 
@@ -2031,7 +2031,7 @@ void G_RecordDemo (char *name)
 
     i = M_CheckParmWithArgs("-maxdemo", 1);
     if (i)
-	maxsize = atoi(myargv[i+1])*1024;
+	maxsize = libc_atoi(myargv[i+1])*1024;
     demobuffer = Z_Malloc (maxsize,PU_STATIC,NULL); 
     demoend = demobuffer + maxsize;
 	
@@ -2183,7 +2183,7 @@ void G_DoPlayDemo (void)
         //                 "    This appears to be %s.";
 
         //I_Error(message, demoversion, G_VanillaVersionCode(),
-        printf("Demo is from a different game version!\n"
+        libc_printf("Demo is from a different game version!\n"
                         "(read %i, should be %i)\n"
                         "\n"
                         "*** You may need to upgrade your version "

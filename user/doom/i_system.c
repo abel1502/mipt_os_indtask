@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -17,9 +17,9 @@
 
 
 
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 // #include <stdio.h>
-#include <string.h>
+#include <inc/string.h>
 
 #include <stdarg.h>
 
@@ -74,7 +74,7 @@ void I_AtExit(atexit_func_t func, boolean run_on_error)
 {
     atexit_listentry_t *entry;
 
-    entry = malloc(sizeof(*entry));
+    entry = libc_malloc(sizeof(*entry));
 
     entry->func = func;
     entry->run_on_error = run_on_error;
@@ -116,7 +116,7 @@ static byte *AutoAllocMemory(int *size, int default_ram, int min_ram)
 
         *size = default_ram * 1024 * 1024;
 
-        zonemem = malloc(*size);
+        zonemem = libc_malloc(*size);
 
         // Failed to allocate?  Reduce zone size until we reach a size
         // that is acceptable.
@@ -146,7 +146,7 @@ byte *I_ZoneBase (int *size)
 
     if (p > 0)
     {
-        default_ram = atoi(myargv[p+1]);
+        default_ram = libc_atoi(myargv[p+1]);
         min_ram = default_ram;
     }
     else
@@ -157,7 +157,7 @@ byte *I_ZoneBase (int *size)
 
     zonemem = AutoAllocMemory(size, default_ram, min_ram);
 
-    printf("zone memory: %p, %x allocated for zone\n", 
+    libc_printf("zone memory: %p, %x allocated for zone\n", 
            zonemem, *size);
 
     return zonemem;
@@ -169,9 +169,9 @@ void I_PrintBanner(char *msg)
     int spaces = 35 - (strlen(msg) / 2);
 
     for (i=0; i<spaces; ++i)
-        putchar(' ');
+        libc_putchar(' ');
 
-    puts(msg);
+    libc_puts(msg);
 }
 
 void I_PrintDivider(void)
@@ -180,10 +180,10 @@ void I_PrintDivider(void)
 
     for (i=0; i<75; ++i)
     {
-        putchar('=');
+        libc_putchar('=');
     }
 
-    putchar('\n');
+    libc_putchar('\n');
 }
 
 void I_PrintStartupBanner(char *gamedescription)
@@ -192,8 +192,8 @@ void I_PrintStartupBanner(char *gamedescription)
     I_PrintBanner(gamedescription);
     I_PrintDivider();
     
-    printf(
-    " " PACKAGE_NAME " is free software, covered by the GNU General Public\n"
+    libc_printf(
+    " " PACKAGE_NAME " is libc_free software, covered by the GNU General Public\n"
     " License.  There is NO warranty; not even for MERCHANTABILITY or FITNESS\n"
     " FOR A PARTICULAR PURPOSE. You are welcome to change and distribute\n"
     " copies under certain conditions. See the source for more information.\n");
@@ -204,17 +204,17 @@ void I_PrintStartupBanner(char *gamedescription)
 // 
 // I_ConsoleStdout
 //
-// Returns true if stdout is a real console, false if it is a file
+// Returns true if libc_stdout is a real console, false if it is a libc_FILE
 //
 
 boolean I_ConsoleStdout(void)
 {
 #ifdef _WIN32
-    // SDL "helpfully" always redirects stdout to a file.
+    // SDL "helpfully" always redirects libc_stdout to a libc_FILE.
     return 0;
 #else
 #if ORIGCODE
-    return isatty(fileno(stdout));
+    return isatty(fileno(libc_stdout));
 #else
 	return 0;
 #endif
@@ -247,7 +247,7 @@ void I_Quit (void)
 {
     atexit_listentry_t *entry;
 
-    // Run through all exit functions
+    // Run through all libc_exit functions
  
     entry = exit_funcs; 
 
@@ -260,7 +260,7 @@ void I_Quit (void)
 #if ORIGCODE
     SDL_Quit();
 
-    exit(0);
+    libc_exit(0);
 #endif
 }
 
@@ -271,7 +271,8 @@ void I_Quit (void)
 
 static int ZenityAvailable(void)
 {
-    return system(ZENITY_BINARY " --help >/dev/null 2>&1") == 0;
+    // return libc_system(ZENITY_BINARY " --help >/dev/null 2>&1") == 0;
+    return false;
 }
 
 // Escape special characters in the given string so that they can be
@@ -283,7 +284,7 @@ static char *EscapeShellString(char *string)
     char *r, *s;
 
     // In the worst case, every character might be escaped.
-    result = malloc(strlen(string) * 2 + 3);
+    result = libc_malloc(strlen(string) * 2 + 3);
     r = result;
 
     // Enclosing quotes.
@@ -322,29 +323,32 @@ static char *EscapeShellString(char *string)
 
 static int ZenityErrorBox(char *message)
 {
-    int result;
-    char *escaped_message;
-    char *errorboxpath;
-    static size_t errorboxpath_size;
+    // int result;
+    // char *escaped_message;
+    // char *errorboxpath;
+    // static size_t errorboxpath_size;
 
-    if (!ZenityAvailable())
-    {
-        return 0;
-    }
+    return 0;
 
-    escaped_message = EscapeShellString(message);
+    // if (!ZenityAvailable())
+    // {
+    //     return 0;
+    // }
 
-    errorboxpath_size = strlen(ZENITY_BINARY) + strlen(escaped_message) + 19;
-    errorboxpath = malloc(errorboxpath_size);
-    M_snprintf(errorboxpath, errorboxpath_size, "%s --error --text=%s",
-               ZENITY_BINARY, escaped_message);
+    // escaped_message = EscapeShellString(message);
 
-    result = system(errorboxpath);
+    // errorboxpath_size = strlen(ZENITY_BINARY) + strlen(escaped_message) + 19;
+    // errorboxpath = libc_malloc(errorboxpath_size);
+    // M_snprintf(errorboxpath, errorboxpath_size, "%s --error --text=%s",
+    //            ZENITY_BINARY, escaped_message);
 
-    free(errorboxpath);
-    free(escaped_message);
+    // // result = libc_system(errorboxpath);
+    // result = 0;
 
-    return result;
+    // libc_free(errorboxpath);
+    // libc_free(escaped_message);
+
+    // return result;
 }
 
 #endif /* !defined(_WIN32) && !defined(__MACOSX__) */
@@ -365,9 +369,9 @@ void I_Error (char *error, ...)
 
     if (already_quitting)
     {
-        fprintf(stderr, "Warning: recursive call to I_Error detected.\n");
+        libc_fprintf(libc_stderr, "Warning: recursive call to I_Error detected.\n");
 #if ORIGCODE
-        exit(-1);
+        libc_exit(-1);
 #endif
     }
     else
@@ -377,11 +381,11 @@ void I_Error (char *error, ...)
 
     // Message first.
     va_start(argptr, error);
-    //fprintf(stderr, "\nError: ");
-    vfprintf(stderr, error, argptr);
-    fprintf(stderr, "\n\n");
+    //libc_fprintf(libc_stderr, "\nError: ");
+    libc_vfprintf(libc_stderr, error, argptr);
+    libc_fprintf(libc_stderr, "\n\n");
     va_end(argptr);
-    fflush(stderr);
+    libc_fflush(libc_stderr);
 
     // Write a copy of the message into buffer.
     va_start(argptr, error);
@@ -458,7 +462,7 @@ void I_Error (char *error, ...)
 #if ORIGCODE
     SDL_Quit();
 
-    exit(-1);
+    libc_exit(-1);
 #else
     while (true)
     {

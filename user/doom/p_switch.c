@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -211,7 +211,7 @@ P_ChangeSwitchTexture
 	
     sound = sfx_swtchn;
 
-    // EXIT SWITCH?
+    // libc_exit SWITCH?
     if (line->special == 11)                
 	sound = sfx_swtchx;
 	
@@ -351,7 +351,7 @@ P_UseSpecialLine
 	break;
 	
       case 11:
-	// Exit level
+	// libc_exit level
 	P_ChangeSwitchTexture(line,0);
 	G_ExitLevel ();
 	break;
@@ -423,7 +423,7 @@ P_UseSpecialLine
 	break;
 	
       case 51:
-	// Secret EXIT
+	// Secret libc_exit
 	P_ChangeSwitchTexture(line,0);
 	G_SecretExitLevel ();
 	break;

@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -18,7 +18,7 @@
 
 
 // #include <stdio.h>
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 
 #include "dstrings.h"
 #include "deh_main.h"
@@ -36,13 +36,13 @@
 #define SAVEGAME_EOF 0x1d
 #define VERSIONSIZE 16 
 
-FILE *save_stream;
+libc_FILE *save_stream;
 int savegamelength;
 boolean savegame_error;
 
-// Get the filename of a temporary file to write the savegame to.  After
-// the file has been successfully saved, it will be renamed to the 
-// real file.
+// Get the filename of a temporary libc_FILE to write the savegame to.  After
+// the libc_FILE has been successfully saved, it will be renamed to the 
+// real libc_FILE.
 
 char *P_TempSaveGameFile(void)
 {
@@ -56,7 +56,7 @@ char *P_TempSaveGameFile(void)
     return filename;
 }
 
-// Get the filename of the save game file to use for the specified slot.
+// Get the filename of the save game libc_FILE to use for the specified slot.
 
 char *P_SaveGameFile(int slot)
 {
@@ -67,7 +67,7 @@ char *P_SaveGameFile(int slot)
     if (filename == NULL)
     {
         filename_size = strlen(savegamedir) + 32;
-        filename = malloc(filename_size);
+        filename = libc_malloc(filename_size);
     }
 
     DEH_snprintf(basename, 32, SAVEGAMENAME "%d.dsg", slot);
@@ -82,11 +82,11 @@ static byte saveg_read8(void)
 {
     byte result;
 
-    if (fread(&result, 1, 1, save_stream) < 1)
+    if (libc_fread(&result, 1, 1, save_stream) < 1)
     {
         if (!savegame_error)
         {
-            fprintf(stderr, "saveg_read8: Unexpected end of file while "
+            libc_fprintf(libc_stderr, "saveg_read8: Unexpected end of libc_FILE while "
                             "reading save game\n");
 
             savegame_error = true;
@@ -98,11 +98,11 @@ static byte saveg_read8(void)
 
 static void saveg_write8(byte value)
 {
-    if (fwrite(&value, 1, 1, save_stream) < 1)
+    if (libc_fwrite(&value, 1, 1, save_stream) < 1)
     {
         if (!savegame_error)
         {
-            fprintf(stderr, "saveg_write8: Error while writing save game\n");
+            libc_fprintf(libc_stderr, "saveg_write8: Error while writing save game\n");
 
             savegame_error = true;
         }
@@ -153,7 +153,7 @@ static void saveg_read_pad(void)
     int padding;
     int i;
 
-    pos = ftell(save_stream);
+    pos = libc_ftell(save_stream);
 
     padding = (4 - (pos & 3)) & 3;
 
@@ -169,7 +169,7 @@ static void saveg_write_pad(void)
     int padding;
     int i;
 
-    pos = ftell(save_stream);
+    pos = libc_ftell(save_stream);
 
     padding = (4 - (pos & 3)) & 3;
 
@@ -1413,7 +1413,7 @@ boolean P_ReadSaveGameHeader(void)
 }
 
 //
-// Read the end of file marker.  Returns true if read successfully.
+// Read the end of libc_FILE marker.  Returns true if read successfully.
 // 
 
 boolean P_ReadSaveGameEOF(void)
@@ -1426,7 +1426,7 @@ boolean P_ReadSaveGameEOF(void)
 }
 
 //
-// Write the end of file marker
+// Write the end of libc_FILE marker
 //
 
 void P_WriteSaveGameEOF(void)
@@ -1624,7 +1624,7 @@ void P_UnArchiveThinkers (void)
     thinker_t*		next;
     mobj_t*		mobj;
     
-    // remove all the current thinkers
+    // libc_remove all the current thinkers
     currentthinker = thinkercap.next;
     while (currentthinker != &thinkercap)
     {

@@ -79,10 +79,12 @@ DOOM_OBJFILES := \
         $(OBJDIR)/user/doom/w_file_stdc.o 	\
         $(OBJDIR)/user/doom/i_input.o 		\
         $(OBJDIR)/user/doom/i_video.o 		\
-        $(OBJDIR)/user/doom/doomgeneric.o
+        $(OBJDIR)/user/doom/doomgeneric.o   \
+        $(OBJDIR)/user/doom/libdoom.o
 
 
 CFLAGS += -I../../pdclib/include
+
 
 $(OBJDIR)/user/doom/%.o: user/doom/%.c
 	@echo [Compiling $<]

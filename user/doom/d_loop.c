@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -16,8 +16,8 @@
 //     Main loop code.
 //
 
-#include <inc/lib.h>
-#include <string.h>
+#include <inc/libdoom.h>
+#include <inc/string.h>
 
 #include "doomfeatures.h"
 
@@ -173,7 +173,7 @@ static boolean BuildNewTic(void)
            return false;
     }
 
-    //printf ("mk:%i ",maketic);
+    //libc_printf ("mk:%i ",maketic);
     memset(&cmd, 0, sizeof(ticcmd_t));
     loop_interface->BuildTiccmd(&cmd, maketic);
 
@@ -260,7 +260,7 @@ static void D_Disconnected(void)
 
     // disconnected from server
 
-    printf("Disconnected from server.\n");
+    libc_printf("Disconnected from server.\n");
 }
 
 //
@@ -380,7 +380,7 @@ void D_StartNetGame(net_gamesettings_t *settings,
     i = M_CheckParmWithArgs("-extratics", 1);
 
     if (i > 0)
-        settings->extratics = atoi(myargv[i+1]);
+        settings->extratics = libc_atoi(myargv[i+1]);
     else
         settings->extratics = 1;
 
@@ -395,7 +395,7 @@ void D_StartNetGame(net_gamesettings_t *settings,
     i = M_CheckParmWithArgs("-dup", 1);
 
     if (i > 0)
-        settings->ticdup = atoi(myargv[i+1]);
+        settings->ticdup = libc_atoi(myargv[i+1]);
     else
         settings->ticdup = 1;
 
@@ -434,7 +434,7 @@ void D_StartNetGame(net_gamesettings_t *settings,
     // TODO: Message disabled until we fix new_sync.
     //if (!new_sync)
     //{
-    //    printf("Syncing netgames like Vanilla Doom.\n");
+    //    libc_printf("Syncing netgames like Vanilla Doom.\n");
     //}
 #else
     settings->consoleplayer = 0;
@@ -457,7 +457,7 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
     int i;
 #endif
 
-    // Call D_QuitNetGame on exit:
+    // Call D_QuitNetGame on libc_exit:
 
     I_AtExit(D_QuitNetGame, true);
 
@@ -538,7 +538,7 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
                     NET_AddrToString(addr));
         }
 
-        printf("D_InitNetGame: Connected to %s\n", NET_AddrToString(addr));
+        libc_printf("D_InitNetGame: Connected to %s\n", NET_AddrToString(addr));
 
         // Wait for launch message received from server.
 
@@ -623,7 +623,7 @@ static void OldNetSync(void)
         if (maketic <= recvtic)
         {
             lasttime--;
-            // printf ("-");
+            // libc_printf ("-");
         }
 
         frameskip[frameon & 3] = oldnettics > recvtic;
@@ -632,7 +632,7 @@ static void OldNetSync(void)
         if (frameskip[0] && frameskip[1] && frameskip[2] && frameskip[3])
         {
             skiptics = 1;
-            // printf ("+");
+            // libc_printf ("+");
         }
     }
 }

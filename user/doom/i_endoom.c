@@ -1,9 +1,9 @@
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -12,11 +12,11 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//    Exit text-mode ENDOOM screen.
+//    libc_exit text-mode ENDOOM screen.
 //
 
 // #include <stdio.h>
-#include <string.h>
+#include <inc/string.h>
 
 #include "config.h"
 #include "doomtype.h"

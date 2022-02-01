@@ -1,9 +1,9 @@
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -81,7 +81,7 @@ struct _net_module_s
 
     void (*AddrToString)(net_addr_t *addr, char *buffer, int buffer_len);
 
-    // Free back an address when no longer in use
+    // libc_free back an address when no longer in use
 
     void (*FreeAddress)(net_addr_t *addr);
 

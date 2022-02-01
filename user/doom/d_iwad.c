@@ -1,9 +1,9 @@
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -12,15 +12,15 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//     Search for and locate an IWAD file, and initialize according
+//     Search for and locate an IWAD libc_FILE, and initialize according
 //     to the IWAD type.
 //
 
 // #include <stdio.h>
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 
 #include <ctype.h>
-#include <string.h>
+#include <inc/string.h>
 
 #include "config.h"
 #include "deh_str.h"
@@ -215,12 +215,12 @@ static char *GetRegistryString(registry_value_t *reg_val)
     {
         // Allocate a buffer for the value and read the value
 
-        result = malloc(len);
+        result = libc_malloc(len);
 
         if (RegQueryValueEx(key, reg_val->value, NULL, &valtype,
                             (unsigned char *) result, &len) != ERROR_SUCCESS)
         {
-            free(result);
+            libc_free(result);
             result = NULL;
         }
     }
@@ -251,11 +251,11 @@ static void CheckUninstallStrings(void)
             continue;
         }
 
-        unstr = strstr(val, UNINSTALLER_STRING);
+        unstr = libc_strstr(val, UNINSTALLER_STRING);
 
         if (unstr == NULL)
         {
-            free(val);
+            libc_free(val);
         }
         else
         {
@@ -289,7 +289,7 @@ static void CheckCollectorsEdition(void)
         AddIWADDir(subpath);
     }
 
-    free(install_path);
+    libc_free(install_path);
 }
 
 
@@ -316,7 +316,7 @@ static void CheckSteamEdition(void)
         AddIWADDir(subpath);
     }
 
-    free(install_path);
+    libc_free(install_path);
 }
 
 // The BFG edition ships with a full set of GUS patches. If we find them,
@@ -344,7 +344,7 @@ static void CheckSteamGUSPatches(void)
     }
 
     len = strlen(install_path) + strlen(STEAM_BFG_GUS_PATCHES) + 20;
-    patch_path = malloc(len);
+    patch_path = libc_malloc(len);
     M_snprintf(patch_path, len, "%s\\%s\\ACBASS.PAT",
                install_path, STEAM_BFG_GUS_PATCHES);
 
@@ -356,8 +356,8 @@ static void CheckSteamGUSPatches(void)
         M_SetVariable("gus_patch_path", patch_path);
     }
 
-    free(patch_path);
-    free(install_path);
+    libc_free(patch_path);
+    libc_free(install_path);
 }
 
 // Default install directories for DOS Doom
@@ -386,7 +386,7 @@ static void CheckDOSDefaults(void)
 
 #endif
 
-// Returns true if the specified path is a path to a file
+// Returns true if the specified path is a path to a libc_FILE
 // of the specified name.
 
 static boolean DirIsFile(char *path, char *filename)
@@ -403,7 +403,7 @@ static boolean DirIsFile(char *path, char *filename)
 }
 
 // Check if the specified directory contains the specified IWAD
-// file, returning the full path to the IWAD if found, or NULL
+// libc_FILE, returning the full path to the IWAD if found, or NULL
 // if not found.
 
 static char *CheckDirectoryHasIWAD(char *dir, char *iwadname)
@@ -411,11 +411,11 @@ static char *CheckDirectoryHasIWAD(char *dir, char *iwadname)
     char *filename; 
 
     // As a special case, the "directory" may refer directly to an
-    // IWAD file if the path comes from DOOMWADDIR or DOOMWADPATH.
+    // IWAD libc_FILE if the path comes from DOOMWADDIR or DOOMWADPATH.
 
     if (DirIsFile(dir, iwadname) && M_FileExists(dir))
     {
-        return strdup(dir);
+        return libc_strdup(dir);
     }
 
     // Construct the full path to the IWAD if it is located in
@@ -423,21 +423,21 @@ static char *CheckDirectoryHasIWAD(char *dir, char *iwadname)
 
     if (!strcmp(dir, "."))
     {
-        filename = strdup(iwadname);
+        filename = libc_strdup(iwadname);
     }
     else
     {
         filename = M_StringJoin(dir, DIR_SEPARATOR_S, iwadname, NULL);
     }
 
-    printf("Trying IWAD file:%s\n", filename);
+    libc_printf("Trying IWAD libc_FILE:%s\n", filename);
 
     if (M_FileExists(filename))
     {
         return filename;
     }
 
-    free(filename);
+    libc_free(filename);
 
     return NULL;
 }
@@ -479,7 +479,7 @@ static GameMission_t IdentifyIWADByName(char *name, int mask)
     GameMission_t mission;
     char *p;
 
-    p = strrchr(name, DIR_SEPARATOR);
+    p = libc_strrchr(name, DIR_SEPARATOR);
 
     if (p != NULL)
     {
@@ -528,7 +528,7 @@ static void AddDoomWadPath(void)
         return;
     }
 
-    doomwadpath = strdup(doomwadpath);
+    doomwadpath = libc_strdup(doomwadpath);
 
     // Add the initial directory
 
@@ -640,17 +640,17 @@ char *D_FindWADByName(char *name)
 
     BuildIWADDirList();
 
-    // Search through all IWAD paths for a file with the given name.
+    // Search through all IWAD paths for a libc_FILE with the given name.
 
     for (i=0; i<num_iwad_dirs; ++i)
     {
         // As a special case, if this is in DOOMWADDIR or DOOMWADPATH,
         // the "directory" may actually refer directly to an IWAD
-        // file.
+        // libc_FILE.
 
         if (DirIsFile(iwad_dirs[i], name) && M_FileExists(iwad_dirs[i]))
         {
-            return strdup(iwad_dirs[i]);
+            return libc_strdup(iwad_dirs[i]);
         }
 
         // Construct a string for the full path
@@ -662,10 +662,10 @@ char *D_FindWADByName(char *name)
             return path;
         }
 
-        free(path);
+        libc_free(path);
     }
 
-    // File not found
+    // libc_FILE not found
 
     return NULL;
 }
@@ -710,9 +710,9 @@ char *D_FindIWAD(int mask, GameMission_t *mission)
     // Check for the -iwad parameter
 
     //!
-    // Specify an IWAD file to use.
+    // Specify an IWAD libc_FILE to use.
     //
-    // @arg <file>
+    // @arg <libc_FILE>
     //
 
     iwadparm = M_CheckParmWithArgs("-iwad", 1);
@@ -727,7 +727,7 @@ char *D_FindIWAD(int mask, GameMission_t *mission)
 
         if (result == NULL)
         {
-            I_Error("IWAD file '%s' not found!", iwadfile);
+            I_Error("IWAD libc_FILE '%s' not found!", iwadfile);
         }
         
         *mission = IdentifyIWADByName(result, mask);
@@ -736,7 +736,7 @@ char *D_FindIWAD(int mask, GameMission_t *mission)
     {
         // Search through the list and look for an IWAD
 
-        printf("-iwad not specified, trying a few iwad names\n");
+        libc_printf("-iwad not specified, trying a few iwad names\n");
 
         result = NULL;
 
@@ -760,7 +760,7 @@ const iwad_t **D_FindAllIWADs(int mask)
     char *filename;
     int i;
 
-    result = malloc(sizeof(iwad_t *) * (arrlen(iwads) + 1));
+    result = libc_malloc(sizeof(iwad_t *) * (arrlen(iwads) + 1));
     result_len = 0;
 
     // Try to find all IWADs

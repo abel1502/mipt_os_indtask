@@ -3,9 +3,9 @@
 // Copyright(C) 2005-2014 Simon Howard
 // Copyright(C) 2005, 2006 Andrey Budko
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -22,7 +22,7 @@
 
 
 
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 
 
 #include "m_bbox.h"
@@ -45,8 +45,8 @@ P_AproxDistance
 ( fixed_t	dx,
   fixed_t	dy )
 {
-    dx = abs(dx);
-    dy = abs(dy);
+    dx = libc_abs(dx);
+    dy = libc_abs(dy);
     if (dx < dy)
 	return dx+dy-(dx>>1);
     return dx+dy-(dy>>1);
@@ -451,7 +451,7 @@ P_SetThingPosition (mobj_t* thing)
 // For each line/thing in the given mapblock,
 // call the passed PIT_* function.
 // If the function returns false,
-// exit with false without checking anything else.
+// libc_exit with false without checking anything else.
 //
 
 
@@ -917,13 +917,13 @@ P_PathTraverse
     {
 	mapxstep = 1;
 	partial = FRACUNIT - ((x1>>MAPBTOFRAC)&(FRACUNIT-1));
-	ystep = FixedDiv (y2-y1,abs(x2-x1));
+	ystep = FixedDiv (y2-y1,libc_abs(x2-x1));
     }
     else if (xt2 < xt1)
     {
 	mapxstep = -1;
 	partial = (x1>>MAPBTOFRAC)&(FRACUNIT-1);
-	ystep = FixedDiv (y2-y1,abs(x2-x1));
+	ystep = FixedDiv (y2-y1,libc_abs(x2-x1));
     }
     else
     {
@@ -939,13 +939,13 @@ P_PathTraverse
     {
 	mapystep = 1;
 	partial = FRACUNIT - ((y1>>MAPBTOFRAC)&(FRACUNIT-1));
-	xstep = FixedDiv (x2-x1,abs(y2-y1));
+	xstep = FixedDiv (x2-x1,libc_abs(y2-y1));
     }
     else if (yt2 < yt1)
     {
 	mapystep = -1;
 	partial = (y1>>MAPBTOFRAC)&(FRACUNIT-1);
-	xstep = FixedDiv (x2-x1,abs(y2-y1));
+	xstep = FixedDiv (x2-x1,libc_abs(y2-y1));
     }
     else
     {

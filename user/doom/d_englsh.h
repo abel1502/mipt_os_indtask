@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -248,7 +248,7 @@
 #define PHUSTR_31	"level 31: cyberden"
 #define PHUSTR_32	"level 32: go 2 it"
 
-#define THUSTR_1	"level 1: system control"
+#define THUSTR_1	"level 1: libc_system control"
 #define THUSTR_2	"level 2: human bbq"
 #define THUSTR_3	"level 3: power control"
 #define THUSTR_4	"level 4: wormhole"

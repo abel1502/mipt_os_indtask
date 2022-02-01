@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -158,7 +158,7 @@ R_ClipSolidWallSegment
     // Adjust the clip size.
     start->last = last;
 	
-    // Remove start+1 to next from the clip list,
+    // libc_remove start+1 to next from the clip list,
     // because start now covers their area.
   crunch:
     if (next == start)
@@ -170,7 +170,7 @@ R_ClipSolidWallSegment
 
     while (next++ != newend)
     {
-	// Remove a post.
+	// libc_remove a post.
 	*++start = *next;
     }
 

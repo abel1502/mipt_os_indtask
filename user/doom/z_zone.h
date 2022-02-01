@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -25,7 +25,7 @@
 #define __Z_ZONE__
 
 // #include <stdio.h>
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 
 //
 // ZONE MEMORY
@@ -36,7 +36,7 @@ enum
     PU_STATIC = 1,                  // static entire execution time
     PU_SOUND,                       // static while playing
     PU_MUSIC,                       // static while playing
-    PU_FREE,                        // a free block
+    PU_FREE,                        // a libc_free block
     PU_LEVEL,                       // static until level exited
     PU_LEVSPEC,                     // a special thinker in a level
     
@@ -56,15 +56,15 @@ void*	Z_Malloc (int size, int tag, void *ptr);
 void    Z_Free (void *ptr);
 void    Z_FreeTags (int lowtag, int hightag);
 void    Z_DumpHeap (int lowtag, int hightag);
-void    Z_FileDumpHeap (FILE *f);
+void    Z_FileDumpHeap (libc_FILE *f);
 void    Z_CheckHeap (void);
-void    Z_ChangeTag2 (void *ptr, int tag, char *file, int line);
+void    Z_ChangeTag2 (void *ptr, int tag, char *libc_FILE, int line);
 void    Z_ChangeUser(void *ptr, void **user);
 int     Z_FreeMemory (void);
 unsigned int Z_ZoneSize(void);
 
 //
-// This is used to get the local FILE:LINE info from CPP
+// This is used to get the local libc_FILE:LINE info from CPP
 // prior to really call the function in question.
 //
 #define Z_ChangeTag(p,t)                                       \

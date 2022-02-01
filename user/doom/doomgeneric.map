@@ -1,4 +1,4 @@
-Archive member included to satisfy reference by file (symbol)
+Archive member included to satisfy reference by libc_FILE (symbol)
 
 /usr/lib/x86_64-linux-gnu/libc_nonshared.a(elf-init.oS)
                               /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crt1.o (__libc_csu_init)
@@ -11,7 +11,7 @@ Removed property 0xc0000002 to merge /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../.
 Removed property 0xc0000002 to merge /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crt1.o (not found) and /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o (0x3)
 
 Allocating common symbols
-Common symbol       size              file
+Common symbol       size              libc_FILE
 
 textureheight       0x8               build/r_data.o
 bombdamage          0x4               build/p_map.o
@@ -951,66 +951,66 @@ LOAD /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o
  *(.plt)
  .plt           0x0000000000402020      0x3e0 /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crt1.o
                 0x0000000000402030                XkbSetDetectableAutoRepeat
-                0x0000000000402040                printf@@GLIBC_2.2.5
+                0x0000000000402040                libc_printf@@GLIBC_2.2.5
                 0x0000000000402050                memset@@GLIBC_2.2.5
-                0x0000000000402060                ftell@@GLIBC_2.2.5
-                0x0000000000402070                snprintf@@GLIBC_2.2.5
+                0x0000000000402060                libc_ftell@@GLIBC_2.2.5
+                0x0000000000402070                libc_snprintf@@GLIBC_2.2.5
                 0x0000000000402080                memchr@@GLIBC_2.2.5
-                0x0000000000402090                puts@@GLIBC_2.2.5
-                0x00000000004020a0                fseek@@GLIBC_2.2.5
+                0x0000000000402090                libc_puts@@GLIBC_2.2.5
+                0x00000000004020a0                libc_fseek@@GLIBC_2.2.5
                 0x00000000004020b0                __isoc99_sscanf@@GLIBC_2.7
                 0x00000000004020c0                toupper@@GLIBC_2.2.5
-                0x00000000004020d0                exit@@GLIBC_2.2.5
+                0x00000000004020d0                libc_exit@@GLIBC_2.2.5
                 0x00000000004020e0                strcasecmp@@GLIBC_2.2.5
                 0x00000000004020f0                gettimeofday@@GLIBC_2.2.5
-                0x0000000000402100                putchar@@GLIBC_2.2.5
+                0x0000000000402100                libc_putchar@@GLIBC_2.2.5
                 0x0000000000402110                strncmp@@GLIBC_2.2.5
-                0x0000000000402120                malloc@@GLIBC_2.2.5
-                0x0000000000402130                fopen@@GLIBC_2.2.5
-                0x0000000000402140                system@@GLIBC_2.2.5
+                0x0000000000402120                libc_malloc@@GLIBC_2.2.5
+                0x0000000000402130                libc_fopen@@GLIBC_2.2.5
+                0x0000000000402140                libc_system@@GLIBC_2.2.5
                 0x0000000000402150                XCreateSimpleWindow
                 0x0000000000402160                XOpenDisplay
                 0x0000000000402170                atof@@GLIBC_2.2.5
-                0x0000000000402180                vfprintf@@GLIBC_2.2.5
+                0x0000000000402180                libc_vfprintf@@GLIBC_2.2.5
                 0x0000000000402190                __ctype_toupper_loc@@GLIBC_2.3
                 0x00000000004021a0                XDrawPoint
-                0x00000000004021b0                free@@GLIBC_2.2.5
+                0x00000000004021b0                libc_free@@GLIBC_2.2.5
                 0x00000000004021c0                fread_unlocked@@GLIBC_2.2.5
                 0x00000000004021d0                XCopyArea
                 0x00000000004021e0                strlen@@GLIBC_2.2.5
                 0x00000000004021f0                XSetForeground
                 0x0000000000402200                XFillRectangle
-                0x0000000000402210                strrchr@@GLIBC_2.2.5
+                0x0000000000402210                libc_strrchr@@GLIBC_2.2.5
                 0x0000000000402220                XNextEvent
                 0x0000000000402230                fwrite_unlocked@@GLIBC_2.2.5
                 0x0000000000402240                usleep@@GLIBC_2.2.5
-                0x0000000000402250                strstr@@GLIBC_2.2.5
-                0x0000000000402260                atoi@@GLIBC_2.2.5
+                0x0000000000402250                libc_strstr@@GLIBC_2.2.5
+                0x0000000000402260                libc_atoi@@GLIBC_2.2.5
                 0x0000000000402270                XMapWindow
-                0x0000000000402280                vsnprintf@@GLIBC_2.2.5
-                0x0000000000402290                fread@@GLIBC_2.2.5
+                0x0000000000402280                libc_vsnprintf@@GLIBC_2.2.5
+                0x0000000000402290                libc_fread@@GLIBC_2.2.5
                 0x00000000004022a0                XCreateGC
                 0x00000000004022b0                XSelectInput
                 0x00000000004022c0                __errno_location@@GLIBC_2.2.5
-                0x00000000004022d0                strdup@@GLIBC_2.2.5
+                0x00000000004022d0                libc_strdup@@GLIBC_2.2.5
                 0x00000000004022e0                strncasecmp@@GLIBC_2.2.5
                 0x00000000004022f0                strcmp@@GLIBC_2.2.5
                 0x0000000000402300                tolower@@GLIBC_2.2.5
                 0x0000000000402310                XKeycodeToKeysym
-                0x0000000000402320                calloc@@GLIBC_2.2.5
-                0x0000000000402330                fclose@@GLIBC_2.2.5
-                0x0000000000402340                remove@@GLIBC_2.2.5
+                0x0000000000402320                libc_calloc@@GLIBC_2.2.5
+                0x0000000000402330                libc_fclose@@GLIBC_2.2.5
+                0x0000000000402340                libc_remove@@GLIBC_2.2.5
                 0x0000000000402350                strncpy@@GLIBC_2.2.5
                 0x0000000000402360                XChangeProperty
-                0x0000000000402370                fwrite@@GLIBC_2.2.5
-                0x0000000000402380                realloc@@GLIBC_2.2.5
+                0x0000000000402370                libc_fwrite@@GLIBC_2.2.5
+                0x0000000000402380                libc_realloc@@GLIBC_2.2.5
                 0x0000000000402390                XCreatePixmap
-                0x00000000004023a0                fprintf@@GLIBC_2.2.5
+                0x00000000004023a0                libc_fprintf@@GLIBC_2.2.5
                 0x00000000004023b0                memcpy@@GLIBC_2.14
-                0x00000000004023c0                rename@@GLIBC_2.2.5
+                0x00000000004023c0                libc_rename@@GLIBC_2.2.5
                 0x00000000004023d0                XPending
-                0x00000000004023e0                mkdir@@GLIBC_2.2.5
-                0x00000000004023f0                fflush@@GLIBC_2.2.5
+                0x00000000004023e0                libc_mkdir@@GLIBC_2.2.5
+                0x00000000004023f0                libc_fflush@@GLIBC_2.2.5
  *(.iplt)
  .iplt          0x0000000000402400        0x0 /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crt1.o
 
@@ -1023,7 +1023,7 @@ LOAD /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o
 
 .text           0x0000000000402400    0x25b35
  *(.text.unlikely .text.*_unlikely .text.unlikely.*)
- *(.text.exit .text.exit.*)
+ *(.text.libc_exit .text.libc_exit.*)
  *(.text.startup .text.startup.*)
  *(.text.hot .text.hot.*)
  *(SORT_BY_NAME(.text.sorted.*))
@@ -2698,7 +2698,7 @@ LOAD /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o
 .bss            0x000000000045f6e0    0x42038
  *(.dynbss)
  .dynbss        0x000000000045f6e0        0x8 /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crt1.o
-                0x000000000045f6e0                stderr@@GLIBC_2.2.5
+                0x000000000045f6e0                libc_stderr@@GLIBC_2.2.5
  *(.bss .bss.* .gnu.linkonce.b.*)
  .bss           0x000000000045f6e8        0x1 /usr/bin/../lib/gcc/x86_64-linux-gnu/9/crtbegin.o
  *fill*         0x000000000045f6e9        0x3 

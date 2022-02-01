@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -85,7 +85,7 @@ void V_UseBuffer(byte *buffer);
 
 void V_RestoreBuffer(void);
 
-// Save a screenshot of the current screen to a file, named in the 
+// Save a screenshot of the current screen to a libc_FILE, named in the 
 // format described in the string passed to the function, eg.
 // "DOOM%02i.pcx"
 

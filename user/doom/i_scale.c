@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -19,8 +19,8 @@
 //
 
 // #include <stdio.h>
-#include <inc/lib.h>
-#include <string.h>
+#include <inc/libdoom.h>
+#include <inc/string.h>
 
 #include "doomtype.h"
 
@@ -374,12 +374,12 @@ static void I_InitStretchTables(byte *palette)
     // mix 80%  =  stretch_tables[0] used backwards
     // mix 100% =  just write line 2
 
-    printf("I_InitStretchTables: Generating lookup tables..");
-    fflush(stdout);
+    libc_printf("I_InitStretchTables: Generating lookup tables..");
+    libc_fflush(libc_stdout);
     stretch_tables[0] = GenerateStretchTable(palette, 20);
-    printf(".."); fflush(stdout);
+    libc_printf(".."); libc_fflush(libc_stdout);
     stretch_tables[1] = GenerateStretchTable(palette, 40);
-    puts("");
+    libc_puts("");
 }
 
 // Create 50%/50% table for 800x600 squash mode
@@ -391,10 +391,10 @@ static void I_InitSquashTable(byte *palette)
         return;
     }
 
-    printf("I_InitSquashTable: Generating lookup table..");
-    fflush(stdout);
+    libc_printf("I_InitSquashTable: Generating lookup table..");
+    libc_fflush(libc_stdout);
     half_stretch_table = GenerateStretchTable(palette, 50);
-    puts("");
+    libc_puts("");
 }
 
 // Destroy the scaling lookup tables. This should only ever be called
@@ -408,7 +408,7 @@ void I_ResetScaleTables(byte *palette)
         Z_Free(stretch_tables[0]);
         Z_Free(stretch_tables[1]);
 
-        printf("I_ResetScaleTables: Regenerating lookup tables..\n");
+        libc_printf("I_ResetScaleTables: Regenerating lookup tables..\n");
         stretch_tables[0] = GenerateStretchTable(palette, 20);
         stretch_tables[1] = GenerateStretchTable(palette, 40);
     }
@@ -417,7 +417,7 @@ void I_ResetScaleTables(byte *palette)
     {
         Z_Free(half_stretch_table);
 
-        printf("I_ResetScaleTables: Regenerating lookup table..\n");
+        libc_printf("I_ResetScaleTables: Regenerating lookup table..\n");
 
         half_stretch_table = GenerateStretchTable(palette, 50);
     }

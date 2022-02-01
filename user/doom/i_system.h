@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	System specific interface stuff.
+//	libc_system specific interface stuff.
 //
 
 
@@ -30,7 +30,7 @@ typedef void (*atexit_func_t)(void);
 void I_Init (void);
 
 // Called by startup code
-// to get the ammount of memory to malloc
+// to get the ammount of memory to libc_malloc
 // for the zone management.
 byte*	I_ZoneBase (int *size);
 
@@ -49,7 +49,7 @@ ticcmd_t* I_BaseTiccmd (void);
 
 
 // Called by M_Responder when quit is selected.
-// Clean exit, displays sell blurb.
+// Clean libc_exit, displays sell blurb.
 void I_Quit (void);
 
 void I_Error (char *error, ...);
@@ -59,12 +59,12 @@ void I_Tactile (int on, int off, int total);
 boolean I_GetMemoryValue(unsigned int offset, void *value, int size);
 
 // Schedule a function to be called when the program exits.
-// If run_if_error is true, the function is called if the exit
+// If run_if_error is true, the function is called if the libc_exit
 // is due to an error (I_Error)
 
 void I_AtExit(atexit_func_t func, boolean run_if_error);
 
-// Add all system-specific config file variable bindings.
+// Add all libc_system-specific config libc_FILE variable bindings.
 
 void I_BindVariables(void);
 

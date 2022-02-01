@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -34,7 +34,7 @@
 #define SHORT(x)  ((signed short) SDL_SwapLE16(x))
 #define LONG(x)   ((signed int) SDL_SwapLE32(x))
 
-// Defines for checking the endianness of the system.
+// Defines for checking the endianness of the libc_system.
 
 #if SDL_BYTEORDER == SYS_LIL_ENDIAN
 #define SYS_LITTLE_ENDIAN

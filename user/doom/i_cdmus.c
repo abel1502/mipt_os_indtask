@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 1993-2008 Raven Software
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -94,12 +94,12 @@ void I_CDMusPrintStartup(void)
 #ifdef ORIGCODE
     if (cd_name != NULL)
     {
-        printf("I_CDMusInit: Using CD-ROM drive: %s\n", cd_name);
+        libc_printf("I_CDMusInit: Using CD-ROM drive: %s\n", cd_name);
     }
 
     if (startup_error != NULL)
     {
-        fprintf(stderr, "I_CDMusInit: %s\n", startup_error);
+        libc_fprintf(libc_stderr, "I_CDMusInit: %s\n", startup_error);
     }
 #endif
 }

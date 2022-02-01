@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -18,8 +18,8 @@
 
 #include <ctype.h>
 // #include <stdio.h>
-#include <inc/lib.h>
-#include <string.h>
+#include <inc/libdoom.h>
+#include <inc/string.h>
 
 #include "doomtype.h"
 #include "i_system.h"
@@ -75,10 +75,10 @@ int M_CheckParm(char *check)
 static void LoadResponseFile(int argv_index)
 {
 #if ORIGCODE
-    FILE *handle;
+    libc_FILE *handle;
     int size;
     char *infile;
-    char *file;
+    char *libc_FILE;
     char *response_filename;
     char **newargv;
     int newargc;
@@ -86,33 +86,33 @@ static void LoadResponseFile(int argv_index)
 
     response_filename = myargv[argv_index] + 1;
 
-    // Read the response file into memory
-    handle = fopen(response_filename, "rb");
+    // Read the response libc_FILE into memory
+    handle = libc_fopen(response_filename, "rb");
 
     if (handle == NULL)
     {
-        printf ("\nNo such response file!");
+        libc_printf ("\nNo such response libc_FILE!");
 #if ORIGCODE
-        exit(1);
+        libc_exit(1);
 #endif
     }
 
-    printf("Found response file %s!\n", response_filename);
+    libc_printf("Found response libc_FILE %s!\n", response_filename);
 
     size = M_FileLength(handle);
 
-    // Read in the entire file
+    // Read in the entire libc_FILE
     // Allocate one byte extra - this is in case there is an argument
-    // at the end of the response file, in which case a '\0' will be
+    // at the end of the response libc_FILE, in which case a '\0' will be
     // needed.
 
-    file = malloc(size + 1);
+    libc_FILE = libc_malloc(size + 1);
 
     i = 0;
 
     while (i < size)
     {
-        k = fread(file + i, 1, size - i, handle);
+        k = libc_fread(libc_FILE + i, 1, size - i, handle);
 
         if (k < 0)
         {
@@ -122,15 +122,15 @@ static void LoadResponseFile(int argv_index)
         i += k;
     }
 
-    fclose(handle);
+    libc_fclose(handle);
 
     // Create new arguments list array
 
-    newargv = malloc(sizeof(char *) * MAXARGVS);
+    newargv = libc_malloc(sizeof(char *) * MAXARGVS);
     newargc = 0;
     memset(newargv, 0, sizeof(char *) * MAXARGVS);
 
-    // Copy all the arguments in the list up to the response file
+    // Copy all the arguments in the list up to the response libc_FILE
 
     for (i=0; i<argv_index; ++i)
     {
@@ -138,7 +138,7 @@ static void LoadResponseFile(int argv_index)
         ++newargc;
     }
 
-    infile = file;
+    infile = libc_FILE;
     k = 0;
 
     while(k < size)
@@ -175,7 +175,7 @@ static void LoadResponseFile(int argv_index)
 
             if (k >= size || infile[k] == '\n')
             {
-                I_Error("Quotes unclosed in response file '%s'",
+                I_Error("Quotes unclosed in response libc_FILE '%s'",
                         response_filename);
             }
 
@@ -203,7 +203,7 @@ static void LoadResponseFile(int argv_index)
         }
     }
 
-    // Add arguments following the response file argument
+    // Add arguments following the response libc_FILE argument
 
     for (i=argv_index + 1; i<myargc; ++i)
     {
@@ -218,18 +218,18 @@ static void LoadResponseFile(int argv_index)
     // Disabled - Vanilla Doom does not do this.
     // Display arguments
 
-    printf("%d command-line args:\n", myargc);
+    libc_printf("%d command-line args:\n", myargc);
 
     for (k=1; k<myargc; k++)
     {
-        printf("'%s'\n", myargv[k]);
+        libc_printf("'%s'\n", myargv[k]);
     }
 #endif
 #endif
 }
 
 //
-// Find a Response File
+// Find a Response libc_FILE
 //
 
 void M_FindResponseFile(void)
@@ -251,7 +251,7 @@ char *M_GetExecutableName(void)
 {
     char *sep;
 
-    sep = strrchr(myargv[0], DIR_SEPARATOR);
+    sep = libc_strrchr(myargv[0], DIR_SEPARATOR);
 
     if (sep == NULL)
     {

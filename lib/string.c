@@ -38,6 +38,12 @@ strcat(char *dst, const char *src) {
     return dst;
 }
 
+int
+toupper(int ch) {
+    if (!(ch >= 'a' && ch <= 'z')) return ch;
+    else return ch + 'A' - 'a';
+}
+
 char *
 strncpy(char *dst, const char *src, size_t size) {
     char *ret = dst;

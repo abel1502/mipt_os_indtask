@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -22,8 +22,8 @@
 
 #include <ctype.h>
 // #include <stdio.h>
-#include <inc/lib.h>
-#include <string.h>
+#include <inc/libdoom.h>
+#include <inc/string.h>
 
 #include "config.h"
 #include "deh_main.h"
@@ -122,7 +122,7 @@ boolean         bfgedition;
 // If true, the main game loop has started.
 boolean         main_loop_started = false;
 
-char		wadfile[1024];		// primary wad file
+char		wadfile[1024];		// primary wad libc_FILE
 char		mapdir[1024];           // directory of development maps
 
 int             show_endoom = 1;
@@ -329,7 +329,7 @@ void D_Display (void)
 }
 
 //
-// Add configuration file variable bindings.
+// Add configuration libc_FILE variable bindings.
 //
 
 void D_BindVariables(void)
@@ -410,7 +410,7 @@ void D_DoomLoop (void)
     if (bfgedition &&
         (demorecording || (gameaction == ga_playdemo) || netgame))
     {
-        printf(" WARNING: You are playing using one of the Doom Classic\n"
+        libc_printf(" WARNING: You are playing using one of the Doom Classic\n"
                " IWAD files shipped with the Doom 3: BFG Edition. These are\n"
                " known to be incompatible with the regular IWAD files and\n"
                " may cause demos and network games to get out of sync.\n");
@@ -617,7 +617,7 @@ static char *banners[] =
     "                           ",
     // Registered DOOM uses this
     "                          "
-    "DOOM System Startup v%i.%i"
+    "DOOM libc_system Startup v%i.%i"
     "                          ",
     // doom.wad (Ultimate DOOM)
     "                         "
@@ -655,7 +655,7 @@ static char *GetGameName(char *gamename)
             int version;
 
             // Has been replaced.
-            // We need to expand via printf to include the Doom version number
+            // We need to expand via libc_printf to include the Doom version number
             // We also need to cut off spaces to get the basic name
 
             gamename_size = strlen(deh_sub) + 10;
@@ -703,11 +703,11 @@ static void SetMissionForPackName(char *pack_name)
         }
     }
 
-    printf("Valid mission packs are:\n");
+    libc_printf("Valid mission packs are:\n");
 
     for (i = 0; i < arrlen(packs); ++i)
     {
-        printf("\t%s\n", packs[i].name);
+        libc_printf("\t%s\n", packs[i].name);
     }
 
     I_Error("Unknown mission pack name: %s", pack_name);
@@ -747,7 +747,7 @@ void D_IdentifyVersion(void)
         {
             // Still no idea.  I don't think this is going to work.
 
-            I_Error("Unknown or invalid IWAD file.");
+            I_Error("Unknown or invalid IWAD libc_FILE.");
         }
     }
 
@@ -867,7 +867,7 @@ static boolean D_AddFile(char *filename)
 {
     wad_file_t *handle;
 
-    printf(" adding %s\n", filename);
+    libc_printf(" adding %s\n", filename);
     handle = W_AddFile(filename);
 
     return handle != NULL;
@@ -881,7 +881,7 @@ static char *copyright_banners[] =
 {
     "===========================================================================\n"
     "ATTENTION:  This version of DOOM has been modified.  If you would like to\n"
-    "get a copy of the original game, call 1-800-IDGAMES or see the readme file.\n"
+    "get a copy of the original game, call 1-800-IDGAMES or see the readme libc_FILE.\n"
     "        You will not receive technical support for modified games.\n"
     "                      press enter to continue\n"
     "===========================================================================\n",
@@ -910,14 +910,14 @@ void PrintDehackedBanners(void)
 
         if (deh_s != copyright_banners[i])
         {
-            printf("%s", deh_s);
+            libc_printf("%s", deh_s);
 
             // Make sure the modified banner always ends in a newline character.
             // If it doesn't, add a newline.  This fixes av.wad.
 
             if (deh_s[strlen(deh_s) - 1] != '\n')
             {
-                printf("\n");
+                libc_printf("\n");
             }
         }
     }
@@ -971,11 +971,11 @@ static void InitGameVersion(void)
         
         if (gameversions[i].description == NULL) 
         {
-            printf("Supported game versions:\n");
+            libc_printf("Supported game versions:\n");
 
             for (i=0; gameversions[i].description != NULL; ++i)
             {
-                printf("\t%s (%s)\n", gameversions[i].cmdline,
+                libc_printf("\t%s (%s)\n", gameversions[i].cmdline,
                         gameversions[i].description);
             }
             
@@ -1053,14 +1053,14 @@ void PrintGameVersion(void)
     {
         if (gameversions[i].version == gameversion)
         {
-            printf("Emulating the behavior of the "
+            libc_printf("Emulating the behavior of the "
                    "'%s' executable.\n", gameversions[i].description);
             break;
         }
     }
 }
 
-// Function called at exit to display the ENDOOM screen
+// Function called at libc_exit to display the ENDOOM screen
 
 static void D_Endoom(void)
 {
@@ -1080,7 +1080,7 @@ static void D_Endoom(void)
 
     I_Endoom(endoom);
 
-	exit();
+	libc_exit(0); //!!!
 }
 
 #if ORIGCODE
@@ -1113,35 +1113,35 @@ static void LoadIwadDeh(void)
         char *chex_deh = NULL;
         char *sep;
 
-        // Look for chex.deh in the same directory as the IWAD file.
-        sep = strrchr(iwadfile, DIR_SEPARATOR);
+        // Look for chex.deh in the same directory as the IWAD libc_FILE.
+        sep = libc_strrchr(iwadfile, DIR_SEPARATOR);
 
         if (sep != NULL)
         {
             size_t chex_deh_len = strlen(iwadfile) + 9;
-            chex_deh = malloc(chex_deh_len);
+            chex_deh = libc_malloc(chex_deh_len);
             M_StringCopy(chex_deh, iwadfile, chex_deh_len);
             chex_deh[sep - iwadfile + 1] = '\0';
             M_StringConcat(chex_deh, "chex.deh", chex_deh_len);
         }
         else
         {
-            chex_deh = strdup("chex.deh");
+            chex_deh = libc_strdup("chex.deh");
         }
 
         // If the dehacked patch isn't found, try searching the WAD
         // search path instead.  We might find it...
         if (!M_FileExists(chex_deh))
         {
-            free(chex_deh);
+            libc_free(chex_deh);
             chex_deh = D_FindWADByName("chex.deh");
         }
 
         // Still not found?
         if (chex_deh == NULL)
         {
-            I_Error("Unable to find Chex Quest dehacked file (chex.deh).\n"
-                    "The dehacked file is required in order to emulate\n"
+            I_Error("Unable to find Chex Quest dehacked libc_FILE (chex.deh).\n"
+                    "The dehacked libc_FILE is required in order to emulate\n"
                     "chex.exe correctly.  It can be found in your nearest\n"
                     "/idgames repository mirror at:\n\n"
                     "   utils/exe_edit/patches/chexdeh.zip");
@@ -1161,7 +1161,7 @@ static void LoadIwadDeh(void)
 void D_DoomMain (void)
 {
     int p;
-    char file[256];
+    char libc_FILE[256];
     char demolumpname[9];
 #if ORIGCODE
     int numiwadlumps;
@@ -1186,7 +1186,7 @@ void D_DoomMain (void)
 
     if (M_CheckParm("-dedicated") > 0)
     {
-        printf("Dedicated server mode.\n");
+        libc_printf("Dedicated server mode.\n");
         NET_DedicatedServer();
 
         // Never returns
@@ -1202,7 +1202,7 @@ void D_DoomMain (void)
     if (M_CheckParm("-search"))
     {
         NET_MasterQuery();
-        exit(0);
+        libc_exit(0);
     }
 
     //!
@@ -1218,7 +1218,7 @@ void D_DoomMain (void)
     if (p)
     {
         NET_QueryAddress(myargv[p+1]);
-        exit(0);
+        libc_exit(0);
     }
 
     //!
@@ -1230,7 +1230,7 @@ void D_DoomMain (void)
     if (M_CheckParm("-localsearch"))
     {
         NET_LANQuery();
-        exit(0);
+        libc_exit(0);
     }
 
 #endif
@@ -1308,7 +1308,7 @@ void D_DoomMain (void)
 
     if (M_ParmExists("-cdrom"))
     {
-        printf(D_CDROM);
+        libc_printf(D_CDROM);
 
         M_SetConfigDir("c:\\doomdata\\");
     }
@@ -1335,7 +1335,7 @@ void D_DoomMain (void)
 	extern int sidemove[2];
 	
 	if (p<myargc-1)
-	    scale = atoi (myargv[p+1]);
+	    scale = libc_atoi (myargv[p+1]);
 	if (scale < 10)
 	    scale = 10;
 	if (scale > 400)
@@ -1352,22 +1352,22 @@ void D_DoomMain (void)
     V_Init ();
 
     // Load configuration files before initialising other subsystems.
-    DEH_printf("M_LoadDefaults: Load system defaults.\n");
+    DEH_printf("M_LoadDefaults: Load libc_system defaults.\n");
     M_SetConfigFilenames("default.cfg", PROGRAM_PREFIX "doom.cfg");
     D_BindVariables();
     M_LoadDefaults();
 
-    // Save configuration at exit.
+    // Save configuration at libc_exit.
     I_AtExit(M_SaveDefaults, false);
 
-    // Find main IWAD file and load it.
+    // Find main IWAD libc_FILE and load it.
     iwadfile = D_FindIWAD(IWAD_MASK_DOOM, &gamemission);
 
     // None found?
 
     if (iwadfile == NULL)
     {
-        I_Error("Game mode indeterminate.  No IWAD file was found.  Try\n"
+        I_Error("Game mode indeterminate.  No IWAD libc_FILE was found.  Try\n"
                 "specifying one with the '-iwad' command line parameter.\n");
     }
 
@@ -1411,7 +1411,7 @@ void D_DoomMain (void)
 
     if (W_CheckNumForName("dmenupic") >= 0)
     {
-        printf("BFG Edition: Using workarounds as needed.\n");
+        libc_printf("BFG Edition: Using workarounds as needed.\n");
         bfgedition = true;
 
         // BFG Edition changes the names of the secret levels to
@@ -1480,32 +1480,32 @@ void D_DoomMain (void)
 
     if (p)
     {
-        // With Vanilla you have to specify the file without extension,
+        // With Vanilla you have to specify the libc_FILE without extension,
         // but make that optional.
         if (M_StringEndsWith(myargv[p + 1], ".lmp"))
         {
-            M_StringCopy(file, myargv[p + 1], sizeof(file));
+            M_StringCopy(libc_FILE, myargv[p + 1], sizeof(libc_FILE));
         }
         else
         {
-            DEH_snprintf(file, sizeof(file), "%s.lmp", myargv[p+1]);
+            DEH_snprintf(libc_FILE, sizeof(libc_FILE), "%s.lmp", myargv[p+1]);
         }
 
-        if (D_AddFile(file))
+        if (D_AddFile(libc_FILE))
         {
             M_StringCopy(demolumpname, lumpinfo[numlumps - 1].name,
                          sizeof(demolumpname));
         }
         else
         {
-            // If file failed to load, still continue trying to play
+            // If libc_FILE failed to load, still continue trying to play
             // the demo in the same way as Vanilla Doom.  This makes
             // tricks like "-playdemo demo1" possible.
 
             M_StringCopy(demolumpname, myargv[p + 1], sizeof(demolumpname));
         }
 
-        printf("Playing demo %s.\n", file);
+        libc_printf("Playing demo %s.\n", libc_FILE);
     }
 
     I_AtExit((atexit_func_t) G_CheckDemoStatus, true);
@@ -1536,7 +1536,7 @@ void D_DoomMain (void)
             }
         }
 
-        printf("  loaded %i DEHACKED lumps from PWAD files.\n", loaded);
+        libc_printf("  loaded %i DEHACKED lumps from PWAD files.\n", loaded);
     }
 #endif
 
@@ -1556,7 +1556,7 @@ void D_DoomMain (void)
         savegamedir = M_GetSaveGameDir(D_SaveGameIWADName(gamemission));
     }
 
-    // Check for -file in shareware
+    // Check for -libc_FILE in shareware
     if (modifiedgame)
     {
 	// These are the lumps that will be checked in IWAD,
@@ -1570,7 +1570,7 @@ void D_DoomMain (void)
 	int i;
 	
 	if ( gamemode == shareware)
-	    I_Error(DEH_String("\nYou cannot -file with the shareware "
+	    I_Error(DEH_String("\nYou cannot -libc_FILE with the shareware "
 			       "version. Register!"));
 
 	// Check for fake IWAD with right name,
@@ -1585,9 +1585,9 @@ void D_DoomMain (void)
      || W_CheckNumForName("FF_END") >= 0)
     {
         I_PrintDivider();
-        printf(" WARNING: The loaded WAD file contains modified sprites or\n"
+        libc_printf(" WARNING: The loaded WAD libc_FILE contains modified sprites or\n"
                " floor textures.  You may want to use the '-merge' command\n"
-               " line option instead of '-file'.\n");
+               " line option instead of '-libc_FILE'.\n");
     }
 
     I_PrintStartupBanner(gamedescription);
@@ -1598,7 +1598,7 @@ void D_DoomMain (void)
     // message and give a link to the website.
     if (W_CheckNumForName("FREEDOOM") >= 0 && W_CheckNumForName("FREEDM") < 0)
     {
-        printf(" WARNING: You are playing using one of the Freedoom IWAD\n"
+        libc_printf(" WARNING: You are playing using one of the Freedoom IWAD\n"
                " files, which might not work in this port. See this page\n"
                " for more information on how to play using Freedoom:\n"
                "   http://www.chocolate-doom.org/wiki/index.php/Freedoom\n");
@@ -1613,7 +1613,7 @@ void D_DoomMain (void)
     I_InitMusic();
 
 #ifdef FEATURE_MULTIPLAYER
-    printf ("NET_Init: Init network subsystem.\n");
+    libc_printf ("NET_Init: Init network subsystem.\n");
     NET_Init ();
 #endif
 
@@ -1665,14 +1665,14 @@ void D_DoomMain (void)
     // @category net
     // @vanilla
     //
-    // For multiplayer games: exit each level after n minutes.
+    // For multiplayer games: libc_exit each level after n minutes.
     //
 
     p = M_CheckParmWithArgs("-timer", 1);
 
     if (p)
     {
-	timelimit = atoi(myargv[p+1]);
+	timelimit = libc_atoi(myargv[p+1]);
     }
 
     //!
@@ -1702,7 +1702,7 @@ void D_DoomMain (void)
     if (p)
     {
         if (gamemode == commercial)
-            startmap = atoi (myargv[p+1]);
+            startmap = libc_atoi (myargv[p+1]);
         else
         {
             startepisode = myargv[p+1][0]-'0';
@@ -1747,7 +1747,7 @@ void D_DoomMain (void)
     
     if (p)
     {
-        startloadgame = atoi(myargv[p+1]);
+        startloadgame = libc_atoi(myargv[p+1]);
     }
     else
     {
@@ -1824,8 +1824,8 @@ void D_DoomMain (void)
 
     if (startloadgame >= 0)
     {
-        M_StringCopy(file, P_SaveGameFile(startloadgame), sizeof(file));
-        G_LoadGame(file);
+        M_StringCopy(libc_FILE, P_SaveGameFile(startloadgame), sizeof(libc_FILE));
+        G_LoadGame(libc_FILE);
     }
 
     if (gameaction != ga_loadgame )

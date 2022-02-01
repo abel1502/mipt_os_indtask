@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -25,7 +25,7 @@
 typedef struct
 {
     wad_file_t wad;
-    FILE *fstream;
+    libc_FILE *fstream;
 } stdc_wad_file_t;
 
 extern wad_file_class_t stdc_wad_file;
@@ -33,16 +33,16 @@ extern wad_file_class_t stdc_wad_file;
 static wad_file_t *W_StdC_OpenFile(char *path)
 {
     stdc_wad_file_t *result;
-    FILE *fstream;
+    libc_FILE *fstream;
 
-    fstream = fopen(path, "rb");
+    fstream = libc_fopen(path, "rb");
 
     if (fstream == NULL)
     {
         return NULL;
     }
 
-    // Create a new stdc_wad_file_t to hold the file handle.
+    // Create a new stdc_wad_file_t to hold the libc_FILE handle.
 
     result = Z_Malloc(sizeof(stdc_wad_file_t), PU_STATIC, 0);
     result->wad.file_class = &stdc_wad_file;
@@ -59,11 +59,11 @@ static void W_StdC_CloseFile(wad_file_t *wad)
 
     stdc_wad = (stdc_wad_file_t *) wad;
 
-    fclose(stdc_wad->fstream);
+    libc_fclose(stdc_wad->fstream);
     Z_Free(stdc_wad);
 }
 
-// Read data from the specified position in the file into the 
+// Read data from the specified position in the libc_FILE into the 
 // provided buffer.  Returns the number of bytes read.
 
 size_t W_StdC_Read(wad_file_t *wad, unsigned int offset,
@@ -74,13 +74,13 @@ size_t W_StdC_Read(wad_file_t *wad, unsigned int offset,
 
     stdc_wad = (stdc_wad_file_t *) wad;
 
-    // Jump to the specified position in the file.
+    // Jump to the specified position in the libc_FILE.
 
-    fseek(stdc_wad->fstream, offset, SEEK_SET);
+    libc_fseek(stdc_wad->fstream, offset, SEEK_SET);
 
     // Read into the buffer.
 
-    result = fread(buffer, 1, buffer_len, stdc_wad->fstream);
+    result = libc_fread(buffer, 1, buffer_len, stdc_wad->fstream);
 
     return result;
 }

@@ -1,13 +1,13 @@
 /* sha1.c - SHA1 hash function
- *	Copyright (C) 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
+ *	Copyright (C) 1998, 1999, 2000, 2001 libc_free Software Foundation, Inc.
  *
  * Please see below for more legal information!
  *
- * This file is part of GnuPG.
+ * This libc_FILE is part of GnuPG.
  *
- * GnuPG is free software; you can redistribute it and/or modify
+ * GnuPG is libc_free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
+ * the libc_free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
  * GnuPG is distributed in the hope that it will be useful,
@@ -30,8 +30,8 @@
  */
 
 // #include <stdio.h>
-#include <inc/lib.h>
-#include <string.h>
+#include <inc/libdoom.h>
+#include <inc/string.h>
 #include <assert.h>
 
 #include "i_swap.h"

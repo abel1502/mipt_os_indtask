@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -17,8 +17,8 @@
 //
 
 // #include <stdio.h>
-#include <inc/lib.h>
-#include <string.h>
+#include <inc/libdoom.h>
+#include <inc/string.h>
 
 #include "m_misc.h"
 #include "sha1.h"
@@ -41,10 +41,10 @@ static int GetFileNumber(wad_file_t *handle)
         }
     }
 
-    // Not found in list.  This is a new file we haven't seen yet.
-    // Allocate another slot for this file.
+    // Not found in list.  This is a new libc_FILE we haven't seen yet.
+    // Allocate another slot for this libc_FILE.
 
-    open_wadfiles = realloc(open_wadfiles,
+    open_wadfiles = libc_realloc(open_wadfiles,
                             sizeof(wad_file_t *) * (num_open_wadfiles + 1));
     open_wadfiles[num_open_wadfiles] = handle;
 

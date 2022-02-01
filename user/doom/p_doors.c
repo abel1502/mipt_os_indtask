@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -118,14 +118,14 @@ void T_VerticalDoor (vldoor_t* door)
 	      case vld_blazeRaise:
 	      case vld_blazeClose:
 		door->sector->specialdata = NULL;
-		P_RemoveThinker (&door->thinker);  // unlink and free
+		P_RemoveThinker (&door->thinker);  // unlink and libc_free
 		S_StartSound(&door->sector->soundorg, sfx_bdcls);
 		break;
 		
 	      case vld_normal:
 	      case vld_close:
 		door->sector->specialdata = NULL;
-		P_RemoveThinker (&door->thinker);  // unlink and free
+		P_RemoveThinker (&door->thinker);  // unlink and libc_free
 		break;
 		
 	      case vld_close30ThenOpen:
@@ -174,7 +174,7 @@ void T_VerticalDoor (vldoor_t* door)
 	      case vld_blazeOpen:
 	      case vld_open:
 		door->sector->specialdata = NULL;
-		P_RemoveThinker (&door->thinker);  // unlink and free
+		P_RemoveThinker (&door->thinker);  // unlink and libc_free
 		break;
 		
 	      default:
@@ -437,7 +437,7 @@ EV_VerticalDoor
                 {
                     // This isn't a door OR a plat.  Now we're in trouble.
 
-                    fprintf(stderr, "EV_VerticalDoor: Tried to close "
+                    libc_fprintf(libc_stderr, "EV_VerticalDoor: Tried to close "
                                     "something that wasn't a door.\n");
 
                     // Try closing it anyway. At least it will work on 32-bit

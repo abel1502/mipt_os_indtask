@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -16,7 +16,7 @@
 //
 
 // #include <stdio.h>
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 
 #include "i_sound.h"
 #include "i_system.h"
@@ -125,7 +125,7 @@ void S_Init(int sfxVolume, int musicVolume)
     // simultaneously) within zone memory.
     channels = Z_Malloc(snd_channels*sizeof(channel_t), PU_STATIC, 0);
 
-    // Free all channels for use
+    // libc_free all channels for use
     for (i=0 ; i<snd_channels ; i++)
     {
         channels[i].sfxinfo = 0;
@@ -330,8 +330,8 @@ static int S_AdjustSoundParams(mobj_t *listener, mobj_t *source,
 
     // calculate the distance to sound origin
     //  and clip it if necessary
-    adx = abs(listener->x - source->x);
-    ady = abs(listener->y - source->y);
+    adx = libc_abs(listener->x - source->x);
+    ady = libc_abs(listener->y - source->y);
 
     // From _GG1_ p.428. Appox. eucledian distance fast.
     approx_dist = adx + ady - ((adx < ady ? adx : ady)>>1);
@@ -561,7 +561,7 @@ void S_UpdateSounds(mobj_t *listener)
             else
             {
                 // if channel is allocated but sound has stopped,
-                //  free it
+                //  libc_free it
                 S_StopChannel(cnum);
             }
         }
@@ -604,7 +604,7 @@ void S_ChangeMusic(int musicnum, int looping)
     char namebuf[9];
     void *handle;
 
-    // The Doom IWAD file has two versions of the intro music: d_intro
+    // The Doom IWAD libc_FILE has two versions of the intro music: d_intro
     // and d_introa.  The latter is used for OPL playback.
 
     if (musicnum == mus_intro && (snd_musicdevice == SNDDEVICE_ADLIB

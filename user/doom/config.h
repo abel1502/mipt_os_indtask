@@ -1,12 +1,12 @@
 /* config.hin.  Generated from configure.ac by autoheader.  */
 
-/* Define to 1 if you have the <dev/isa/spkrio.h> header file. */
+/* Define to 1 if you have the <dev/isa/spkrio.h> header libc_FILE. */
 #undef HAVE_DEV_ISA_SPKRIO_H
 
-/* Define to 1 if you have the <dev/speaker/speaker.h> header file. */
+/* Define to 1 if you have the <dev/speaker/speaker.h> header libc_FILE. */
 #undef HAVE_DEV_SPEAKER_SPEAKER_H
 
-/* Define to 1 if you have the <inttypes.h> header file. */
+/* Define to 1 if you have the <inttypes.h> header libc_FILE. */
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `ioperm' function. */
@@ -30,10 +30,10 @@
 /* Define to 1 if you have the `z' library (-lz). */
 #undef HAVE_LIBZ
 
-/* Define to 1 if you have the <linux/kd.h> header file. */
+/* Define to 1 if you have the <linux/kd.h> header libc_FILE. */
 #undef HAVE_LINUX_KD_H
 
-/* Define to 1 if you have the <memory.h> header file. */
+/* Define to 1 if you have the <memory.h> header libc_FILE. */
 #undef HAVE_MEMORY_H
 
 /* Define to 1 if you have the `mmap' function. */
@@ -42,25 +42,25 @@
 /* Define to 1 if you have the `sched_setaffinity' function. */
 #undef HAVE_SCHED_SETAFFINITY
 
-/* Define to 1 if you have the <stdint.h> header file. */
+/* Define to 1 if you have the <stdint.h> header libc_FILE. */
 #define HAVE_STDINT_H 1
 
-/* Define to 1 if you have the <stdlib.h> header file. */
+/* Define to 1 if you have the <stdlib.h> header libc_FILE. */
 #define HAVE_STDLIB_H 1
 
-/* Define to 1 if you have the <strings.h> header file. */
+/* Define to 1 if you have the <strings.h> header libc_FILE. */
 #define HAVE_STRINGS_H 1
 
-/* Define to 1 if you have the <string.h> header file. */
+/* Define to 1 if you have the <string.h> header libc_FILE. */
 #define HAVE_STRING_H 1
 
-/* Define to 1 if you have the <sys/stat.h> header file. */
+/* Define to 1 if you have the <sys/stat.h> header libc_FILE. */
 #undef HAVE_SYS_STAT_H
 
-/* Define to 1 if you have the <sys/types.h> header file. */
+/* Define to 1 if you have the <sys/types.h> header libc_FILE. */
 #define HAVE_SYS_TYPES_H 1
 
-/* Define to 1 if you have the <unistd.h> header file. */
+/* Define to 1 if you have the <unistd.h> header libc_FILE. */
 #undef HAVE_UNISTD_H
 
 /* Name of package */

@@ -3,9 +3,9 @@
 // Copyright(C) 1993-2008 Raven Software
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -14,13 +14,13 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//    Configuration file interface.
+//    Configuration libc_FILE interface.
 //
 
 
 // #include <stdio.h>
-#include <inc/lib.h>
-#include <string.h>
+#include <inc/libdoom.h>
+#include <inc/string.h>
 #include <ctype.h>
 #include <errno.h>
 
@@ -70,12 +70,12 @@ typedef struct
     default_type_t type;
 
     // If this is a key value, the original integer scancode we read from
-    // the config file before translating it to the internal key value.
-    // If zero, we didn't read this value from a config file.
+    // the config libc_FILE before translating it to the internal key value.
+    // If zero, we didn't read this value from a config libc_FILE.
     int untranslated;
 
     // The value we translated the scancode into when we read the 
-    // config file on startup.  If the variable value is different from
+    // config libc_FILE on startup.  If the variable value is different from
     // this, it has been changed and needs to be converted; otherwise,
     // use the 'untranslated' value.
     int original_translated;
@@ -837,7 +837,7 @@ static default_t extra_defaults_list[] =
     // @game doom strife
     //
     // If non-zero, the Vanilla savegame limit is enforced; if the
-    // savegame exceeds 180224 bytes in size, the game will exit with
+    // savegame exceeds 180224 bytes in size, the game will libc_exit with
     // an error.  If this has a value of zero, there is no limit to
     // the size of savegames.
     //
@@ -1097,7 +1097,7 @@ static default_t extra_defaults_list[] =
     // Scaling factor used by libsamplerate. This is used when converting
     // sounds internally back into integer form; normally it should not
     // be necessary to change it from the default value. The only time
-    // it might be needed is if a PWAD file is loaded that contains very
+    // it might be needed is if a PWAD libc_FILE is loaded that contains very
     // loud sounds, in which case the conversion may cause sound clipping
     // and the scale factor should be reduced. The lower the value, the
     // quieter the sound effects become, so it should be set as high as is
@@ -1106,8 +1106,8 @@ static default_t extra_defaults_list[] =
     CONFIG_VARIABLE_FLOAT(libsamplerate_scale),
 
     //!
-    // Full path to a Timidity configuration file to use for MIDI
-    // playback. The file will be evaluated from the directory where
+    // Full path to a Timidity configuration libc_FILE to use for MIDI
+    // playback. The libc_FILE will be evaluated from the directory where
     // it is evaluated, so there is no need to add "dir" commands
     // into it.
     //
@@ -1611,11 +1611,11 @@ static void SaveDefaultCollection(default_collection_t *collection)
 #if ORIGCODE
     default_t *defaults;
     int i, v;
-    FILE *f;
+    libc_FILE *f;
 	
-    f = fopen (collection->filename, "w");
+    f = libc_fopen (collection->filename, "w");
     if (!f)
-	return; // can't write the file, but don't complain
+	return; // can't write the libc_FILE, but don't complain
 
     defaults = collection->defaults;
 		
@@ -1632,10 +1632,10 @@ static void SaveDefaultCollection(default_collection_t *collection)
 
         // Print the name and line up all values at 30 characters
 
-        chars_written = fprintf(f, "%s ", defaults[i].name);
+        chars_written = libc_fprintf(f, "%s ", defaults[i].name);
 
         for (; chars_written < 30; ++chars_written)
-            fprintf(f, " ");
+            libc_fprintf(f, " ");
 
         // Print the value
 
@@ -1645,7 +1645,7 @@ static void SaveDefaultCollection(default_collection_t *collection)
 
                 // use the untranslated version if we can, to reduce
                 // the possibility of screwing up the user's config
-                // file
+                // libc_FILE
                 
                 v = * (int *) defaults[i].location;
 
@@ -1663,7 +1663,7 @@ static void SaveDefaultCollection(default_collection_t *collection)
                       && v == defaults[i].original_translated)
                 {
                     // Has not been changed since the last time we
-                    // read the config file.
+                    // read the config libc_FILE.
 
                     v = defaults[i].untranslated;
                 }
@@ -1684,44 +1684,44 @@ static void SaveDefaultCollection(default_collection_t *collection)
                     }
                 }
 
-	        fprintf(f, "%i", v);
+	        libc_fprintf(f, "%i", v);
                 break;
 
             case DEFAULT_INT:
-	        fprintf(f, "%i", * (int *) defaults[i].location);
+	        libc_fprintf(f, "%i", * (int *) defaults[i].location);
                 break;
 
             case DEFAULT_INT_HEX:
-	        fprintf(f, "0x%x", * (int *) defaults[i].location);
+	        libc_fprintf(f, "0x%x", * (int *) defaults[i].location);
                 break;
 
             case DEFAULT_FLOAT:
                 break;
-            //     fprintf(f, "%f", * (float *) defaults[i].location);
+            //     libc_fprintf(f, "%f", * (float *) defaults[i].location);
             //     break;
 
             case DEFAULT_STRING:
-	        fprintf(f,"\"%s\"", * (char **) (defaults[i].location));
+	        libc_fprintf(f,"\"%s\"", * (char **) (defaults[i].location));
                 break;
         }
 
-        fprintf(f, "\n");
+        libc_fprintf(f, "\n");
     }
 
-    fclose (f);
+    libc_fclose (f);
 #endif
 }
 
-// Parses integer values in the configuration file
+// Parses integer values in the configuration libc_FILE
 
 static int ParseIntParameter(char *strparm)
 {
     int parm;
 
     if (strparm[0] == '0' && strparm[1] == 'x')
-        sscanf(strparm+2, "%x", &parm);
+        libc_sscanf(strparm+2, "%x", &parm);
     else
-        sscanf(strparm, "%i", &parm);
+        libc_sscanf(strparm, "%i", &parm);
 
     return parm;
 }
@@ -1735,7 +1735,7 @@ static void SetVariable(default_t *def, char *value)
     switch (def->type)
     {
         case DEFAULT_STRING:
-            * (char **) def->location = strdup(value);
+            * (char **) def->location = libc_strdup(value);
             break;
 
         case DEFAULT_INT:
@@ -1746,7 +1746,7 @@ static void SetVariable(default_t *def, char *value)
         case DEFAULT_KEY:
 
             // translate scancodes read from config
-            // file (save the old value in untranslated)
+            // libc_FILE (save the old value in untranslated)
 
             intparm = ParseIntParameter(value);
             def->untranslated = intparm;
@@ -1773,17 +1773,17 @@ static void SetVariable(default_t *def, char *value)
 static void LoadDefaultCollection(default_collection_t *collection)
 {
 #if ORIGCODE
-    FILE *f;
+    libc_FILE *f;
     default_t *def;
     char defname[80];
     char strparm[100];
 
-    // read the file in, overriding any set defaults
-    f = fopen(collection->filename, "r");
+    // read the libc_FILE in, overriding any set defaults
+    f = libc_fopen(collection->filename, "r");
 
     if (f == NULL)
     {
-        // File not opened, but don't complain. 
+        // libc_FILE not opened, but don't complain. 
         // It's probably just the first time they ran the game.
 
         return;
@@ -1818,7 +1818,7 @@ static void LoadDefaultCollection(default_collection_t *collection)
             strparm[strlen(strparm)-1] = '\0';
         }
 
-        // Surrounded by quotes? If so, remove them.
+        // Surrounded by quotes? If so, libc_remove them.
         if (strlen(strparm) >= 2
          && strparm[0] == '"' && strparm[strlen(strparm) - 1] == '"')
         {
@@ -1829,7 +1829,7 @@ static void LoadDefaultCollection(default_collection_t *collection)
         SetVariable(def, strparm);
     }
 
-    fclose (f);
+    libc_fclose (f);
 #endif
 }
 
@@ -1884,13 +1884,13 @@ void M_LoadDefaults (void)
 {
     int i;
  
-    // check for a custom default file
+    // check for a custom default libc_FILE
 
     //!
-    // @arg <file>
+    // @arg <libc_FILE>
     // @vanilla
     //
-    // Load main configuration from the specified file, instead of the
+    // Load main configuration from the specified libc_FILE, instead of the
     // default.
     //
 
@@ -1899,7 +1899,7 @@ void M_LoadDefaults (void)
     if (i)
     {
 	doom_defaults.filename = myargv[i+1];
-	printf ("	default file: %s\n",doom_defaults.filename);
+	libc_printf ("	default libc_FILE: %s\n",doom_defaults.filename);
     }
     else
     {
@@ -1907,12 +1907,12 @@ void M_LoadDefaults (void)
             = M_StringJoin(configdir, default_main_config, NULL);
     }
 
-    printf("saving config in %s\n", doom_defaults.filename);
+    libc_printf("saving config in %s\n", doom_defaults.filename);
 
     //!
-    // @arg <file>
+    // @arg <libc_FILE>
     //
-    // Load additional configuration from the specified file, instead of
+    // Load additional configuration from the specified libc_FILE, instead of
     // the default.
     //
 
@@ -1921,7 +1921,7 @@ void M_LoadDefaults (void)
     if (i)
     {
         extra_defaults.filename = myargv[i+1];
-        printf("        extra configuration file: %s\n", 
+        libc_printf("        extra configuration libc_FILE: %s\n", 
                extra_defaults.filename);
     }
     else
@@ -1934,7 +1934,7 @@ void M_LoadDefaults (void)
     LoadDefaultCollection(&extra_defaults);
 }
 
-// Get a configuration file variable by its name
+// Get a configuration libc_FILE variable by its name
 
 static default_t *GetDefaultForName(char *name)
 {
@@ -1960,7 +1960,7 @@ static default_t *GetDefaultForName(char *name)
 }
 
 //
-// Bind a variable to a given configuration file variable, by name.
+// Bind a variable to a given configuration libc_FILE variable, by name.
 //
 
 void M_BindVariable(char *name, void *location)
@@ -2045,7 +2045,7 @@ const char *M_GetStrVariable(char *name)
 
 static char *GetDefaultConfigDir(void)
 {
-    char *result = (char *)malloc(2);
+    char *result = (char *)libc_malloc(2);
     result[0] = '.';
     result[1] = '\0';
 
@@ -2074,7 +2074,7 @@ void M_SetConfigDir(char *dir)
 
     if (strcmp(configdir, "") != 0)
     {
-        printf("Using %s for configuration and saves\n", configdir);
+        libc_printf("Using %s for configuration and saves\n", configdir);
     }
 
     // Make the directory if it doesn't already exist:
@@ -2099,7 +2099,7 @@ char *M_GetSaveGameDir(char *iwadname)
 
     if (!strcmp(configdir, ""))
     {
-    	savegamedir = strdup("");
+    	savegamedir = libc_strdup("");
     }
     else
     {
@@ -2116,13 +2116,13 @@ char *M_GetSaveGameDir(char *iwadname)
 
         M_MakeDirectory(savegamedir);
 
-        free(topdir);
+        libc_free(topdir);
 #else
         savegamedir = M_StringJoin(configdir, DIR_SEPARATOR_S, ".savegame/", NULL);
 
         M_MakeDirectory(savegamedir);
 
-        printf ("Using %s for savegames\n", savegamedir);
+        libc_printf ("Using %s for savegames\n", savegamedir);
 #endif
     }
 

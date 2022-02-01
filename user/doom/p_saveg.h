@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -34,12 +34,12 @@ char *P_TempSaveGameFile(void);
 
 char *P_SaveGameFile(int slot);
 
-// Savegame file header read/write functions
+// Savegame libc_FILE header read/write functions
 
 boolean P_ReadSaveGameHeader(void);
 void P_WriteSaveGameHeader(char *description);
 
-// Savegame end-of-file read/write functions
+// Savegame end-of-libc_FILE read/write functions
 
 boolean P_ReadSaveGameEOF(void);
 void P_WriteSaveGameEOF(void);
@@ -55,7 +55,7 @@ void P_UnArchiveThinkers (void);
 void P_ArchiveSpecials (void);
 void P_UnArchiveSpecials (void);
 
-extern FILE *save_stream;
+extern libc_FILE *save_stream;
 extern boolean savegame_error;
 
 

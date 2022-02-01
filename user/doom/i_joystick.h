@@ -1,9 +1,9 @@
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -12,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//      System-specific joystick interface.
+//      libc_system-specific joystick interface.
 //
 
 
@@ -24,7 +24,7 @@
 // bindings supported by the higher-level game code (joyb* variables).
 #define NUM_VIRTUAL_BUTTONS 10
 
-// If this bit is set in a configuration file axis value, the axis is
+// If this bit is set in a configuration libc_FILE axis value, the axis is
 // not actually a joystick axis, but instead is a "button axis". This
 // means that instead of reading an SDL joystick axis, we read the
 // state of two buttons to get the axis value. This is needed for eg.

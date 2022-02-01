@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	Handles WAD file header, directory, lump I/O.
+//	Handles WAD libc_FILE header, directory, lump I/O.
 //
 
 
@@ -21,8 +21,8 @@
 
 #include <ctype.h>
 // #include <stdio.h>
-#include <inc/lib.h>
-#include <string.h>
+#include <inc/libdoom.h>
+#include <inc/string.h>
 
 #include "doomtype.h"
 
@@ -89,11 +89,11 @@ static void ExtendLumpInfo(int newnumlumps)
     lumpinfo_t *newlumpinfo;
     unsigned int i;
 
-    newlumpinfo = calloc(newnumlumps, sizeof(lumpinfo_t));
+    newlumpinfo = libc_calloc(newnumlumps, sizeof(lumpinfo_t));
 
     if (newlumpinfo == NULL)
     {
-	I_Error ("Couldn't realloc lumpinfo");
+	I_Error ("Couldn't libc_realloc lumpinfo");
     }
 
     // Copy over lumpinfo_t structures from the old array. If any of
@@ -118,7 +118,7 @@ static void ExtendLumpInfo(int newnumlumps)
     }
 
     // All done.
-    free(lumpinfo);
+    libc_free(lumpinfo);
     lumpinfo = newlumpinfo;
     numlumps = newnumlumps;
 }
@@ -129,7 +129,7 @@ static void ExtendLumpInfo(int newnumlumps)
 
 //
 // W_AddFile
-// All files are optional, but at least one file must be
+// All files are optional, but at least one libc_FILE must be
 //  found (PWAD, if all required lumps are present).
 // Files with a .wad extension are wadlink files
 //  with multiple lumps.
@@ -148,13 +148,13 @@ wad_file_t *W_AddFile (char *filename)
     filelump_t *filerover;
     int newnumlumps;
 
-    // open the file and add to directory
+    // open the libc_FILE and add to directory
 
     wad_file = W_OpenFile(filename);
 
     if (wad_file == NULL)
     {
-		printf (" couldn't open %s\n", filename);
+		libc_printf (" couldn't open %s\n", filename);
 		return NULL;
     }
 
@@ -162,7 +162,7 @@ wad_file_t *W_AddFile (char *filename)
 
     if (strcasecmp(filename+strlen(filename)-3 , "wad" ) )
     {
-    	// single lump file
+    	// single lump libc_FILE
 
         // fraggle: Swap the filepos and size here.  The WAD directory
         // parsing code expects a little-endian directory, so will swap
@@ -181,7 +181,7 @@ wad_file_t *W_AddFile (char *filename)
     }
     else 
     {
-    	// WAD file
+    	// WAD libc_FILE
         W_Read(wad_file, 0, &header, sizeof(header));
 
 		if (strncmp(header.identification,"IWAD",4))
@@ -189,7 +189,7 @@ wad_file_t *W_AddFile (char *filename)
 			// Homebrew levels?
 			if (strncmp(header.identification,"PWAD",4))
 			{
-			I_Error ("Wad file %s doesn't have IWAD "
+			I_Error ("Wad libc_FILE %s doesn't have IWAD "
 				 "or PWAD id\n", filename);
 			}
 
@@ -205,7 +205,7 @@ wad_file_t *W_AddFile (char *filename)
         newnumlumps += header.numlumps;
     }
 
-    // Increase size of numlumps array to accomodate the new file.
+    // Increase size of numlumps array to accomodate the new libc_FILE.
     startlump = numlumps;
     ExtendLumpInfo(newnumlumps);
 
@@ -392,13 +392,13 @@ void *W_CacheLumpNum(int lumpnum, int tag)
     lump = &lumpinfo[lumpnum];
 
     // Get the pointer to return.  If the lump is in a memory-mapped
-    // file, we can just return a pointer to within the memory-mapped
-    // region.  If the lump is in an ordinary file, we may already
+    // libc_FILE, we can just return a pointer to within the memory-mapped
+    // region.  If the lump is in an ordinary libc_FILE, we may already
     // have it cached; otherwise, load it into memory.
 
     if (lump->wad_file->mapped != NULL)
     {
-        // Memory mapped file, return from the mmapped region.
+        // Memory mapped libc_FILE, return from the mmapped region.
 
         result = lump->wad_file->mapped + lump->position;
     }
@@ -454,7 +454,7 @@ void W_ReleaseLumpNum(int lumpnum)
 
     if (lump->wad_file->mapped != NULL)
     {
-        // Memory-mapped file, so nothing needs to be done here.
+        // Memory-mapped libc_FILE, so nothing needs to be done here.
     }
     else
     {
@@ -481,7 +481,7 @@ void W_Profile (void)
     memblock_t*	block;
     void*	ptr;
     char	ch;
-    FILE*	f;
+    libc_FILE*	f;
     int		j;
     char	name[9];
 	
@@ -506,7 +506,7 @@ void W_Profile (void)
     }
     profilecount++;
 #if ORIGCODE
-    f = fopen ("waddump.txt","w");
+    f = libc_fopen ("waddump.txt","w");
     name[8] = 0;
 
     for (i=0 ; i<numlumps ; i++)
@@ -520,14 +520,14 @@ void W_Profile (void)
 	for ( ; j<8 ; j++)
 	    name[j] = ' ';
 
-	fprintf (f,"%s ",name);
+	libc_fprintf (f,"%s ",name);
 
 	for (j=0 ; j<profilecount ; j++)
-	    fprintf (f,"    %c",info[i][j]);
+	    libc_fprintf (f,"    %c",info[i][j]);
 
-	fprintf (f,"\n");
+	libc_fprintf (f,"\n");
     }
-    fclose (f);
+    libc_fclose (f);
 #endif
 }
 
@@ -540,7 +540,7 @@ void W_GenerateHashTable(void)
 {
     unsigned int i;
 
-    // Free the old hash table, if there is one
+    // libc_free the old hash table, if there is one
 
     if (lumphash != NULL)
     {
@@ -596,7 +596,7 @@ void W_CheckCorrectIWAD(GameMission_t mission)
 
             if (lumpnum >= 0)
             {
-                I_Error("\nYou are trying to use a %s IWAD file with "
+                I_Error("\nYou are trying to use a %s IWAD libc_FILE with "
                         "the %s%s binary.\nThis isn't going to work.\n"
                         "You probably want to use the %s%s binary.",
                         D_SuggestGameName(unique_lumps[i].mission,

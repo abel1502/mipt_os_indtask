@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -17,8 +17,8 @@
 //
 
 // #include <stdio.h>
-#include <inc/lib.h>
-#include <string.h>
+#include <inc/libdoom.h>
+#include <inc/string.h>
 
 #include "memio.h"
 
@@ -41,16 +41,16 @@ struct _MEMFILE {
 
 MEMFILE *mem_fopen_read(void *buf, size_t buflen)
 {
-	MEMFILE *file;
+	MEMFILE *libc_FILE;
 
-	file = Z_Malloc(sizeof(MEMFILE), PU_STATIC, 0);
+	libc_FILE = Z_Malloc(sizeof(MEMFILE), PU_STATIC, 0);
 
-	file->buf = (unsigned char *) buf;
-	file->buflen = buflen;
-	file->position = 0;
-	file->mode = MODE_READ;
+	libc_FILE->buf = (unsigned char *) buf;
+	libc_FILE->buflen = buflen;
+	libc_FILE->position = 0;
+	libc_FILE->mode = MODE_READ;
 
-	return file;
+	return libc_FILE;
 }
 
 // Read bytes
@@ -61,7 +61,7 @@ size_t mem_fread(void *buf, size_t size, size_t nmemb, MEMFILE *stream)
 
 	if (stream->mode != MODE_READ)
 	{
-		printf("not a read stream\n");
+		libc_printf("not a read stream\n");
 		return -1;
 	}
 
@@ -89,17 +89,17 @@ size_t mem_fread(void *buf, size_t size, size_t nmemb, MEMFILE *stream)
 
 MEMFILE *mem_fopen_write(void)
 {
-	MEMFILE *file;
+	MEMFILE *libc_FILE;
 
-	file = Z_Malloc(sizeof(MEMFILE), PU_STATIC, 0);
+	libc_FILE = Z_Malloc(sizeof(MEMFILE), PU_STATIC, 0);
 
-	file->alloced = 1024;
-	file->buf = Z_Malloc(file->alloced, PU_STATIC, 0);
-	file->buflen = 0;
-	file->position = 0;
-	file->mode = MODE_WRITE;
+	libc_FILE->alloced = 1024;
+	libc_FILE->buf = Z_Malloc(libc_FILE->alloced, PU_STATIC, 0);
+	libc_FILE->buflen = 0;
+	libc_FILE->position = 0;
+	libc_FILE->mode = MODE_WRITE;
 
-	return file;
+	return libc_FILE;
 }
 
 // Write bytes to stream
@@ -189,7 +189,7 @@ int mem_fseek(MEMFILE *stream, signed long position, mem_rel_t whence)
 	}
 	else
 	{
-		printf("Error seeking to %i\n", newpos);
+		libc_printf("Error seeking to %i\n", newpos);
 		return -1;
 	}
 }

@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -21,7 +21,7 @@
 //
 
 
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 
 #include "doomdef.h"
 #include "doomstat.h"
@@ -91,7 +91,7 @@ extern anim_t*	lastanim;
 // The full animation sequence is given
 //  using all the flats between the start
 //  and end entry, in the order found in
-//  the WAD file.
+//  the WAD libc_FILE.
 //
 animdef_t		animdefs[] =
 {
@@ -685,7 +685,7 @@ P_CrossSpecialLine
 	break;
 	
       case 52:
-	// EXIT!
+	// libc_exit!
 	G_ExitLevel ();
 	break;
 	
@@ -768,7 +768,7 @@ P_CrossSpecialLine
 	break;
 	
       case 124:
-	// Secret EXIT
+	// Secret libc_exit
 	G_SecretExitLevel ();
 	break;
 		
@@ -1062,7 +1062,7 @@ void P_PlayerInSpecialSector (player_t* player)
 	break;
 			
       case 11:
-	// EXIT SUPER DAMAGE! (for E1M8 finale)
+	// libc_exit SUPER DAMAGE! (for E1M8 finale)
 	player->cheats &= ~CF_GODMODE;
 
 	if (!(leveltime&0x1f))
@@ -1202,7 +1202,7 @@ static void DonutOverrun(fixed_t *s3_floorheight, short *s3_floorpic,
         // Use the specified magic values when emulating behavior caused
         // by memory overruns from improperly constructed donuts.
         // In Vanilla Doom this can differ depending on the operating
-        // system.  The default (if this option is not specified) is to
+        // libc_system.  The default (if this option is not specified) is to
         // emulate the behavior when running under Windows 98.
 
         p = M_CheckParmWithArgs("-donut", 2);
@@ -1228,7 +1228,7 @@ static void DonutOverrun(fixed_t *s3_floorheight, short *s3_floorpic,
 
             if (tmp_s3_floorpic >= numflats)
             {
-                fprintf(stderr,
+                libc_fprintf(libc_stderr,
                         "DonutOverrun: The second parameter for \"-donut\" "
                         "switch should be greater than 0 and less than number "
                         "of flats (%d). Using default value (%d) instead. \n",
@@ -1239,7 +1239,7 @@ static void DonutOverrun(fixed_t *s3_floorheight, short *s3_floorpic,
     }
 
     /*
-    fprintf(stderr,
+    libc_fprintf(libc_stderr,
             "Linedef: %d; Sector: %d; "
             "New floor height: %d; New floor pic: %d\n",
             line->iLineID, pillar_sector->iSectorID,
@@ -1290,7 +1290,7 @@ int EV_DoDonut(line_t*	line)
 
         if (s2 == NULL)
         {
-            fprintf(stderr,
+            libc_fprintf(libc_stderr,
                     "EV_DoDonut: linedef had no second sidedef! "
                     "Unexpected behavior may occur in Vanilla Doom. \n");
 	    break;
@@ -1311,7 +1311,7 @@ int EV_DoDonut(line_t*	line)
                 // s3->floorpic is a short at 0000:0008
                 // Trying to emulate
 
-                fprintf(stderr,
+                libc_fprintf(libc_stderr,
                         "EV_DoDonut: WARNING: emulating buffer overrun due to "
                         "NULL back sector. "
                         "Unexpected behavior may occur in Vanilla Doom.\n");

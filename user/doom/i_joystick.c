@@ -1,9 +1,9 @@
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -20,9 +20,9 @@
 #include "SDL_joystick.h"
 #endif
 
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 // #include <stdio.h>
-#include <string.h>
+#include <inc/string.h>
 
 #include "doomtype.h"
 #include "d_event.h"
@@ -127,7 +127,7 @@ void I_InitJoystick(void)
 
     if (joystick_index < 0 || joystick_index >= SDL_NumJoysticks())
     {
-        printf("I_InitJoystick: Invalid joystick ID: %i\n", joystick_index);
+        libc_printf("I_InitJoystick: Invalid joystick ID: %i\n", joystick_index);
         SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
         return;
     }
@@ -138,7 +138,7 @@ void I_InitJoystick(void)
 
     if (joystick == NULL)
     {
-        printf("I_InitJoystick: Failed to open joystick #%i\n",
+        libc_printf("I_InitJoystick: Failed to open joystick #%i\n",
                joystick_index);
         SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
         return;
@@ -148,7 +148,7 @@ void I_InitJoystick(void)
      || !IsValidAxis(joystick_y_axis)
      || !IsValidAxis(joystick_strafe_axis))
     {
-        printf("I_InitJoystick: Invalid joystick axis for joystick #%i "
+        libc_printf("I_InitJoystick: Invalid joystick axis for joystick #%i "
                "(run joystick setup again)\n",
                joystick_index);
 
@@ -161,7 +161,7 @@ void I_InitJoystick(void)
 
     // Initialized okay!
 
-    printf("I_InitJoystick: %s\n", SDL_JoystickName(joystick_index));
+    libc_printf("I_InitJoystick: %s\n", SDL_JoystickName(joystick_index));
 
     I_AtExit(I_ShutdownJoystick, true);
 #endif

@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard, Andrey Budko
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -18,7 +18,7 @@
 //
 
 // #include <stdio.h>
-#include <inc/lib.h>
+#include <inc/libdoom.h>
 
 #include "deh_misc.h"
 
@@ -103,8 +103,8 @@ boolean PIT_StompThing (mobj_t* thing)
 		
     blockdist = thing->radius + tmthing->radius;
     
-    if ( abs(thing->x - tmx) >= blockdist
-	 || abs(thing->y - tmy) >= blockdist )
+    if ( libc_abs(thing->x - tmx) >= blockdist
+	 || libc_abs(thing->y - tmy) >= blockdist )
     {
 	// didn't hit it
 	return true;
@@ -283,8 +283,8 @@ boolean PIT_CheckThing (mobj_t* thing)
     
     blockdist = thing->radius + tmthing->radius;
 
-    if ( abs(thing->x - tmx) >= blockdist
-	 || abs(thing->y - tmy) >= blockdist )
+    if ( libc_abs(thing->x - tmx) >= blockdist
+	 || libc_abs(thing->y - tmy) >= blockdist )
     {
 	// didn't hit it
 	return true;	
@@ -360,7 +360,7 @@ boolean PIT_CheckThing (mobj_t* thing)
 	solid = thing->flags&MF_SOLID;
 	if (tmflags&MF_PICKUP)
 	{
-	    // can remove thing
+	    // can libc_remove thing
 	    P_TouchSpecialThing (thing, tmthing);
 	}
 	return !solid;
@@ -1223,8 +1223,8 @@ boolean PIT_RadiusAttack (mobj_t* thing)
 	|| thing->type == MT_SPIDER)
 	return true;	
 		
-    dx = abs(thing->x - bombspot->x);
-    dy = abs(thing->y - bombspot->y);
+    dx = libc_abs(thing->x - bombspot->x);
+    dy = libc_abs(thing->y - bombspot->y);
     
     dist = dx>dy ? dx : dy;
     dist = (dist - thing->radius) >> FRACBITS;
@@ -1439,7 +1439,7 @@ static void SpechitOverrun(line_t *ld)
             nofit = addr; 
             break;
         default:
-            fprintf(stderr, "SpechitOverrun: Warning: unable to emulate"
+            libc_fprintf(libc_stderr, "SpechitOverrun: Warning: unable to emulate"
                             "an overrun where numspechit=%i\n",
                             numspechit);
             break;

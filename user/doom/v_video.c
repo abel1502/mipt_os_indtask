@@ -3,9 +3,9 @@
 // Copyright(C) 1993-2008 Raven Software
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -20,7 +20,7 @@
 //
 
 // #include <stdio.h>
-#include <string.h>
+#include <inc/string.h>
 #include <math.h>
 
 #include "i_system.h"
@@ -696,7 +696,7 @@ void WritePCXfile(char *filename, byte *data,
     for (i=0 ; i<768 ; i++)
 	*pack++ = *palette++;
     
-    // write output file
+    // write output libc_FILE
     length = pack - (byte *)pcx;
     M_WriteFile (filename, pcx, length);
 
@@ -710,12 +710,12 @@ void WritePCXfile(char *filename, byte *data,
 
 static void error_fn(png_structp p, png_const_charp s)
 {
-    printf("libpng error: %s\n", s);
+    libc_printf("libpng error: %s\n", s);
 }
 
 static void warning_fn(png_structp p, png_const_charp s)
 {
-    printf("libpng warning: %s\n", s);
+    libc_printf("libpng warning: %s\n", s);
 }
 
 void WritePNGfile(char *filename, byte *data,
@@ -725,10 +725,10 @@ void WritePNGfile(char *filename, byte *data,
     png_structp ppng;
     png_infop pinfo;
     png_colorp pcolor;
-    FILE *handle;
+    libc_FILE *handle;
     int i;
 
-    handle = fopen(filename, "wb");
+    handle = libc_fopen(filename, "wb");
     if (!handle)
     {
         return;
@@ -754,7 +754,7 @@ void WritePNGfile(char *filename, byte *data,
                  8, PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
-    pcolor = malloc(sizeof(*pcolor) * 256);
+    pcolor = libc_malloc(sizeof(*pcolor) * 256);
     if (!pcolor)
     {
         png_destroy_write_struct(&ppng, &pinfo);
@@ -769,7 +769,7 @@ void WritePNGfile(char *filename, byte *data,
     }
 
     png_set_PLTE(ppng, pinfo, pcolor, 256);
-    free(pcolor);
+    libc_free(pcolor);
 
     png_write_info(ppng, pinfo);
 
@@ -780,7 +780,7 @@ void WritePNGfile(char *filename, byte *data,
 
     png_write_end(ppng, pinfo);
     png_destroy_write_struct(&ppng, &pinfo);
-    fclose(handle);
+    libc_fclose(handle);
 }
 #endif
 
@@ -794,7 +794,7 @@ void V_ScreenShot(char *format)
     char lbmname[16]; // haleyjd 20110213: BUG FIX - 12 is too small!
     char *ext;
     
-    // find a file name to save it to
+    // find a libc_FILE name to save it to
 
 #ifdef HAVE_LIBPNG
     extern int png_screenshots;
@@ -814,7 +814,7 @@ void V_ScreenShot(char *format)
 
         if (!M_FileExists(lbmname))
         {
-            break;      // file doesn't exist
+            break;      // libc_FILE doesn't exist
         }
     }
 
@@ -833,7 +833,7 @@ void V_ScreenShot(char *format)
     else
 #endif
     {
-    // save the pcx file
+    // save the pcx libc_FILE
     WritePCXfile(lbmname, I_VideoBuffer,
                  SCREENWIDTH, SCREENHEIGHT,
                  W_CacheLumpName (DEH_String("PLAYPAL"), PU_CACHE));

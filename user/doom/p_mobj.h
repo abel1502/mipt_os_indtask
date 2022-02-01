@@ -2,9 +2,9 @@
 // Copyright(C) 1993-1996 Id Software, Inc.
 // Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software; you can redistribute it and/or
+// This program is libc_free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
+// as published by the libc_free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
@@ -56,7 +56,7 @@
 // from state_t structures.
 // The statescr.exe utility generates the states.h and states.c
 // files that contain the sprite/frame numbers from the
-// statescr.txt source file.
+// statescr.txt source libc_FILE.
 // The xyz origin point represents a point at the bottom middle
 // of the sprite (between the feet of a biped).
 // This is the default origin position for patch_ts grabbed
