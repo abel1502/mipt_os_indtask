@@ -2,8 +2,11 @@
 #define JOS_INC_DOOM_H 1
 
 
+#include <inc/types.h>
+
 // #include <fcntl.h>
 // #include <sys/types.h>
+
 
 #ifndef FILE
 typedef int FILE;
@@ -34,7 +37,6 @@ long ftell(FILE *file);
 int rename(const char *oldfilename, const char *newfilename);
 
 int atoi(const char *s);
-float atof(const char *s);
 
 int fflush(FILE stream);
 

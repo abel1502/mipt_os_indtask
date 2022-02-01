@@ -1,5 +1,4 @@
 #include <inc/lib.h>
-#include <kern/doom.h>
 
 
 FILE stderr = (FILE) 1;
