@@ -16,8 +16,8 @@
 
 #include <inc/libdoom.h>
 
-#include <ctype.h>
-#include <math.h>
+#include <inc/types.h>
+//#include <math.h>
 #include <inc/string.h>
 // #include <fcntl.h>
 // #include <stdio.h>

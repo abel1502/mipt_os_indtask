@@ -21,7 +21,7 @@
 
 // #include <stdio.h>
 #include <inc/string.h>
-#include <math.h>
+//#include <math.h>
 
 #include "i_system.h"
 

@@ -20,7 +20,7 @@
 //
 
 
-#include <ctype.h>
+#include <inc/types.h>
 // #include <stdio.h>
 #include <inc/libdoom.h>
 #include <inc/string.h>

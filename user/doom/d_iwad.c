@@ -19,7 +19,7 @@
 // #include <stdio.h>
 #include <inc/libdoom.h>
 
-#include <ctype.h>
+#include <inc/types.h>
 #include <inc/string.h>
 
 #include "config.h"

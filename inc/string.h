@@ -14,8 +14,15 @@ int strcmp(const char *s1, const char *s2);
 int strncmp(const char *s1, const char *s2, size_t size);
 char *strchr(const char *s, int c);
 char *strfind(const char *s, int c);
+int strcasecmp(const char *s1, const char *s2);
+int strncasecmp(const char *s1, const char *s2, size_t n);
 
 int toupper(int ch);
+int tolower(int ch);
+
+bool isalpha(int c);
+bool isspace(int c);
+bool ispunct(int c);
 
 void *memset(void *dst, int c, size_t len);
 void *memcpy(void *restrict dst, const void *restrict src, size_t len);

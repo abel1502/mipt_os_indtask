@@ -32,7 +32,7 @@
 // #include <stdio.h>
 #include <inc/libdoom.h>
 #include <inc/string.h>
-#include <assert.h>
+//#include <assert.h>
 
 #include "i_swap.h"
 #include "sha1.h"

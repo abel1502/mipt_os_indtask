@@ -21,8 +21,8 @@
 // #include <stdio.h>
 #include <inc/libdoom.h>
 #include <inc/string.h>
-#include <ctype.h>
-#include <errno.h>
+#include <inc/types.h>
+//#include <errno.h>
 
 #include "config.h"
 
