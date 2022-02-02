@@ -150,18 +150,21 @@ struct virtq_used {
     /* Only if VIRTIO_F_EVENT_IDX: virtio_le16_t avail_event; */
 } __attribute__((packed));
 
+
 struct virtq {
     struct virtio_device *device;
     unsigned idx;
 
     unsigned capacity;
 
-    struct virtq_desc  *desc;
-    struct virtq_avail *avail;
-    struct virtq_used  *used;
+    volatile struct virtq_desc  *desc;
+    volatile struct virtq_avail *avail;
+    volatile struct virtq_used  *used;
 
     size_t notify_offset;
 };
+
+typedef int vq_buf_handle;
 
 
 struct virtio_device {
@@ -169,19 +172,19 @@ struct virtio_device {
 
     // ---- MMIO locations:
     // General configuration
-    struct virtio_pci_common_cfg *mmio_cfg;
+    volatile struct virtio_pci_common_cfg *mmio_cfg;
     size_t mmio_cfg_size;
 
     // Notifications
-    void *mmio_ntf;
+    volatile void *mmio_ntf;
     size_t mmio_ntf_size;
 
     // ISR status
-    uint8_t *mmio_isr;
+    volatile uint8_t *mmio_isr;
     size_t mmio_isr_size;
 
     // Device-specific configuration
-    void *mmio_dev;
+    volatile void *mmio_dev;
     size_t mmio_dev_size;
     // ----
 
@@ -192,6 +195,7 @@ struct virtio_device {
     uint32_t vq_notify_off_mul;
 
     // TODO
+    void (*on_virtqs_update)(struct virtio_device *device);
 };
 
 // TODO: Some way to keep track of all deivces
@@ -214,8 +218,12 @@ void virtio_deinit(struct virtio_device *device);
 // TODO: Handle incoming notifications
 void virtio_intr();
 
-int virtq_init(struct virtq *queue);
-int virtq_write(struct virtq *queue, const char *data, unsigned size, unsigned max_resp_size);
+// Negative values should be treated as standard errors
+vq_buf_handle virtq_push(struct virtq *queue, const char *data, unsigned size, unsigned max_resp_size);
+vq_buf_handle virtq_next_handle(struct virtq *queue);
+int virtq_peek(struct virtq *queue, vq_buf_handle handle, char **buf, unsigned *limit);
+int virtq_pop(struct virtq *queue);
+
 // TODO: other methods
 
 
