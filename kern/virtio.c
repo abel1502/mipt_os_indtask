@@ -167,6 +167,8 @@ virtio_init_device_virtqs(struct virtio_device *device) {
         device->queues[i].idx = i;
         device->queues[i].capacity = vq_size;
         device->queues[i].notify_offset = device->mmio_cfg->queue_notify_off;
+        device->queues[i].seen_used_idx = 0;
+        device->queues[i].waiting = false;
 
         /*
           Now we allocate the queue parts. We're gonna use the split virtq format.
@@ -228,7 +230,17 @@ static void
 virtio_on_virtqs_update(struct virtio_device *device) {
     assert(device);
 
-    // TODO: Implement
+    for (unsigned i = 0; i < device->num_queues; ++i) {
+        struct virtq *queue = &device->queues[i];
+
+        if (queue->used->idx > queue->seen_used_idx) {
+            assert(queue->used->idx == queue->seen_used_idx + 1);
+            assert(queue->waiting);
+
+            queue->seen_used_idx = queue->used->idx;
+            queue->waiting = false;
+        }
+    }
 }
 
 int
@@ -374,6 +386,41 @@ virtio_intr() {
 }
 
 
+void
+virtq_request(struct virtq *queue, physaddr_t buf, unsigned size, unsigned resp_offs) {
+    assert(queue);
+    assert(size >= resp_offs);
+    assert(!queue->waiting);
+
+    queue->waiting = true;
+
+    queue->desc[0] = (struct virtq_desc){buf, resp_offs, VIRTQ_DESC_F_NEXT, 1};
+    queue->desc[1] = (struct virtq_desc){buf + resp_offs, size - resp_offs, VIRTQ_DESC_F_WRITE, 0};
+
+    queue->avail->ring[queue->avail->idx] = 0;
+
+    MEM_BARRIER();
+
+    queue->avail->idx++;
+
+    MEM_BARRIER();
+
+    if (queue->avail->flags & VIRTQ_AVAIL_F_NO_INTERRUPT) {
+        *(volatile virtio_le16_t *)(
+            queue->device->mmio_ntf + 
+            queue->notify_offset * queue->device->vq_notify_off_mul
+        ) = queue->idx;
+    }
+
+    // Probably suboptimal, but well sorry
+    while (queue->waiting) {
+        asm volatile ("pause");
+    }
+
+    // And now the result must have been provided
+}
+
+/*
 vq_buf_handle
 virtq_push(struct virtq *queue, const char *data, unsigned size, unsigned max_resp_size);
 
@@ -385,3 +432,4 @@ virtq_peek(struct virtq *queue, vq_buf_handle handle, char **buf, unsigned *limi
 
 int
 virtq_pop(struct virtq *queue);
+*/

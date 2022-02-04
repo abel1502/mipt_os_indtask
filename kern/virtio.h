@@ -157,11 +157,15 @@ struct virtq {
 
     unsigned capacity;
 
+    volatile bool waiting;
+
     volatile struct virtq_desc  *desc;
     volatile struct virtq_avail *avail;
     volatile struct virtq_used  *used;
 
     size_t notify_offset;
+
+    uint32_t seen_used_idx;
 };
 
 typedef int vq_buf_handle;
@@ -212,17 +216,18 @@ void virtio_reset(struct virtio_device *device);
 uint8_t virtio_get_status(struct virtio_device *device);
 void virtio_fail(struct virtio_device *device);
 bool virtio_needs_reset(struct virtio_device *device);
-int virtio_notify_avail(struct virtio_device *device, unsigned virtq_idx);
 // TODO: Implement deinit?
 void virtio_deinit(struct virtio_device *device);
 // TODO: Handle incoming notifications
 void virtio_intr();
 
 // Negative values should be treated as standard errors
-vq_buf_handle virtq_push(struct virtq *queue, const char *data, unsigned size, unsigned max_resp_size);
-vq_buf_handle virtq_next_handle(struct virtq *queue);
-int virtq_peek(struct virtq *queue, vq_buf_handle handle, char **buf, unsigned *limit);
-int virtq_pop(struct virtq *queue);
+// vq_buf_handle virtq_push(struct virtq *queue, const char *data, unsigned size, unsigned max_resp_size);
+// vq_buf_handle virtq_next_handle(struct virtq *queue);
+// int virtq_peek(struct virtq *queue, vq_buf_handle handle, char **buf, unsigned *limit);
+// int virtq_pop(struct virtq *queue);
+
+void virtq_request(struct virtq *queue, physaddr_t buf, unsigned size, unsigned resp_offs);
 
 // TODO: other methods
 
