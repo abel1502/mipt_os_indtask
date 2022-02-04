@@ -7,6 +7,8 @@
 
 #include <kern/virtio.h>
 
+#define VIRTIO_GPU_DEVICE_ID 0x10
+
 #define VIRTIO_GPU_MAX_SCANOUTS 16
 #define VIRTIO_GPU_FLAG_FENCE   (1 << 0)
 
@@ -63,18 +65,18 @@ struct virtio_gpu_ctrl_hdr {
     virtio_le64_t fence_id;
     virtio_le32_t ctx_id;
     virtio_le32_t padding;
-};
+} __attribute__((packed));
 
 struct virtio_gpu_rect {
     virtio_le32_t x;
     virtio_le32_t y;
     virtio_le32_t width;
     virtio_le32_t height;
-};
+} __attribute__((packed));
 
 struct virtio_gpu_get_display_info {
     struct virtio_gpu_ctrl_hdr hdr;
-};
+} __attribute__((packed));
 
 struct virtio_gpu_resp_display_info {
     struct virtio_gpu_ctrl_hdr hdr;
@@ -84,7 +86,7 @@ struct virtio_gpu_resp_display_info {
         virtio_le32_t enabled;
         virtio_le32_t flags;
     } pmodes[VIRTIO_GPU_MAX_SCANOUTS];
-};
+} __attribute__((packed));
 
 struct virtio_gpu_resource_create_2d {
     struct virtio_gpu_ctrl_hdr hdr;
@@ -93,21 +95,21 @@ struct virtio_gpu_resource_create_2d {
     virtio_le32_t format;
     virtio_le32_t width;
     virtio_le32_t height;
-};
+} __attribute__((packed));
 
 struct virtio_gpu_set_scanout {
     struct virtio_gpu_ctrl_hdr hdr;
     struct virtio_gpu_rect r;
     virtio_le32_t scanout_id;
     virtio_le32_t resource_id;
-};
+} __attribute__((packed));
 
 struct virtio_gpu_resource_flush {
     struct virtio_gpu_ctrl_hdr hdr;
     struct virtio_gpu_rect r;
     virtio_le32_t resource_id;
     virtio_le32_t padding;
-};
+} __attribute__((packed));
 
 struct virtio_gpu_transfer_to_host_2d {
     struct virtio_gpu_ctrl_hdr hdr;
@@ -115,19 +117,19 @@ struct virtio_gpu_transfer_to_host_2d {
     virtio_le64_t offset;
     virtio_le32_t resource_id;
     virtio_le32_t padding;
-};
+} __attribute__((packed));
 
 struct virtio_gpu_resource_attach_backing {
     struct virtio_gpu_ctrl_hdr hdr;
     virtio_le32_t resource_id;
     virtio_le32_t nr_entries;
-};
+} __attribute__((packed));
 
 struct virtio_gpu_mem_entry {
     virtio_le64_t addr;
     virtio_le32_t length;
     virtio_le32_t padding;
-};
+} __attribute__((packed));
 
 struct virtio_gpu_bigfngreq {
     struct {
@@ -140,21 +142,26 @@ struct virtio_gpu_bigfngreq {
     struct {
         // VIRTIO_GPU_CMD_RESOURCE_CREATE_2D  // 640x400, VIRTIO_GPU_FORMAT_R8G8B8A8_UNORM
         struct virtio_gpu_resource_create_2d create;
+        struct virtio_gpu_ctrl_hdr create_resp;
         // VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING
         struct virtio_gpu_resource_attach_backing attach;
         struct virtio_gpu_mem_entry attachment_page;
+        struct virtio_gpu_ctrl_hdr attach_resp;
         // VIRTIO_GPU_CMD_SET_SCANOUT
         struct virtio_gpu_set_scanout scanout;
+        struct virtio_gpu_ctrl_hdr scanout_resp;
     } init;
 
     struct {
         // VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D
         struct virtio_gpu_transfer_to_host_2d transfer;
+        struct virtio_gpu_ctrl_hdr transfer_resp;
         // VIRTIO_GPU_CMD_RESOURCE_FLUSH
         struct virtio_gpu_resource_flush flush;
+        struct virtio_gpu_ctrl_hdr flush_resp;
     } flush;
-};
-// size <= 0x1000
+} __attribute__((packed));
+// size = ?
 
 // Also need a framebuffer somewhere in (almost?) contiguous memory
 // size = 0x3E800 * 4 - almost 0x100000 - class 8
@@ -164,6 +171,13 @@ static_assert(sizeof(struct virtio_gpu_bigfngreq) +
               (640 * 400 * sizeof(virtio_le32_t)) <= VIRTIO_GPU_CONTROLPAGE_SIZE, 
               "Bad size");
 
+
+extern struct virtio_device *virtio_gpu_device;
+
+
+void virtio_gpu_init();
+
+void virtio_gpu_flush();
 
 
 #endif
