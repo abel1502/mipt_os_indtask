@@ -15,4 +15,5 @@ end
 add-symbol-file obj/fs/fs
 
 b _panic
-
+b virtio_gpu_init
+b kern/virtiogpu.c:60

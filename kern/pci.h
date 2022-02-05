@@ -35,7 +35,7 @@
 
 #define PCI_MSI_CAPABILITY 0x11
 
-#define PCI_STATUS_CAPS_LIST 0x1000
+#define PCI_STATUS_CAPS_LIST (1 << 4)
 
 struct pci_addr_t {
     uint8_t bus;

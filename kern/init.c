@@ -20,6 +20,7 @@
 #include <kern/traceopt.h>
 #include <kern/pci.h>
 #include <kern/virtio.h>
+#include <kern/virtiogpu.h>
 
 void
 timers_init(void) {
@@ -156,12 +157,12 @@ i386_init(void) {
     env_init();
 
     list_pci();
+    // TODO: Remove
     configure_virtio_vga();
 
     virtio_init();
     // Creating a GPU device for a test
-    struct virtio_device *virtio_gpu = virtio_create_device();
-    virtio_init_device(virtio_gpu, 16);
+    virtio_gpu_init();
     cprintf("Successfully initialized a virtio gpu device\n");
 
 #ifdef CONFIG_KSPACE

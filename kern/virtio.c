@@ -37,7 +37,7 @@ virtio_create_device() {
 }
 
 
-static int
+/*static*/ int
 virtio_process_capability(struct virtio_device *device, struct virtio_pci_cap *cur_cap, uint8_t followup_offset) {
     assert(device);
     assert(cur_cap);
@@ -114,6 +114,12 @@ virtio_identify_capabilities(struct virtio_device *device) {
         struct virtio_pci_cap cur_cap;
 
         pci_read_confspc_data(device->pci_device_addr, cur_offset, &cur_cap, sizeof(cur_cap));
+
+        // cprintf(">> %hhx: %016lX\n", cur_offset, *(uint64_t *)&cur_cap);
+        if (cur_cap.cap_vndr != VIRTIO_PCI_CAP_VENDOR) {
+            cur_offset = cur_cap.cap_next;
+            continue;
+        }
 
         assert(cur_cap.cap_len >= sizeof(cur_cap));
 

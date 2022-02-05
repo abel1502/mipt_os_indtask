@@ -63,7 +63,7 @@
 // Arbitrary limits to keep the size small
 #define VIRTIO_MAX_DEVICES 0x8
 #define VIRTIO_MAX_VIRTQS 0x8
-#define VIRTIO_MAX_VQ_SIZE 0x1000
+#define VIRTIO_MAX_VQ_SIZE 0x10
 
 
 // Everything is little-endian, unless otherwise specified
