@@ -79,7 +79,7 @@ void pci_scan_capabilities(uint8_t bus, uint8_t slot, uint8_t func, uint8_t capa
 void list_pci();
 void pci_find_device(uint16_t vendor, uint8_t device_class, uint8_t device_subclass, uint8_t *bus_ret, uint8_t *slot_ret, uint8_t *func_ret);
 void pci_find_device_by_id(uint16_t vendor, uint16_t device_id, uint8_t *bus_ret, uint8_t *slot_ret, uint8_t *func_ret);
-uint32_t pci_get_bar(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t *);
+uint64_t pci_get_bar(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t *);
 uint8_t pci_get_class(uint8_t, uint8_t, uint8_t);
 uint8_t pci_get_subclass(uint8_t, uint8_t, uint8_t);
 uint8_t pci_get_hdr_type(uint8_t, uint8_t, uint8_t);

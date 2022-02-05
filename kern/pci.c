@@ -327,7 +327,7 @@ pci_get_vendor_name(uint16_t vendor, int* found) {
     return "unknown";
 }
 
-uint32_t
+uint64_t
 pci_get_bar(uint8_t hdrtype, uint8_t bus, uint8_t slot, uint8_t func, uint8_t bar_number, uint8_t *bar_type) {
     uint8_t bar_type_placeholder = 0;
 
@@ -335,23 +335,31 @@ pci_get_bar(uint8_t hdrtype, uint8_t bus, uint8_t slot, uint8_t func, uint8_t ba
         bar_type = &bar_type_placeholder;
     }
 
-    if ((hdrtype & ~0x80) == 0) {
-        uint8_t off = bar_number * sizeof(uint32_t);
-        uint32_t bar  = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, offsetof(pci_header_00, bar) + off);
-        if ((bar & 1) == 0) {
-            if ((bar & 0xffff0000 & ~0b110) == 0x00) { // 32-bit bar, we don't support other :P
-                *bar_type = 0;
-                return bar & ~0b1111;
+	if ((hdrtype & ~0x80) == 0) {
+		uint8_t off = bar_number * 2;
+		uint32_t bar = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, 0x10 + off);
+
+		if (!(bar & 1)) {
+			if ((bar & 0b110) == 0b000) {
+				*bar_type = 0;
+
+				return bar & ~0b1111;
+			} else if ((bar & 0b110) == 0b100) {
+                uint32_t next_bar  = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, 0x10 + off);
+
+                *bar_type = 2;
+
+                return (uint64_t)((bar & 0xFFFFFFF0) + ((uint64_t)(next_bar & 0xFFFFFFFF) << 32));
             }
+		} else  {
+			*bar_type = 1;
 
-            assert(false);
-        } else {
-            *bar_type = 1;
-            return bar & ~0b11;
-        }
-    }
+			return bar & ~0b11;
+		}
+	}
 
-    return 0;
+    assert(false);
+	return 0;
 }
 
 void
