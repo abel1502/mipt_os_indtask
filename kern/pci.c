@@ -336,21 +336,22 @@ pci_get_bar(uint8_t hdrtype, uint8_t bus, uint8_t slot, uint8_t func, uint8_t ba
     }
 
 	if ((hdrtype & ~0x80) == 0) {
-		uint8_t off = bar_number * 2;
-		uint32_t bar = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, 0x10 + off);
+		uint8_t off = bar_number * sizeof(uint32_t);
+		uint32_t bar = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, offsetof(pci_header_00, bar) + off);
 
 		if (!(bar & 1)) {
 			if ((bar & 0b110) == 0b000) {
 				*bar_type = 0;
-
 				return bar & ~0b1111;
+
 			} else if ((bar & 0b110) == 0b100) {
-                uint32_t next_bar  = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, 0x10 + off);
+                uint32_t next_bar = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, offsetof(pci_header_00, bar) + off + sizeof(uint32_t));
 
                 *bar_type = 2;
-
                 return (uint64_t)((bar & 0xFFFFFFF0) + ((uint64_t)(next_bar & 0xFFFFFFFF) << 32));
             }
+
+            assert(false);
 		} else  {
 			*bar_type = 1;
 
