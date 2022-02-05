@@ -19,6 +19,7 @@ void
 virtio_init() {
     assert(virtio_devices == 0);
 
+    kzalloc_region_no_cow = true;
     virtio_devices = kzalloc_region(sizeof(struct virtio_device) * VIRTIO_MAX_DEVICES);
     virtio_num_devices = 0;
 
@@ -37,7 +38,7 @@ virtio_create_device() {
 }
 
 
-/*static*/ int
+static int
 virtio_process_capability(struct virtio_device *device, struct virtio_pci_cap *cur_cap, uint8_t followup_offset) {
     assert(device);
     assert(cur_cap);
@@ -217,6 +218,7 @@ virtio_init_device_virtqs(struct virtio_device *device) {
 
         cprintf("Allocating %llu bytes-large page for a virtiqueue\n", CLASS_SIZE(class));
 
+        kzalloc_region_no_cow = true;
         volatile void *vq_region = kzalloc_region(total_size);
         physaddr_t vq_phys_region = lookup_physaddr((void *)vq_region, total_size);
 

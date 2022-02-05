@@ -9,6 +9,9 @@ static volatile struct virtio_gpu_bigfngreq *virtio_gpu_reqpage = NULL;
 static void virtio_gpu_init_header() {
     assert(!virtio_gpu_reqpage);
 
+    // TODO: Gotta fix somehow. Currently, the alignment of the kernel heap (virtual) head
+    // prevents this from being allocated as a single page
+    kzalloc_region_no_cow = true;
     virtio_gpu_reqpage = (volatile struct virtio_gpu_bigfngreq *)kzalloc_region(VIRTIO_GPU_CONTROLPAGE_SIZE);
     virtio_gpu_reqpage_phys = lookup_physaddr((const void *)virtio_gpu_reqpage, VIRTIO_GPU_CONTROLPAGE_SIZE);
 
