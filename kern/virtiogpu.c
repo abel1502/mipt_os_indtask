@@ -72,6 +72,21 @@ virtio_gpu_init() {
     );
 
     // Now we have the display info in resp, if we need it for whatever reason...
+    for (unsigned i = 0; i < VIRTIO_GPU_MAX_SCANOUTS; ++i) {
+        #define PMODE_ (virtio_gpu_reqpage->display_info.resp.pmodes[i])
+
+        if (!PMODE_.enabled) {
+            continue;
+        }
+
+        cprintf("%u %u %u %u\n", 
+                PMODE_.r.x,
+                PMODE_.r.y,
+                PMODE_.r.width,
+                PMODE_.r.height);
+
+        #undef PMODE_
+    }
 }
 
 void

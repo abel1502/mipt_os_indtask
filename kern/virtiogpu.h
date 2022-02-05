@@ -7,7 +7,7 @@
 
 #include <kern/virtio.h>
 
-#define VIRTIO_GPU_DEVICE_ID 0x10
+#define VIRTIO_GPU_DEVICE_ID 16
 
 #define VIRTIO_GPU_MAX_SCANOUTS 16
 #define VIRTIO_GPU_FLAG_FENCE   (1 << 0)
