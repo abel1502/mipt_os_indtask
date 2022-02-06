@@ -19,6 +19,7 @@ extern libc_FILE *libc_stdout;
 #endif
 
 char *libc_strdup(const char *str);
+char *libc_strchr(const char *str, int ch);
 char *libc_strrchr(const char *str, int ch);
 char *libc_strstr(const char *str1, const char *str2);
 

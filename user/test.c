@@ -15,4 +15,13 @@ umain(int argc, char **argv) {
     }
 
     cprintf("%s\n", str);
+
+    char* str2 = libc_strdup(str);
+    cprintf("%s\n", str2);
+
+    libc_puts("{[");
+    libc_putchar(']');
+    libc_putchar('}');
+
+    libc_printf(" -> %s <-", str2);
 }

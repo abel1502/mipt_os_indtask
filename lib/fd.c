@@ -238,6 +238,15 @@ seek(int fdnum, off_t offset) {
     return 0;
 }
 
+int tell(int fdnum) {
+    int res;
+    struct Fd *fd;
+
+    if ((res = fd_lookup(fdnum, &fd)) < 0) return res;
+
+    return fd->fd_offset;
+}
+
 int
 ftruncate(int fdnum, off_t newsize) {
     int res;
