@@ -190,7 +190,7 @@ pci_write_confspc_word(struct pci_addr_t addr, uint8_t offset, uint16_t data) {
         dword = (dword & 0xffff0000) | ((uint32_t)data);
     }
 
-    pci_write_confspc_word(addr, offset & ~0b11, dword);
+    pci_write_confspc_dword(addr, offset & ~0b11, dword);
 }
 
 void

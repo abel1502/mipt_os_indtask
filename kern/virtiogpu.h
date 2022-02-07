@@ -173,6 +173,7 @@ static_assert(sizeof(struct virtio_gpu_bigfngreq) +
 
 
 extern struct virtio_device *virtio_gpu_device;
+extern uint32_t *virtio_gpu_fb;
 
 
 void virtio_gpu_init();

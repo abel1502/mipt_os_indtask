@@ -19,6 +19,8 @@ enum {
     SYS_ipc_try_send,
     SYS_ipc_recv,
     SYS_gettime,
+    SYS_virtiogpu_init,
+    SYS_virtiogpu_flush,
     NSYSCALLS
 };
 

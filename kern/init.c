@@ -157,13 +157,10 @@ i386_init(void) {
     env_init();
 
     list_pci();
-    // TODO: Remove
-    configure_virtio_vga();
+    // configure_virtio_vga();
 
     virtio_init();
-    // Creating a GPU device for a test
-    virtio_gpu_init();
-    cprintf("Successfully initialized a virtio gpu device\n");
+    // virtio_gpu_init();
 
 #ifdef CONFIG_KSPACE
     /* Touch all you want */

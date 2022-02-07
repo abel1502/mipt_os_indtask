@@ -23,6 +23,9 @@ virtio_init() {
     virtio_devices = kzalloc_region(sizeof(struct virtio_device) * VIRTIO_MAX_DEVICES);
     virtio_num_devices = 0;
 
+    pic_irq_unmask(IRQ_VIRTIO);
+    cprintf("Virtio initialization done.\n");
+
     return;
 }
 
@@ -126,7 +129,7 @@ virtio_identify_capabilities(struct virtio_device *device) {
 
         if (cur_cap.cfg_type <= VIRTIO_PCI_CAP_PCI_CFG &&
             !seen_caps[cur_cap.cfg_type]) {
-            res = virtio_process_capability(device, &cur_cap, cur_offset);
+            res = virtio_process_capability(device, &cur_cap, cur_offset + sizeof(cur_cap));
             if (res < 0) {
                 return res;
             }
@@ -171,11 +174,12 @@ virtio_init_device_virtqs(struct virtio_device *device) {
 
         device->mmio_cfg->queue_msix_vector = VIRTIO_MSI_NO_VECTOR;
 
+        device->queues[i].device = device;
         device->queues[i].idx = i;
         device->queues[i].capacity = vq_size;
+        device->queues[i].waiting = false;
         device->queues[i].notify_offset = device->mmio_cfg->queue_notify_off;
         device->queues[i].seen_used_idx = 0;
-        device->queues[i].waiting = false;
 
         /*
           Now we allocate the queue parts. We're gonna use the split virtq format.
@@ -276,6 +280,10 @@ virtio_init_device(struct virtio_device *device, uint16_t virtio_device_id) {
         return res;
     }
 
+    // Inform the device of the chosen irq
+    pci_write_confspc_byte(device->pci_device_addr, offsetof(struct pci_header_00, int_pin), 0);
+    pci_write_confspc_byte(device->pci_device_addr, offsetof(struct pci_header_00, int_line), IRQ_VIRTIO);
+
     // 1. Reset the device.
     virtio_reset(device);
 
@@ -304,7 +312,7 @@ virtio_init_device(struct virtio_device *device, uint16_t virtio_device_id) {
 
     // 7. Perform device-specific setup, including discovery of virtqueues for the device, optional per-bus setup,
     // reading and possibly writing the device’s virtio configuration space, and population of virtqueues.
-    device->mmio_cfg->msix_config = VIRTIO_MSI_NO_VECTOR;
+    // device->mmio_cfg->msix_config = VIRTIO_MSI_NO_VECTOR;
 
     res = virtio_init_device_virtqs(device);
     if (res < 0) {
@@ -314,7 +322,7 @@ virtio_init_device(struct virtio_device *device, uint16_t virtio_device_id) {
     // 8. Set the DRIVER_OK status bit. At this point the device is “live”.
     device->mmio_cfg->device_status |= VIRTIO_CONFIG_S_DRIVER_OK;
 
-    pic_irq_unmask(IRQ_VIRTIO);
+    cprintf("Virtio device confguration done.\n");
 
     return 0;
 }
@@ -369,15 +377,22 @@ virtio_needs_reset(struct virtio_device *device) {
 
 void
 virtio_intr() {
-    assert(virtio_devices);
+    cprintf("Virtio interrupt hit");
+
+    if (!virtio_devices) {
+        return;
+    }
 
     for (unsigned i = 0; i < virtio_num_devices; ++i) {
         struct virtio_device *device = &virtio_devices[i];
+        cprintf("Device %u.\n", i);
+
         uint8_t isr = *device->mmio_isr;
 
         if (isr & 0b01) {
             cprintf("Virtio device %p virtq used bufs returned\n", device);
 
+            assert(device->on_virtqs_update);
             device->on_virtqs_update(device);
 
             // Deliberately no `continue`
@@ -397,6 +412,7 @@ virtio_intr() {
 void
 virtq_request(struct virtq *queue, physaddr_t buf, unsigned size, unsigned resp_offs) {
     assert(queue);
+    assert(queue->device);
     assert(size >= resp_offs);
     assert(!queue->waiting);
 
@@ -405,7 +421,7 @@ virtq_request(struct virtq *queue, physaddr_t buf, unsigned size, unsigned resp_
     queue->desc[0] = (struct virtq_desc){buf, resp_offs, VIRTQ_DESC_F_NEXT, 1};
     queue->desc[1] = (struct virtq_desc){buf + resp_offs, size - resp_offs, VIRTQ_DESC_F_WRITE, 0};
 
-    queue->avail->ring[queue->avail->idx] = 0;
+    queue->avail->ring[queue->avail->idx % queue->capacity] = 0;
 
     MEM_BARRIER();
 
@@ -413,14 +429,29 @@ virtq_request(struct virtq *queue, physaddr_t buf, unsigned size, unsigned resp_
 
     MEM_BARRIER();
 
-    if (queue->avail->flags & VIRTQ_AVAIL_F_NO_INTERRUPT) {
+    if (!(queue->avail->flags & VIRTQ_AVAIL_F_NO_INTERRUPT)) {
+        assert(queue->device->mmio_ntf);
+
         *(volatile virtio_le16_t *)(
             queue->device->mmio_ntf + 
             queue->notify_offset * queue->device->vq_notify_off_mul
         ) = queue->idx;
     }
 
-    // Probably suboptimal, but well sorry
+    // while (true) {
+    //     if (queue->used->idx > queue->seen_used_idx) {
+    //         assert(queue->used->idx == queue->seen_used_idx + 1);
+    //         assert(queue->waiting);
+
+    //         queue->seen_used_idx = queue->used->idx;
+    //         queue->waiting = false;
+    //         break;
+    //     }
+
+    //     asm volatile ("pause");
+    // }
+
+    // Probably suboptimal, but, well, sorry
     while (queue->waiting) {
         asm volatile ("pause");
     }

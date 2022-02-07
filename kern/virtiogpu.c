@@ -4,15 +4,20 @@
 struct virtio_device *virtio_gpu_device = NULL;
 static physaddr_t virtio_gpu_reqpage_phys = 0;
 static volatile struct virtio_gpu_bigfngreq *virtio_gpu_reqpage = NULL;
+uint32_t *virtio_gpu_fb = NULL;
 
 
 static void virtio_gpu_init_header() {
     assert(!virtio_gpu_reqpage);
 
-    // TODO: Gotta fix somehow. Currently, the alignment of the kernel heap (virtual) head
-    // prevents this from being allocated as a single page
-    kzalloc_region_no_cow = true;
-    virtio_gpu_reqpage = (volatile struct virtio_gpu_bigfngreq *)kzalloc_region(VIRTIO_GPU_CONTROLPAGE_SIZE);
+    static_assert(VIRTIO_GPU_CONTROLPAGE_SIZE == VIRTIO_FRAMEBUFFER_HOLDER_SIZE, "Bad size");
+
+    int res = 0;
+
+    res = map_region(&kspace, (uintptr_t)VIRTIO_FRAMEBUFFER_HOLDER, NULL, 0, VIRTIO_FRAMEBUFFER_HOLDER_SIZE, PROT_R | PROT_W | ALLOC_ZERO | ALLOC_NOW);
+    assert(res >= 0);
+
+    virtio_gpu_reqpage = (volatile struct virtio_gpu_bigfngreq *)VIRTIO_FRAMEBUFFER_HOLDER;
     virtio_gpu_reqpage_phys = lookup_physaddr((const void *)virtio_gpu_reqpage, VIRTIO_GPU_CONTROLPAGE_SIZE);
 
     // Init (most of) the reqpage data:
@@ -22,6 +27,7 @@ static void virtio_gpu_init_header() {
     static const unsigned FB_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(virtio_le32_t);
 
     static_assert(sizeof(*virtio_gpu_reqpage) + FB_SIZE <= VIRTIO_GPU_CONTROLPAGE_SIZE, "Bad size");
+    static_assert(sizeof(*virtio_gpu_reqpage) < PAGE_SIZE, "Bad size");
 
     virtio_gpu_reqpage->display_info.req.hdr = (struct virtio_gpu_ctrl_hdr){VIRTIO_GPU_CMD_GET_DISPLAY_INFO};
 
@@ -46,6 +52,8 @@ static void virtio_gpu_init_header() {
     virtio_gpu_reqpage->init.attachment_page = (struct virtio_gpu_mem_entry){
         virtio_gpu_reqpage_phys + sizeof(*virtio_gpu_reqpage), FB_SIZE
     };
+
+    virtio_gpu_fb = (uint32_t *)(((void *)virtio_gpu_reqpage) + PAGE_SIZE);
 }
 
 
@@ -65,7 +73,11 @@ virtio_gpu_init() {
 
     struct virtq *queue = &virtio_gpu_device->queues[0];
 
+    cprintf("Doing...\n");
+
     virtio_gpu_init_header();
+
+    cprintf("Header inited...\n");
 
     virtq_request(
         queue,
@@ -73,6 +85,8 @@ virtio_gpu_init() {
         sizeof(virtio_gpu_reqpage->display_info),
         sizeof(virtio_gpu_reqpage->display_info.req)
     );
+
+    cprintf("Done?\n");
 
     // Now we have the display info in resp, if we need it for whatever reason...
     for (unsigned i = 0; i < VIRTIO_GPU_MAX_SCANOUTS; ++i) {

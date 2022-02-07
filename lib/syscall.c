@@ -147,3 +147,14 @@ int
 sys_gettime(void) {
     return syscall(SYS_gettime, 0, 0, 0, 0, 0, 0, 0);
 }
+
+int
+sys_virtiogpu_init(uint32_t **fb_holder) {
+    return syscall(SYS_virtiogpu_init, 0, (uintptr_t)fb_holder, 0, 0, 0, 0, 0);
+}
+
+int
+sys_virtiogpu_flush() {
+    return syscall(SYS_virtiogpu_flush, 0, 0, 0, 0, 0, 0, 0);
+}
+

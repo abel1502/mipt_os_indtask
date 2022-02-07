@@ -13,6 +13,7 @@
 #include <kern/syscall.h>
 #include <kern/trap.h>
 #include <kern/traceopt.h>
+#include <kern/virtiogpu.h>
 
 /* Print a string to the system console.
  * The string is exactly 'len' characters long.
@@ -555,6 +556,41 @@ sys_region_refs(uintptr_t addr, size_t size, uintptr_t addr2, uintptr_t size2) {
     return res;
 }
 
+static int
+sys_virtiogpu_init(uint32_t **user_fb) {
+    int res = 0;
+
+    res = user_mem_check(curenv, user_fb, sizeof(uint32_t), PROT_R | PROT_W | PROT_USER_);
+    if (res < 0) {
+        return res;
+    }
+
+    virtio_gpu_init();
+    assert(virtio_gpu_fb);
+
+    assert(&curenv->address_space != &kspace);
+
+    res = map_region(&curenv->address_space, (uintptr_t)UVFB, &kspace, (uintptr_t)virtio_gpu_fb, UVFB_SIZE, PROT_R | PROT_W | PROT_USER_);
+    if (res < 0) {
+        return res;
+    }
+
+    *user_fb = UVFB;
+
+    return 0;
+}
+
+static int
+sys_virtiogpu_flush() {
+    if (!virtio_gpu_fb) {
+        return -E_INVAL;
+    }
+
+    virtio_gpu_flush();
+
+    return 0;
+}
+
 /* Dispatches to the correct kernel function, passing the arguments. */
 uintptr_t
 syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6) {
@@ -610,6 +646,12 @@ syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t
 
     case SYS_gettime:
         return sys_gettime();
+
+    case SYS_virtiogpu_init:
+        return sys_virtiogpu_init((uint32_t **)a1);
+
+    case SYS_virtiogpu_flush:
+        return sys_virtiogpu_flush();
 
     case SYS_yield:
         sys_yield();
