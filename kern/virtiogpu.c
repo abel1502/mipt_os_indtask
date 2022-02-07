@@ -1,3 +1,5 @@
+#include <inc/error.h>
+
 #include <kern/virtiogpu.h>
 
 
@@ -50,7 +52,7 @@ static void virtio_gpu_init_header() {
     virtio_gpu_reqpage->flush.flush.resource_id = RES_ID;
 
     virtio_gpu_reqpage->init.attachment_page = (struct virtio_gpu_mem_entry){
-        virtio_gpu_reqpage_phys + sizeof(*virtio_gpu_reqpage), FB_SIZE
+        virtio_gpu_reqpage_phys + PAGE_SIZE, FB_SIZE
     };
 
     virtio_gpu_fb = (uint32_t *)(((void *)virtio_gpu_reqpage) + PAGE_SIZE);
@@ -79,12 +81,15 @@ virtio_gpu_init() {
 
     cprintf("Header inited...\n");
 
+    size_t offs = offsetof(struct virtio_gpu_bigfngreq, display_info);
+
     virtq_request(
         queue,
-        virtio_gpu_reqpage_phys + offsetof(struct virtio_gpu_bigfngreq, display_info),
-        sizeof(virtio_gpu_reqpage->display_info),
-        sizeof(virtio_gpu_reqpage->display_info.req)
+        virtio_gpu_reqpage_phys + offs,
+        sizeof(virtio_gpu_reqpage->display_info.req),
+        sizeof(virtio_gpu_reqpage->display_info.resp)
     );
+    offs += sizeof(virtio_gpu_reqpage->display_info) + sizeof(virtio_gpu_reqpage->display_info.req);
 
     cprintf("Done?\n");
 
@@ -104,9 +109,62 @@ virtio_gpu_init() {
 
         #undef PMODE_
     }
+
+    virtq_request(
+        queue,
+        virtio_gpu_reqpage_phys + offs,
+        sizeof(virtio_gpu_reqpage->init.create),
+        sizeof(virtio_gpu_reqpage->init.create_resp)
+    );
+    offs += sizeof(virtio_gpu_reqpage->init.create) + sizeof(virtio_gpu_reqpage->init.create_resp);
+
+    virtq_request(
+        queue,
+        virtio_gpu_reqpage_phys + offs,
+        sizeof(virtio_gpu_reqpage->init.attach),
+        sizeof(virtio_gpu_reqpage->init.attach_resp)
+    );
+    offs += sizeof(virtio_gpu_reqpage->init.attach) + sizeof(virtio_gpu_reqpage->init.attachment_page)
+          + sizeof(virtio_gpu_reqpage->init.attach_resp);
+    
+    virtq_request(
+        queue,
+        virtio_gpu_reqpage_phys + offs,
+        sizeof(virtio_gpu_reqpage->init.scanout),
+        sizeof(virtio_gpu_reqpage->init.scanout_resp)
+    );
+    offs += sizeof(virtio_gpu_reqpage->init.scanout) + sizeof(virtio_gpu_reqpage->init.scanout_resp);
+
+    cprintf("Virtio gpu initialization complete");
 }
 
-void
+int
 virtio_gpu_flush() {
-    //
+    if (!virtio_gpu_device) {
+        return -E_INVAL;
+    }
+
+    assert(virtio_gpu_device->num_queues >= 1);
+
+    struct virtq *queue = &virtio_gpu_device->queues[0];
+
+    size_t offs = offsetof(struct virtio_gpu_bigfngreq, flush);
+
+    virtq_request(
+        queue,
+        virtio_gpu_reqpage_phys + offs,
+        sizeof(virtio_gpu_reqpage->flush.transfer),
+        sizeof(virtio_gpu_reqpage->flush.transfer_resp)
+    );
+    offs += sizeof(virtio_gpu_reqpage->flush.transfer) + sizeof(virtio_gpu_reqpage->flush.transfer_resp);
+
+    virtq_request(
+        queue,
+        virtio_gpu_reqpage_phys + offs,
+        sizeof(virtio_gpu_reqpage->flush.flush),
+        sizeof(virtio_gpu_reqpage->flush.flush_resp)
+    );
+    offs += sizeof(virtio_gpu_reqpage->flush.flush) + sizeof(virtio_gpu_reqpage->flush.flush_resp);
+
+    return 0;
 }

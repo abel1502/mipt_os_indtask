@@ -586,9 +586,7 @@ sys_virtiogpu_flush() {
         return -E_INVAL;
     }
 
-    virtio_gpu_flush();
-
-    return 0;
+    return virtio_gpu_flush();
 }
 
 /* Dispatches to the correct kernel function, passing the arguments. */

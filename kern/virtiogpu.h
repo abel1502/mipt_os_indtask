@@ -178,7 +178,7 @@ extern uint32_t *virtio_gpu_fb;
 
 void virtio_gpu_init();
 
-void virtio_gpu_flush();
+int virtio_gpu_flush();
 
 
 #endif

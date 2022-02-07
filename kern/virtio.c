@@ -410,16 +410,15 @@ virtio_intr() {
 
 
 void
-virtq_request(struct virtq *queue, physaddr_t buf, unsigned size, unsigned resp_offs) {
+virtq_request(struct virtq *queue, physaddr_t buf, unsigned req_size, unsigned resp_size) {
     assert(queue);
     assert(queue->device);
-    assert(size >= resp_offs);
     assert(!queue->waiting);
 
     queue->waiting = true;
 
-    queue->desc[0] = (struct virtq_desc){buf, resp_offs, VIRTQ_DESC_F_NEXT, 1};
-    queue->desc[1] = (struct virtq_desc){buf + resp_offs, size - resp_offs, VIRTQ_DESC_F_WRITE, 0};
+    queue->desc[0] = (struct virtq_desc){buf, req_size, VIRTQ_DESC_F_NEXT, 1};
+    queue->desc[1] = (struct virtq_desc){buf + req_size, resp_size, VIRTQ_DESC_F_WRITE, 0};
 
     queue->avail->ring[queue->avail->idx % queue->capacity] = 0;
 

@@ -227,7 +227,7 @@ void virtio_intr();
 // int virtq_peek(struct virtq *queue, vq_buf_handle handle, char **buf, unsigned *limit);
 // int virtq_pop(struct virtq *queue);
 
-void virtq_request(struct virtq *queue, physaddr_t buf, unsigned size, unsigned resp_offs);
+void virtq_request(struct virtq *queue, physaddr_t buf, unsigned req_size, unsigned resp_size);
 
 // TODO: other methods
 
