@@ -230,7 +230,7 @@ void M_ExtractFileBase(char *path, char *dest)
             break;
         }
 
-	dest[length++] = toupper((int)*src++);
+	dest[length++] = libc_toupper((int)*src++);
     }
 }
 
@@ -248,7 +248,7 @@ void M_ForceUppercase(char *text)
 
     for (p = text; *p != '\0'; ++p)
     {
-        *p = toupper(*p);
+        *p = libc_toupper(*p);
     }
 }
 

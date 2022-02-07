@@ -1320,7 +1320,7 @@ int M_StringWidth(char* string)
 	
     for (i = 0;i < strlen(string);i++)
     {
-	c = toupper(string[i]) - HU_FONTSTART;
+	c = libc_toupper(string[i]) - HU_FONTSTART;
 	if (c < 0 || c >= HU_FONTSIZE)
 	    w += 4;
 	else
@@ -1382,7 +1382,7 @@ M_WriteText
 	    continue;
 	}
 		
-	c = toupper(c) - HU_FONTSTART;
+	c = libc_toupper(c) - HU_FONTSTART;
 	if (c < 0 || c>= HU_FONTSIZE)
 	{
 	    cx += 4;
@@ -1600,7 +1600,7 @@ boolean M_Responder (event_t* ev)
                 ch = key;
             }
 
-            ch = toupper(ch);
+            ch = libc_toupper(ch);
 
             if (ch != ' '
              && (ch - HU_FONTSTART < 0 || ch - HU_FONTSTART >= HU_FONTSIZE))

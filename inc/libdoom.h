@@ -42,7 +42,7 @@ void libc_free(void *ptr);
 
 int libc_abs(int x);
 int libc_atoi(const char *s);
-int toupper(int ch);
+int libc_toupper(int ch);
 
 libc_FILE *libc_fopen(const char *filename, const char *mode);
 void libc_fclose(libc_FILE *libc_FILE);
@@ -68,6 +68,55 @@ int libc_fseek (libc_FILE *stream, long offset, int origin);
 
 #define SEEK_END 1
 #define SEEK_SET 2
+
+
+#ifdef LIBC_REMOVE_FPREFIX
+#define strdup(...) libc_strdup( __VA_ARGS__ )
+#define strchr(...) libc_strchr( __VA_ARGS__ )
+#define strrchr(...) slibc_strrchr( __VA_ARGS__ )
+#define strstr(...) libc_strstr( __VA_ARGS__ )
+
+#define putchar(...) libc_putchar( __VA_ARGS__ )
+#define puts(...) libc_puts( __VA_ARGS__ )
+
+#define printf(...) libc_printf( __VA_ARGS__ )
+#define fprintf(...) libc_fprintf( __VA_ARGS__ )
+
+#define snprintf(...) libc_snprintf( __VA_ARGS__ )
+
+#define exit(...) libc_exit( __VA_ARGS__ )
+
+#define malloc(...) libc_malloc( __VA_ARGS__ )
+#define realloc(...) libc_realloc( __VA_ARGS__ )
+#define calloc(...) libc_calloc( __VA_ARGS__ )
+
+#define free(...) libc_free( __VA_ARGS__ )
+
+#define abs(...) libc_abs( __VA_ARGS__ )
+#define atoi(...) libc_atoi( __VA_ARGS__ )
+#define toupper(...) libc_toupper( __VA_ARGS__ )
+
+#define fopen(...) libc_fopen( __VA_ARGS__ )
+#define  fclose(...) libc_fclose( __VA_ARGS__ )
+
+#define  ftell(...) libc_ftell( __VA_ARGS__ )
+
+#define  rename(...) libc_rename( __VA_ARGS__ )
+#define  remove(...) libc_remove( __VA_ARGS__ )
+#define  mkdir(...) libc_mkdir( __VA_ARGS__ )
+
+#define  fread(...) libc_fread( __VA_ARGS__ )
+#define  fwrite(...) libc_fwrite( __VA_ARGS__ )
+
+#define  fflush(...) libc_fflush( __VA_ARGS__ )
+
+#define  vfprintf(...) libc_vfprintf( __VA_ARGS__ )
+#define  vsnprintf(...) libc_vsnprintf( __VA_ARGS__ )
+
+#define  sscanf(...) libc_sscanf( __VA_ARGS__ )
+
+#define  fseek(...) libc_fseek( __VA_ARGS__ )
+#endif
 
 
 #endif // JOS_INC_DOOM_H

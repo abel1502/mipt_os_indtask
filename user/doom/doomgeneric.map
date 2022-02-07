@@ -959,7 +959,7 @@ LOAD /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o
                 0x0000000000402090                libc_puts@@GLIBC_2.2.5
                 0x00000000004020a0                libc_fseek@@GLIBC_2.2.5
                 0x00000000004020b0                __isoc99_sscanf@@GLIBC_2.7
-                0x00000000004020c0                toupper@@GLIBC_2.2.5
+                0x00000000004020c0                libc_toupper@@GLIBC_2.2.5
                 0x00000000004020d0                libc_exit@@GLIBC_2.2.5
                 0x00000000004020e0                strcasecmp@@GLIBC_2.2.5
                 0x00000000004020f0                gettimeofday@@GLIBC_2.2.5
@@ -972,7 +972,7 @@ LOAD /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../x86_64-linux-gnu/crtn.o
                 0x0000000000402160                XOpenDisplay
                 0x0000000000402170                atof@@GLIBC_2.2.5
                 0x0000000000402180                libc_vfprintf@@GLIBC_2.2.5
-                0x0000000000402190                __ctype_toupper_loc@@GLIBC_2.3
+                0x0000000000402190                __ctype_libc_toupper_loc@@GLIBC_2.3
                 0x00000000004021a0                XDrawPoint
                 0x00000000004021b0                libc_free@@GLIBC_2.2.5
                 0x00000000004021c0                fread_unlocked@@GLIBC_2.2.5

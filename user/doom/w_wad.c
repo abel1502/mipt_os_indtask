@@ -77,7 +77,7 @@ unsigned int W_LumpNameHash(const char *s)
 
     for (i=0; i < 8 && s[i] != '\0'; ++i)
     {
-        result = ((result << 5) ^ result ) ^ toupper((int)s[i]);
+        result = ((result << 5) ^ result ) ^ libc_toupper((int)s[i]);
     }
 
     return result;

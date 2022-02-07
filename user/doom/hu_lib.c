@@ -108,7 +108,7 @@ HUlib_drawTextLine
     x = l->x;
     for (i=0;i<l->len;i++)
     {
-	c = toupper((int)l->l[i]);
+	c = libc_toupper((int)l->l[i]);
 	if (c != ' '
 	    && c >= l->sc
 	    && c <= '_')
@@ -314,7 +314,7 @@ HUlib_keyInIText
 ( hu_itext_t*	it,
   unsigned char ch )
 {
-    ch = toupper(ch);
+    ch = libc_toupper(ch);
 
     if (ch >= ' ' && ch <= '_') 
   	HUlib_addCharToTextLine(&it->l, (char) ch);
