@@ -37,20 +37,162 @@ int libc_atoi(const char *s) {
 }
 
 
-char heap[2 * 1024 * 1024]; // 2MB heap
+// ================================================================================================ mem
 
-void *HEAP_HEAD = heap; // current free position in heap
+/* block header */
+struct header {
+    /* next block */
+    struct header *next;
+    /* prev block */
+    struct header *prev;
+    /* size of this block */
+    size_t size;
+} __attribute__((packed, aligned(_Alignof(max_align_t))));
+
+typedef struct header Header;
+
+
+#define SPACE_SIZE 5 * 0x1000
+
+static uint8_t space[SPACE_SIZE];
+
+/* empty list to get started */
+static Header base = {.next = (Header *)space, .prev = (Header *)space};
+/* start of free list */
+static Header *freep = NULL;
+
+static void
+check_list(void) {
+    asm volatile("cli");
+    Header *prevp = freep, *p = prevp->next;
+    for (; p != freep; p = p->next) {
+        if (prevp != p->prev) panic("Corrupted list.\n");
+        prevp = p;
+    }
+    asm volatile("sti");
+}
+
+/* malloc: general-purpose storage allocator */
+void *
+test_alloc(size_t nbytes) {
+
+    /* Make allocator thread-safe with the help of spin_lock/spin_unlock. */
+    // LAB 5: Your code here DONE?
+    // lock_kernel();
+
+    size_t nunits = (nbytes + sizeof(Header) - 1) / sizeof(Header) + 1;
+
+    /* no free list yet */
+    if (!freep) {
+        Header *hd = (Header *)&space;
+
+        hd->next = (Header *)&base;
+        hd->prev = (Header *)&base;
+        hd->size = (SPACE_SIZE - sizeof(Header)) / sizeof(Header);
+
+        freep = &base;
+    }
+
+    // cprintf("frep %p\n", freep);
+
+    // check_list();
+
+    for (Header *p = freep->next;; p = p->next) {
+        /* big enough */
+        if (p->size >= nunits) {
+            freep = p->prev;
+            /* exactly */
+            if (p->size == nunits) {
+                p->prev->next = p->next;
+                p->next->prev = p->prev;
+            } else { /* allocate tail end */
+                p->size -= nunits;
+                p += p->size;
+                p->size = nunits;
+            }
+            // unlock_kernel();
+            return (void *)(p + 1);
+        }
+
+        /* wrapped around free list */
+        if (p == freep) {
+            break;
+        }
+    }
+
+    // unlock_kernel();
+    return NULL;
+}
+
+/* free: put block ap in free list */
+void
+test_free(void *ap) {
+
+    /* point to block header */
+    Header *bp = (Header *)ap - 1;
+
+    /* Make allocator thread-safe with the help of spin_lock/spin_unlock. */
+    // LAB 5: Your code here DONE?
+    // lock_kernel();
+
+    /* freed block at start or end of arena */
+    Header *p = freep;
+    for (; !(bp > p && bp < p->next); p = p->next)
+        if (p >= p->next && (bp > p || bp < p->next)) break;
+
+    if (bp + bp->size == p->next && p + p->size == bp) /* join to both */ {
+        p->size += bp->size + p->next->size;
+        p->next->next->prev = p;
+        p->next = p->next->next;
+    } else if (bp + bp->size == p->next) /* join to upper nbr */ {
+        bp->size += p->next->size;
+        bp->next = p->next->next;
+        bp->prev = p->next->prev;
+        p->next->next->prev = bp;
+        p->next = bp;
+    } else if (p + p->size == bp) /* join to lower nbr */ {
+        p->size += bp->size;
+    } else {
+        bp->next = p->next;
+        bp->prev = p;
+        p->next->prev = bp;
+        p->next = bp;
+    }
+    freep = p;
+
+    // check_list();
+
+    // unlock_kernel();
+
+}
+
+
+Header*
+get_header(void *ap) {
+
+    /* point to block header */
+    Header *bp = (Header *)ap - 1;
+
+    /* Make allocator thread-safe with the help of spin_lock/spin_unlock. */
+    // LAB 5: Your code here DONE?
+    // lock_kernel();
+
+    /* freed block at start or end of arena */
+    Header *p = freep;
+    for (; !(bp > p && bp < p->next); p = p->next)
+        if (p >= p->next && (bp > p || bp < p->next)) break;
+
+    return bp;
+}
+
+// ================================================================================================
 
 void libc_free(void *ptr) {
-    return;
+    test_free(ptr);
 }
 
 void *libc_malloc(int cnt) {
-    void *ret = HEAP_HEAD;
-
-    HEAP_HEAD += cnt;
-
-    return ret;
+    return test_alloc((size_t) cnt);
 }
 
 void *libc_realloc(void *ptr, size_t newsize) {
@@ -59,14 +201,19 @@ void *libc_realloc(void *ptr, size_t newsize) {
         return NULL;
     }
 
-    // memcpy(new_ptr, ptr, ???);
+    Header *header = get_header(ptr);
+    
+    memcpy(new_ptr, ptr, header->size);
     libc_free(ptr);
     
     return new_ptr;
 }
 
 void *libc_calloc(size_t num, size_t size) {
-    return libc_malloc(num * size);
+    void *ptr = libc_malloc(num * size);
+    memset(ptr, 0, num * size);
+    
+    return ptr;
 }
 
 
