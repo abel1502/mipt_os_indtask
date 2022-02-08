@@ -294,9 +294,7 @@ map_segment(envid_t child, uintptr_t va, size_t memsz,
     // ^ This comment is wrong
 
     /* Allocate filesz in parent to UTEMP */
-    cprintf("{\n");
     res = sys_alloc_region(0, UTEMP, memsz, PROT_ALL);
-    cprintf("}\n");
     if (res < 0) {
         return res;
     }
