@@ -47,6 +47,9 @@ void __nosan_memmove(void *, void *, size_t);
 /* map_region() source override flags */
 #define ALLOC_ZERO 0x100000 /* Allocate memory filled with 0x00 */
 #define ALLOC_ONE  0x200000 /* Allocate memory filled with 0xFF */
+#define ALLOC_NOW  0x400000 /* Allocate memory withot COW.
+                               May be ignored by some functions.
+                               Doesn't interfere with ALLOC_ZERO or ALLOC_ONE. */
 
 /* Memory protection flags & attributes */
 #define PROT_X       0x1 /* Executable */
@@ -116,6 +119,7 @@ void dump_page_table(pte_t *pml4);
 void dump_memory_lists(void);
 void dump_virtual_tree(struct Page *node, int class);
 
+extern bool kzalloc_region_no_cow;
 void *kzalloc_region(size_t size);
 
 void *mmio_map_region(physaddr_t addr, size_t size);

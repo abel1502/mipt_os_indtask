@@ -8,6 +8,9 @@
 #include <kern/virtio.h>
 
 
+#define MEM_BARRIER()  asm volatile("mfence":::"memory")
+
+
 struct virtio_device *virtio_devices = NULL;
 unsigned virtio_num_devices = 0;
 
@@ -16,8 +19,12 @@ void
 virtio_init() {
     assert(virtio_devices == 0);
 
+    kzalloc_region_no_cow = true;
     virtio_devices = kzalloc_region(sizeof(struct virtio_device) * VIRTIO_MAX_DEVICES);
     virtio_num_devices = 0;
+
+    pic_irq_unmask(IRQ_VIRTIO);
+    cprintf("Virtio initialization done.\n");
 
     return;
 }
@@ -54,23 +61,23 @@ virtio_process_capability(struct virtio_device *device, struct virtio_pci_cap *c
 
     switch (cur_cap->cfg_type) {
     case VIRTIO_PCI_CAP_COMMON_CFG: {
-        device->mmio_cfg = (struct virtio_pci_common_cfg *)mmio_map_region(addr, cur_cap->length);
+        device->mmio_cfg = (volatile struct virtio_pci_common_cfg *)mmio_map_region(addr, cur_cap->length);
         device->mmio_cfg_size = cur_cap->length;
     } break;
 
     case VIRTIO_PCI_CAP_NOTIFY_CFG: {
-        device->mmio_ntf = (void *)mmio_map_region(addr, cur_cap->length);
+        device->mmio_ntf = (volatile void *)mmio_map_region(addr, cur_cap->length);
         device->mmio_ntf_size = cur_cap->length;
         device->vq_notify_off_mul = pci_read_confspc_dword(device->pci_device_addr, followup_offset);
     } break;
 
     case VIRTIO_PCI_CAP_ISR_CFG: {
-        device->mmio_isr = (uint8_t *)mmio_map_region(addr, cur_cap->length);
+        device->mmio_isr = (volatile uint8_t *)mmio_map_region(addr, cur_cap->length);
         device->mmio_isr_size = cur_cap->length;
     } break;
 
     case VIRTIO_PCI_CAP_DEVICE_CFG: {
-        device->mmio_dev = (void *)mmio_map_region(addr, cur_cap->length);
+        device->mmio_dev = (volatile void *)mmio_map_region(addr, cur_cap->length);
         device->mmio_dev_size = cur_cap->length;
     } break;
 
@@ -112,14 +119,22 @@ virtio_identify_capabilities(struct virtio_device *device) {
 
         pci_read_confspc_data(device->pci_device_addr, cur_offset, &cur_cap, sizeof(cur_cap));
 
+        // cprintf(">> %hhx: %016lX\n", cur_offset, *(uint64_t *)&cur_cap);
+        if (cur_cap.cap_vndr != VIRTIO_PCI_CAP_VENDOR) {
+            cur_offset = cur_cap.cap_next;
+            continue;
+        }
+
         assert(cur_cap.cap_len >= sizeof(cur_cap));
 
         if (cur_cap.cfg_type <= VIRTIO_PCI_CAP_PCI_CFG &&
             !seen_caps[cur_cap.cfg_type]) {
-            res = virtio_process_capability(device, &cur_cap, cur_offset);
+            res = virtio_process_capability(device, &cur_cap, cur_offset + sizeof(cur_cap));
             if (res < 0) {
                 return res;
             }
+
+            seen_caps[cur_cap.cfg_type] = 1;
         }
 
         cur_offset = cur_cap.cap_next;
@@ -159,9 +174,12 @@ virtio_init_device_virtqs(struct virtio_device *device) {
 
         device->mmio_cfg->queue_msix_vector = VIRTIO_MSI_NO_VECTOR;
 
+        device->queues[i].device = device;
         device->queues[i].idx = i;
         device->queues[i].capacity = vq_size;
+        device->queues[i].waiting = false;
         device->queues[i].notify_offset = device->mmio_cfg->queue_notify_off;
+        device->queues[i].seen_used_idx = 0;
 
         /*
           Now we allocate the queue parts. We're gonna use the split virtq format.
@@ -204,12 +222,13 @@ virtio_init_device_virtqs(struct virtio_device *device) {
 
         cprintf("Allocating %llu bytes-large page for a virtiqueue\n", CLASS_SIZE(class));
 
-        void *vq_region = kzalloc_region(total_size);
-        physaddr_t vq_phys_region = lookup_physaddr(vq_region, total_size);
+        kzalloc_region_no_cow = true;
+        volatile void *vq_region = kzalloc_region(total_size);
+        physaddr_t vq_phys_region = lookup_physaddr((void *)vq_region, total_size);
 
-        device->queues[i].desc  = (struct virtq_desc  *)(vq_region + desc_offs);
-        device->queues[i].avail = (struct virtq_avail *)(vq_region + avail_offs);
-        device->queues[i].used  = (struct virtq_used  *)(vq_region + used_offs);
+        device->queues[i].desc  = (volatile struct virtq_desc  *)(vq_region + desc_offs);
+        device->queues[i].avail = (volatile struct virtq_avail *)(vq_region + avail_offs);
+        device->queues[i].used  = (volatile struct virtq_used  *)(vq_region + used_offs);
 
         device->mmio_cfg->queue_desc   = vq_phys_region + desc_offs;
         device->mmio_cfg->queue_driver = vq_phys_region + avail_offs;
@@ -219,6 +238,23 @@ virtio_init_device_virtqs(struct virtio_device *device) {
     return 0;
 }
 
+static void
+virtio_on_virtqs_update(struct virtio_device *device) {
+    assert(device);
+
+    for (unsigned i = 0; i < device->num_queues; ++i) {
+        struct virtq *queue = &device->queues[i];
+
+        if (queue->used->idx > queue->seen_used_idx) {
+            assert(queue->used->idx == queue->seen_used_idx + 1);
+            assert(queue->waiting);
+
+            queue->seen_used_idx = queue->used->idx;
+            queue->waiting = false;
+        }
+    }
+}
+
 int
 virtio_init_device(struct virtio_device *device, uint16_t virtio_device_id) {
     assert(device);
@@ -226,6 +262,8 @@ virtio_init_device(struct virtio_device *device, uint16_t virtio_device_id) {
     int res = 0;
 
     memset(device, 0, sizeof(*device));
+
+    device->on_virtqs_update = &virtio_on_virtqs_update;
 
     // 0. Discover the device. DONE
     pci_find_device_by_id(VIRTIO_PCI_VENDOR, VIRTIO_PCI_DEVICE_ID_BASE + virtio_device_id,
@@ -241,6 +279,10 @@ virtio_init_device(struct virtio_device *device, uint16_t virtio_device_id) {
     if (res < 0) {
         return res;
     }
+
+    // Inform the device of the chosen irq
+    pci_write_confspc_byte(device->pci_device_addr, offsetof(struct pci_header_00, int_pin), 0);
+    pci_write_confspc_byte(device->pci_device_addr, offsetof(struct pci_header_00, int_line), IRQ_VIRTIO);
 
     // 1. Reset the device.
     virtio_reset(device);
@@ -270,7 +312,7 @@ virtio_init_device(struct virtio_device *device, uint16_t virtio_device_id) {
 
     // 7. Perform device-specific setup, including discovery of virtqueues for the device, optional per-bus setup,
     // reading and possibly writing the device’s virtio configuration space, and population of virtqueues.
-    device->mmio_cfg->msix_config = VIRTIO_MSI_NO_VECTOR;
+    // device->mmio_cfg->msix_config = VIRTIO_MSI_NO_VECTOR;
 
     res = virtio_init_device_virtqs(device);
     if (res < 0) {
@@ -280,7 +322,7 @@ virtio_init_device(struct virtio_device *device, uint16_t virtio_device_id) {
     // 8. Set the DRIVER_OK status bit. At this point the device is “live”.
     device->mmio_cfg->device_status |= VIRTIO_CONFIG_S_DRIVER_OK;
 
-    pic_irq_unmask(IRQ_VIRTIO);
+    cprintf("Virtio device confguration done.\n");
 
     return 0;
 }
@@ -333,32 +375,31 @@ virtio_needs_reset(struct virtio_device *device) {
     return device->mmio_cfg->device_status & VIRTIO_CONFIG_S_NEEDS_RESET;
 }
 
-static void
-virtio_on_virtqs_update(struct virtio_device *device) {
-    cprintf("Virtio device %p virtq used bufs returned\n", device);
-
-    // TODO: Actually process
-}
-
-static void
-virtio_on_cfg_update(struct virtio_device *device) {
-    cprintf("Virtio device %p cfg update\n", device);
-}
-
 void
 virtio_intr() {
-    assert(virtio_devices);
+    cprintf("Virtio interrupt hit");
+
+    if (!virtio_devices) {
+        return;
+    }
 
     for (unsigned i = 0; i < virtio_num_devices; ++i) {
         struct virtio_device *device = &virtio_devices[i];
+        cprintf("Device %u.\n", i);
+
         uint8_t isr = *device->mmio_isr;
 
         if (isr & 0b01) {
-            virtio_on_virtqs_update(device);
+            cprintf("Virtio device %p virtq used bufs returned\n", device);
+
+            assert(device->on_virtqs_update);
+            device->on_virtqs_update(device);
+
+            // Deliberately no `continue`
         }
 
         if (isr & 0b10) {
-            virtio_on_cfg_update(device);
+            cprintf("Virtio device %p cfg update\n", device);
         }
     }
 
@@ -366,3 +407,67 @@ virtio_intr() {
     // pic_send_eoi(IRQ_VIRTIO);
     cprintf("Virtio notification hit");
 }
+
+
+void
+virtq_request(struct virtq *queue, physaddr_t buf, unsigned req_size, unsigned resp_size) {
+    assert(queue);
+    assert(queue->device);
+    assert(!queue->waiting);
+
+    queue->waiting = true;
+
+    queue->desc[0] = (struct virtq_desc){buf, req_size, VIRTQ_DESC_F_NEXT, 1};
+    queue->desc[1] = (struct virtq_desc){buf + req_size, resp_size, VIRTQ_DESC_F_WRITE, 0};
+
+    queue->avail->ring[queue->avail->idx % queue->capacity] = 0;
+
+    MEM_BARRIER();
+
+    queue->avail->idx++;
+
+    MEM_BARRIER();
+
+    if (!(queue->avail->flags & VIRTQ_AVAIL_F_NO_INTERRUPT)) {
+        assert(queue->device->mmio_ntf);
+
+        *(volatile virtio_le16_t *)(
+            queue->device->mmio_ntf + 
+            queue->notify_offset * queue->device->vq_notify_off_mul
+        ) = queue->idx;
+    }
+
+    // while (true) {
+    //     if (queue->used->idx > queue->seen_used_idx) {
+    //         assert(queue->used->idx == queue->seen_used_idx + 1);
+    //         assert(queue->waiting);
+
+    //         queue->seen_used_idx = queue->used->idx;
+    //         queue->waiting = false;
+    //         break;
+    //     }
+
+    //     asm volatile ("pause");
+    // }
+
+    // Probably suboptimal, but, well, sorry
+    while (queue->waiting) {
+        asm volatile ("pause");
+    }
+
+    // And now the result must have been provided
+}
+
+/*
+vq_buf_handle
+virtq_push(struct virtq *queue, const char *data, unsigned size, unsigned max_resp_size);
+
+vq_buf_handle
+virtq_next_handle(struct virtq *queue);
+
+int
+virtq_peek(struct virtq *queue, vq_buf_handle handle, char **buf, unsigned *limit);
+
+int
+virtq_pop(struct virtq *queue);
+*/

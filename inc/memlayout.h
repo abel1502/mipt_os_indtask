@@ -128,6 +128,9 @@
 /* Memory-mapped FrameBuffer */
 #define FRAMEBUFFER KERN_HEAP_START
 
+#define VIRTIO_FRAMEBUFFER_HOLDER KERN_HEAP_END
+#define VIRTIO_FRAMEBUFFER_HOLDER_SIZE (0x100 * PAGE_SIZE)
+
 #define MAX_USER_READABLE FRAMEBUFFER
 
 /*
@@ -149,6 +152,9 @@
 /* Virtual syscall page */
 #define UVSYS_SIZE PAGE_SIZE
 #define UVSYS      (UENVS - UVSYS_SIZE)
+
+#define UVFB_SIZE (VIRTIO_FRAMEBUFFER_HOLDER_SIZE - PAGE_SIZE)
+#define UVFB      (UVSYS - UVFB_SIZE)
 
 /*
  * Top of user VM. User can manipulate VA from MAX_USER_ADDRESS-1 and down!

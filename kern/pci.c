@@ -190,7 +190,7 @@ pci_write_confspc_word(struct pci_addr_t addr, uint8_t offset, uint16_t data) {
         dword = (dword & 0xffff0000) | ((uint32_t)data);
     }
 
-    pci_write_confspc_word(addr, offset & ~0b11, dword);
+    pci_write_confspc_dword(addr, offset & ~0b11, dword);
 }
 
 void
@@ -222,7 +222,8 @@ void pci_read_confspc_data(struct pci_addr_t addr, uint8_t offset, void *dst, un
 
     #define READ_FWD_(TYPE, NAME)                                       \
         if (size >= sizeof(TYPE)) {                                     \
-            *((TYPE *)dst++) = pci_read_confspc_##NAME(addr, offset);   \
+            *(TYPE *)dst = pci_read_confspc_##NAME(addr, offset);       \
+            dst += sizeof(TYPE);                                        \
             offset += sizeof(TYPE);                                     \
             size -= sizeof(TYPE);                                       \
         }
@@ -231,8 +232,9 @@ void pci_read_confspc_data(struct pci_addr_t addr, uint8_t offset, void *dst, un
     if (offset & 0b10) { READ_FWD_(uint16_t, word); }
 
     while (size >= sizeof(uint32_t)) {
-        *((uint32_t *)dst++) = pci_read_confspc_dword(addr, offset);
+        *((uint32_t *)dst) = pci_read_confspc_dword(addr, offset);
 
+        dst += sizeof(uint32_t);
         size -= sizeof(uint32_t);
         offset += sizeof(uint32_t);
     }
@@ -249,27 +251,29 @@ void pci_write_confspc_data(struct pci_addr_t addr, uint8_t offset, const void *
     assert(src);
     assert((unsigned)offset + size < 0x100);
 
-    #define READ_FWD_(TYPE, NAME)                                       \
+    #define WRITE_FWD_(TYPE, NAME)                                      \
         if (size >= sizeof(TYPE)) {                                     \
-            pci_write_confspc_##NAME(addr, offset, *((TYPE *)src++));   \
+            pci_write_confspc_##NAME(addr, offset, *(TYPE *)src);       \
+            src += sizeof(TYPE);                                        \
             offset += sizeof(TYPE);                                     \
             size -= sizeof(TYPE);                                       \
         }
 
-    if (offset & 0b01) { READ_FWD_(uint8_t,  byte); }
-    if (offset & 0b10) { READ_FWD_(uint16_t, word); }
+    if (offset & 0b01) { WRITE_FWD_(uint8_t,  byte); }
+    if (offset & 0b10) { WRITE_FWD_(uint16_t, word); }
 
     while (size >= sizeof(uint32_t)) {
-        pci_write_confspc_dword(addr, offset, *((uint32_t *)src++));
+        pci_write_confspc_dword(addr, offset, *(uint32_t *)src);
 
+        src += sizeof(uint32_t);
         size -= sizeof(uint32_t);
         offset += sizeof(uint32_t);
     }
 
-    READ_FWD_(uint16_t, word);
-    READ_FWD_(uint8_t,  byte);
+    WRITE_FWD_(uint16_t, word);
+    WRITE_FWD_(uint8_t,  byte);
 
-    #undef READ_FWD_
+    #undef WRITE_FWD_
 
     assert(size == 0);
 }
@@ -323,7 +327,7 @@ pci_get_vendor_name(uint16_t vendor, int* found) {
     return "unknown";
 }
 
-uint32_t
+uint64_t
 pci_get_bar(uint8_t hdrtype, uint8_t bus, uint8_t slot, uint8_t func, uint8_t bar_number, uint8_t *bar_type) {
     uint8_t bar_type_placeholder = 0;
 
@@ -331,21 +335,32 @@ pci_get_bar(uint8_t hdrtype, uint8_t bus, uint8_t slot, uint8_t func, uint8_t ba
         bar_type = &bar_type_placeholder;
     }
 
-    if ((hdrtype & ~0x80) == 0) {
-        uint8_t off = bar_number * sizeof(uint32_t);
-        uint32_t bar  = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, offsetof(pci_header_00, bar) + off);
-        if ((bar & 1) == 0) {
-            if((bar & 0xffff0000 & ~0b110) == 0x00) { // 32-bit bar, we don't support other :P
-                *bar_type = 0;
-                return bar & ~0b1111;
-            }
-        } else {
-            *bar_type = 1;
-            return bar & ~0b11;
-        }
-    }
+	if ((hdrtype & ~0x80) == 0) {
+		uint8_t off = bar_number * sizeof(uint32_t);
+		uint32_t bar = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, offsetof(pci_header_00, bar) + off);
 
-    return 0;
+		if (!(bar & 1)) {
+			if ((bar & 0b110) == 0b000) {
+				*bar_type = 0;
+				return bar & ~0b1111;
+
+			} else if ((bar & 0b110) == 0b100) {
+                uint32_t next_bar = pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, offsetof(pci_header_00, bar) + off + sizeof(uint32_t));
+
+                *bar_type = 2;
+                return (uint64_t)((bar & 0xFFFFFFF0) + ((uint64_t)(next_bar & 0xFFFFFFFF) << 32));
+            }
+
+            assert(false);
+		} else  {
+			*bar_type = 1;
+
+			return bar & ~0b11;
+		}
+	}
+
+    assert(false);
+	return 0;
 }
 
 void
@@ -477,7 +492,7 @@ void pci_scan_capabilities(uint8_t bus, uint8_t slot, uint8_t func, uint8_t capa
 
         cprintf(" - [%02x]: Capability #%02x, metadata = %04x\n",
             cap_index, capability_index,
-            (uint16_t)((pci_read_confspc_dword((struct pci_addr_t){bus, slot, func}, cap_index) >> 8) & 0xffff));
+            pci_read_confspc_word((struct pci_addr_t){bus, slot, func}, cap_index + 2));
 
         if(capability_index == PCI_MSI_CAPABILITY) {
             // pci_scan_msi_x_capability(bus, slot, func, cap_index);

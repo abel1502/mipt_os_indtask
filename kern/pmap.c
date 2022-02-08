@@ -1390,6 +1390,18 @@ do_map_region_one_page(struct AddressSpace *dspace, uintptr_t dst, struct Addres
                 set_wp(1);
                 switch_address_space(old);
             }
+        } else if (flags & ALLOC_NOW) {
+            // Lazy allocation is explicitly prevented
+            res = alloc_composite_page(dspace, dst, class, flags & PROT_ALL & ~PROT_LAZY);
+            if (!res) {
+                assert(current_space);
+                assert(dspace);
+                struct AddressSpace *old = switch_address_space(dspace);
+                set_wp(0);
+                nosan_memset((void *)dst, flags & ALLOC_ONE ? 0xFF : 0x00, CLASS_SIZE(class));
+                set_wp(1);
+                switch_address_space(old);
+            }
         } else {
             /* MAP_ZERO and MAP_ONE ignore sspace and source and
              * use special 0x00/0xFF-filled pages */
@@ -1673,9 +1685,13 @@ init_allocator(void) {
     root.state = PARTIAL_NODE;
 }
 
+bool kzalloc_region_no_cow = false;
+
 void *
 kzalloc_region(size_t size) {
     assert(current_space);
+    int extra_flags = kzalloc_region_no_cow ? ALLOC_NOW : 0;
+    kzalloc_region_no_cow = false;
 
     size = ROUNDUP(size, PAGE_SIZE);
 
@@ -1684,7 +1700,8 @@ kzalloc_region(size_t size) {
     uintptr_t res = metaheaptop;
     metaheaptop += size;
 
-    int r = map_region(&kspace, res, NULL, 0, size, PROT_R | PROT_W | ALLOC_ZERO);
+    int r = map_region(&kspace, res, NULL, 0, size,
+                       PROT_R | PROT_W | ALLOC_ZERO | extra_flags);
     if (r < 0) panic("kzalloc_region: %i\n", r);
 
 #ifdef SANITIZE_SHADOW_BASE
@@ -2015,7 +2032,11 @@ lookup_physaddr(const void *region, size_t size) {
     assert(class != MAX_CLASS);
     assert(CLASS_SIZE(class) == size);
 
-    struct Page *page = page_lookup(NULL, (uintptr_t)region, class, PARTIAL_NODE, false);
+    // cprintf(">> 0x%016zx 0x%zx (%d)\n", (uintptr_t)region, size, class);
+    // struct Page *page = page_lookup(NULL, (uintptr_t)region, class, PARTIAL_NODE, false);
+    struct Page *page = page_lookup_virtual(kspace.root, (uintptr_t)region, class, false);
+    assert(page);
+    page = page->phy;
     assert(page);
     assert(page->class == class);
 
