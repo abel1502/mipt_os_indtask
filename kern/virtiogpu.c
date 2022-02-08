@@ -75,11 +75,7 @@ virtio_gpu_init() {
 
     struct virtq *queue = &virtio_gpu_device->queues[0];
 
-    cprintf("Doing...\n");
-
     virtio_gpu_init_header();
-
-    cprintf("Header inited...\n");
 
     size_t offs = offsetof(struct virtio_gpu_bigfngreq, display_info);
 
@@ -90,8 +86,6 @@ virtio_gpu_init() {
         sizeof(virtio_gpu_reqpage->display_info.resp)
     );
     offs += sizeof(virtio_gpu_reqpage->display_info) + sizeof(virtio_gpu_reqpage->display_info.req);
-
-    cprintf("Done?\n");
 
     // Now we have the display info in resp, if we need it for whatever reason...
     for (unsigned i = 0; i < VIRTIO_GPU_MAX_SCANOUTS; ++i) {
@@ -135,7 +129,7 @@ virtio_gpu_init() {
     );
     offs += sizeof(virtio_gpu_reqpage->init.scanout) + sizeof(virtio_gpu_reqpage->init.scanout_resp);
 
-    cprintf("Virtio gpu initialization complete");
+    cprintf("Virtio gpu initialization complete\n");
 }
 
 int

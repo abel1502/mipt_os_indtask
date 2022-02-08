@@ -233,6 +233,13 @@ virtio_init_device_virtqs(struct virtio_device *device) {
         device->mmio_cfg->queue_desc   = vq_phys_region + desc_offs;
         device->mmio_cfg->queue_driver = vq_phys_region + avail_offs;
         device->mmio_cfg->queue_device = vq_phys_region + used_offs;
+
+        // Yup, interrupts were a mistake
+        // But fixing it this way breaks everything...
+        // No, wait, but it shouldn't...
+        device->queues[i].avail->flags |= VIRTQ_AVAIL_F_NO_INTERRUPT;
+
+        device->mmio_cfg->queue_enable = 1;
     }
 
     return 0;
@@ -377,35 +384,33 @@ virtio_needs_reset(struct virtio_device *device) {
 
 void
 virtio_intr() {
-    cprintf("Virtio interrupt hit");
+    cprintf("Virtio interrupt hit, that's unexpected\n");
 
     if (!virtio_devices) {
-        return;
+        panic("Too early, virtio-onii-chan");
     }
 
     for (unsigned i = 0; i < virtio_num_devices; ++i) {
         struct virtio_device *device = &virtio_devices[i];
-        cprintf("Device %u.\n", i);
 
         uint8_t isr = *device->mmio_isr;
 
         if (isr & 0b01) {
-            cprintf("Virtio device %p virtq used bufs returned\n", device);
+            cprintf("Virtio device %u virtq used bufs returned\n", i);
 
-            assert(device->on_virtqs_update);
-            device->on_virtqs_update(device);
+            if (device->on_virtqs_update)
+                device->on_virtqs_update(device);
 
             // Deliberately no `continue`
         }
 
         if (isr & 0b10) {
-            cprintf("Virtio device %p cfg update\n", device);
+            cprintf("Virtio device %d cfg update\n", i);
         }
     }
 
     // Do I even need it?
     // pic_send_eoi(IRQ_VIRTIO);
-    cprintf("Virtio notification hit");
 }
 
 
@@ -428,7 +433,7 @@ virtq_request(struct virtq *queue, physaddr_t buf, unsigned req_size, unsigned r
 
     MEM_BARRIER();
 
-    if (!(queue->avail->flags & VIRTQ_AVAIL_F_NO_INTERRUPT)) {
+    if (!(queue->used->flags & VIRTQ_USED_F_NO_NOTIFY)) {
         assert(queue->device->mmio_ntf);
 
         *(volatile virtio_le16_t *)(
@@ -437,23 +442,23 @@ virtq_request(struct virtq *queue, physaddr_t buf, unsigned req_size, unsigned r
         ) = queue->idx;
     }
 
-    // while (true) {
-    //     if (queue->used->idx > queue->seen_used_idx) {
-    //         assert(queue->used->idx == queue->seen_used_idx + 1);
-    //         assert(queue->waiting);
+    while (true) {
+        if (queue->used->idx > queue->seen_used_idx) {
+            assert(queue->used->idx == queue->seen_used_idx + 1);
+            assert(queue->waiting);
 
-    //         queue->seen_used_idx = queue->used->idx;
-    //         queue->waiting = false;
-    //         break;
-    //     }
+            queue->seen_used_idx = queue->used->idx;
+            queue->waiting = false;
+            break;
+        }
 
-    //     asm volatile ("pause");
-    // }
-
-    // Probably suboptimal, but, well, sorry
-    while (queue->waiting) {
         asm volatile ("pause");
     }
+
+    // Probably suboptimal, but, well, sorry
+    // while (queue->waiting) {
+    //     asm volatile ("pause");
+    // }
 
     // And now the result must have been provided
 }

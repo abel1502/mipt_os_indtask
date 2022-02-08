@@ -23,5 +23,14 @@ umain(int argc, char **argv) {
     int res = sys_virtiogpu_init(&fb);
     assert(res >= 0);
     printf("fb = %p\n", fb);
+
+    for (unsigned y = 0; y < 400; ++y) {
+        for (unsigned x = 0; x < 640; ++x) {
+            fb[y * 640 + x] = 0xFF0000FF;
+        }
+    }
+    
+    res = sys_virtiogpu_flush();
+    assert(res >= 0);
     
 }
