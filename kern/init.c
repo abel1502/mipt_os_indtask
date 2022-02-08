@@ -150,7 +150,7 @@ i386_init(void) {
     timers_init();
 
     /* Framebuffer init should be done after memory init */
-    fb_init();
+    // fb_init();
     if (trace_init) cprintf("Framebuffer initialised\n");
 
     /* User environment initialization functions */
