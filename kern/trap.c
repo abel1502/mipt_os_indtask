@@ -370,8 +370,8 @@ trap(struct Trapframe *tf) {
      * the interrupt path */
     assert(!(read_rflags() & FL_IF));
 
-    if (trace_traps || 1) cprintf("Incoming TRAP[%ld] frame at %p\n", tf->tf_trapno, tf);
-    if (trace_traps_more || 1) print_trapframe(tf);
+    if (trace_traps) cprintf("Incoming TRAP[%ld] frame at %p\n", tf->tf_trapno, tf);
+    if (trace_traps_more) print_trapframe(tf);
 
     /* #PF should be handled separately */
     if (tf->tf_trapno == T_PGFLT) {
@@ -400,7 +400,7 @@ trap(struct Trapframe *tf) {
 
         /* Read processor's CR2 register to find the faulting address */
         int res = force_alloc_page(current_space, va, MAX_ALLOCATION_CLASS);
-        if (trace_pagefaults || 1) {
+        if (trace_pagefaults) {
             bool can_redir = tf->tf_err & FEC_U && curenv && curenv->env_pgfault_upcall;
             cprintf("<%p> Page fault ip=%08lX va=%08lX err=%c%c%c%c%c -> %s\n", current_space, tf->tf_rip, va,
                     tf->tf_err & FEC_P ? 'P' : '-',

@@ -579,7 +579,7 @@ sys_virtiogpu_init(uint32_t **user_fb) {
         return res;
     }
 
-    *user_fb = UVFB;
+    *user_fb = (uint32_t *)UVFB;
 
     return 0;
 }

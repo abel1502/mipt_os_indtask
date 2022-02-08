@@ -63,7 +63,7 @@ struct header {
 typedef struct header Header;
 
 
-#define SPACE_SIZE 10 * 1024 * 1024
+#define SPACE_SIZE 1024 * 1024
 
 static uint8_t space[SPACE_SIZE];
 
