@@ -36,7 +36,7 @@ USERAPPS :=		$(OBJDIR)/user/init \
 			$(OBJDIR)/user/Doom \
 
 
-FSIMGFILES := $(FSIMGTXTFILES) $(USERAPPS)
+FSIMGFILES := $(FSIMGTXTFILES) $(USERAPPS) user/doom/doom.wad
 
 $(OBJDIR)/fs/%.o: fs/%.c fs/fs.h inc/lib.h $(OBJDIR)/.vars.USER_CFLAGS
 	@echo + cc[USER] $<

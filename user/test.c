@@ -12,16 +12,16 @@ uint32_t *fb = NULL;
 
 void
 umain(int argc, char **argv) {
-    // const char *buf = "abc 123 xyz\0";
-    // int n = 0;
-    // char *s1 = malloc(10);
-    // char *s2 = malloc(10);
+    // libc_FILE *file = fopen("lorem", "w");
 
-    // sscanf(buf, "%s %d %s", s1, &n, s2);
-    // printf("%s|%d|%s\n", s1, n, s2);
+    // libc_fprintf(file, "ABOBA[%s]", "typotype");
 
-    int res = sys_virtiogpu_init(&fb);
-    assert(res >= 0);
-    printf("fb = %p\n", fb);
-    
+    // fclose(file);
+
+    libc_FILE *file = fopen("lorem", "r");
+
+    char buf[8096];
+
+    libc_fread(buf, 1, 8096, file);
+    printf("%s\n", buf);
 }

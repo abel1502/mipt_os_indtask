@@ -339,14 +339,15 @@ void D_BindVariables(void)
     M_ApplyPlatformDefaults();
 
     I_BindVideoVariables();
-    I_BindJoystickVariables();
+    // I_BindJoystickVariables();
     I_BindSoundVariables();
 
     M_BindBaseControls();
     M_BindWeaponControls();
     M_BindMapControls();
     M_BindMenuControls();
-    M_BindChatControls(MAXPLAYERS);
+    // M_BindChatControls(MAXPLAYERS);
+
 
     key_multi_msgplayer[0] = HUSTR_KEYGREEN;
     key_multi_msgplayer[1] = HUSTR_KEYINDIGO;
@@ -374,7 +375,7 @@ void D_BindVariables(void)
     {
         char buf[12];
 
-        M_snprintf(buf, sizeof(buf), "chatmacro%i", i);
+        M_snprintf(buf, sizeof(buf), "chatmacro%d", i);
         M_BindVariable(buf, &chat_macros[i]);
     }
 }
@@ -1354,7 +1355,9 @@ void D_DoomMain (void)
     // Load configuration files before initialising other subsystems.
     DEH_printf("M_LoadDefaults: Load libc_system defaults.\n");
     M_SetConfigFilenames("default.cfg", PROGRAM_PREFIX "doom.cfg");
+    DEH_printf("Binding vars\n");
     D_BindVariables();
+    DEH_printf("Loading defaults\n");
     M_LoadDefaults();
 
     // Save configuration at libc_exit.
@@ -1375,6 +1378,7 @@ void D_DoomMain (void)
 
     DEH_printf("W_Init: Init WADfiles.\n");
     D_AddFile(iwadfile);
+    DEH_printf("W_Init: Inited.\n");
 #if ORIGCODE
     numiwadlumps = numlumps;
 #endif
@@ -1835,6 +1839,8 @@ void D_DoomMain (void)
 		else
 			D_StartTitle ();                // start up intro loop
     }
+
+    libc_printf("Successfully inited\n");
 
     D_DoomLoop ();  // never returns
 }
