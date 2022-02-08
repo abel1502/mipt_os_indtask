@@ -14,6 +14,7 @@ $(OBJDIR)/user/%: $(OBJDIR)/user/%.o $(OBJDIR)/lib/libdoom.o $(OBJDIR)/lib/entry
 	$(V)$(NM) -n $@ > $@.sym
 
 $(OBJDIR)/lib/libdoom.o: user/doom/libdoom.c
+	@mkdir -p $(OBJDIR)/lib
 	$(V)$(CC) $(USER_CFLAGS) $(USER_SAN_CFLAGS) -c -o $@ $<
 
 include user/doom/Makedoom

@@ -91,7 +91,12 @@ $(OBJDIR)/user/doom_obj/%.o: user/doom/%.c
 	$(V)$(CC) $(CFLAGS) -c $< -o $@
 
 
-$(OBJDIR)/user/Doom: $(DOOM_OBJFILES) $(OBJDIR)/lib/entry.o $(USERLIBS:%=$(OBJDIR)/lib/lib%.a) $(USER_EXTRA_OBJFILES) user/user.ld
+BuildDoomObj:
+	@mkdir -p $(OBJDIR)/user/doom_obj/
+.PHONY: BuildDoomObj
+
+
+$(OBJDIR)/user/Doom: BuildDoomObj $(DOOM_OBJFILES) $(OBJDIR)/lib/entry.o $(USERLIBS:%=$(OBJDIR)/lib/lib%.a) $(USER_EXTRA_OBJFILES) user/user.ld
 	@echo + ld $@
 	$(V)$(LD) -o $@ $(ULDFLAGS) $(LDFLAGS) $(USER_SAN_LDFLAGS) -nostdlib $(OBJDIR)/lib/entry.o $(USER_EXTRA_OBJFILES) $(DOOM_OBJFILES) -L$(OBJDIR)/lib $(USERLIBS:%=-l%) $(GCC_LIB)
 	$(V)$(OBJDUMP) -S $@ > $@.asm
