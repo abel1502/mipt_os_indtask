@@ -110,6 +110,8 @@ spawn(const char *prog, const char **argv) {
 
     if ((res = init_stack(child, argv, &child_tf)) < 0) goto error;
 
+    cprintf("spawning...\n");
+
     /* Set up program segments as defined in ELF header. */
     struct Proghdr *ph = (struct Proghdr *)(elf_buf + elf->e_phoff);
     for (size_t i = 0; i < elf->e_phnum; i++, ph++) {
@@ -124,6 +126,8 @@ spawn(const char *prog, const char **argv) {
                                fd, ph->p_filesz, ph->p_offset, perm)) < 0)
             goto error;
     }
+
+    cprintf("done\n");
 
     close(fd);
 
@@ -290,7 +294,9 @@ map_segment(envid_t child, uintptr_t va, size_t memsz,
     // ^ This comment is wrong
 
     /* Allocate filesz in parent to UTEMP */
+    cprintf("{\n");
     res = sys_alloc_region(0, UTEMP, memsz, PROT_ALL);
+    cprintf("}\n");
     if (res < 0) {
         return res;
     }

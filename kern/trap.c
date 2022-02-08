@@ -511,7 +511,7 @@ page_fault_handler(struct Trapframe *tf) {
     /* Assert existance of exception stack using user mem assert */
     // LAB 9: Your code here DONE
     // We only validate one page here, since the availability of more will be deduced later
-    user_mem_assert(curenv, stack_top - requiredStackSpace, requiredStackSpace, PROT_R | PROT_W | PROT_USER_);
+    user_mem_assert(curenv, stack_top - requiredStackSpace, requiredStackSpace, PROT_R | PROT_W | PROT_USER_); //!!!!!
     
     if (!curenv->env_pgfault_upcall) {
         cprintf("[%08x] user fault va %08zx ip %08zx\n",

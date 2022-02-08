@@ -876,7 +876,8 @@ void G_Ticker (void)
 	  case ga_loadgame: 
 	    G_DoLoadGame (); 
 	    break; 
-	  case ga_savegame: 
+	  case ga_savegame:
+        libc_printf("[WARNING]<doom>: trying to G_DoSaveGame, maybe we are dead\n"); 
 	    G_DoSaveGame (); 
 	    break; 
 	  case ga_playdemo: 
@@ -1672,8 +1673,8 @@ void G_DoSaveGame (void)
     // Now libc_rename the temporary savegame libc_FILE to the actual savegame
     // libc_FILE, overwriting the old savegame if there was one there.
 
-    libc_remove(savegame_file);
-    libc_rename(temp_savegame_file, savegame_file);
+    // libc_remove(savegame_file);
+    // libc_rename(temp_savegame_file, savegame_file);
     
     gameaction = ga_nothing;
     M_StringCopy(savedescription, "", sizeof(savedescription));

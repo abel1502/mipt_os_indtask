@@ -204,6 +204,8 @@ static int
 sys_alloc_region(envid_t envid, uintptr_t addr, size_t size, int perm) {
     // LAB 9: Your code here DONE
 
+    cprintf("ALLOC\n");
+
     int res = 0;
     struct Env *env = NULL;
 
@@ -230,10 +232,12 @@ sys_alloc_region(envid_t envid, uintptr_t addr, size_t size, int perm) {
     }
 
     assert(perm & (ALLOC_ZERO | ALLOC_ONE));
+    cprintf("HERE\n");
     res = map_region(&env->address_space, addr, NULL, 0, size, perm);
     if (res < 0) {
         return res;
     }
+    cprintf("ok\n");
 
     return 0;
 }

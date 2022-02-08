@@ -96,6 +96,8 @@ static byte *AutoAllocMemory(int *size, int default_ram, int min_ram)
 {
     byte *zonemem;
 
+    libc_printf("default_ram: %d\n", default_ram);
+
     // Allocate the zone memory.  This loop tries progressively smaller
     // zone sizes until a size is found that can be allocated.
     // If we used the -mb command line parameter, only the parameter

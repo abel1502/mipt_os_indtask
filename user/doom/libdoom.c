@@ -2,6 +2,11 @@
 #include <inc/lib.h>
 
 
+int one = 1;
+libc_FILE *libc_stderr = &one;
+libc_FILE *libc_stdout = &one;
+
+
 int libc_abs(int x) {
     return (x >= 0) ? x : -x;
 }
@@ -37,6 +42,12 @@ int libc_atoi(const char *s) {
 }
 
 
+int libc_toupper(int ch) {
+    if (ch >= 'a' && ch <= 'z') return ch + 'A' - 'a';
+    else return ch;
+}
+
+
 // ================================================================================================ mem
 
 /* block header */
@@ -52,7 +63,7 @@ struct header {
 typedef struct header Header;
 
 
-#define SPACE_SIZE 5 * 0x1000
+#define SPACE_SIZE 10 * 1024 * 1024
 
 static uint8_t space[SPACE_SIZE];
 
