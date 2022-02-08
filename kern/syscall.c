@@ -569,7 +569,9 @@ sys_virtiogpu_init(uint32_t **user_fb) {
         return res;
     }
 
+    struct AddressSpace *old_space = switch_address_space(&kspace);
     virtio_gpu_init();
+    switch_address_space(old_space);
     assert(virtio_gpu_fb);
 
     assert(&curenv->address_space != &kspace);
