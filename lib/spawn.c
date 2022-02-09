@@ -122,9 +122,25 @@ spawn(const char *prog, const char **argv) {
         if (ph->p_flags & ELF_PROG_FLAG_READ) perm |= PROT_R;
         if (ph->p_flags & ELF_PROG_FLAG_EXEC) perm |= PROT_X;
 
-        if ((res = map_segment(child, ph->p_va, ph->p_memsz,
-                               fd, ph->p_filesz, ph->p_offset, perm)) < 0)
-            goto error;
+        uint64_t left_to_map = ph->p_memsz;
+        uint64_t filesz = ph->p_filesz;
+        uint64_t mapped = 0;
+
+        while (left_to_map) {
+            uint64_t cur_mapping_size = MIN(left_to_map, UTEXT - (uint64_t)UTEMP);
+            uint64_t cur_file_size = MIN(filesz, cur_mapping_size);
+    
+            if ((res = map_segment(child, ph->p_va + mapped, cur_mapping_size,
+                               fd, cur_file_size, ph->p_offset + mapped, perm)) < 0)
+                goto error;
+
+            filesz -= cur_file_size;
+            
+            mapped += cur_mapping_size;
+            left_to_map -= cur_mapping_size;
+        }
+
+        
     }
 
     cprintf("done\n");

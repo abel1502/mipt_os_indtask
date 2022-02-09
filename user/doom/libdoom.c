@@ -63,7 +63,7 @@ struct header {
 typedef struct header Header;
 
 
-#define SPACE_SIZE 1024 * 1024
+#define SPACE_SIZE 16 * 1024 * 1024
 
 static uint8_t space[SPACE_SIZE];
 
@@ -199,6 +199,8 @@ get_header(void *ap) {
 // ================================================================================================
 
 void libc_free(void *ptr) {
+	if (ptr == NULL) return;
+
     test_free(ptr);
 }
 
@@ -208,12 +210,12 @@ void *libc_malloc(int cnt) {
 
 void *libc_realloc(void *ptr, size_t newsize) {
     void *new_ptr = libc_malloc(newsize);
-    if (!new_ptr) {
-        return NULL;
+    if (!new_ptr || !ptr) {
+        return new_ptr;
     }
 
     Header *header = get_header(ptr);
-    
+
     memcpy(new_ptr, ptr, header->size);
     libc_free(ptr);
     
@@ -301,7 +303,7 @@ int libc_fprintf(libc_FILE *fp, const char *format, ...) {
     va_start(ap, format);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
-    int result = fprintf(*fp, format, ap);
+    int result = vfprintf(*fp, format, ap);
 #pragma GCC diagnostic pop
     va_end(ap);
     return result;
@@ -312,7 +314,7 @@ int libc_snprintf(char * s, size_t n, const char * format, ...) {
     va_start(ap, format);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
-    int result = snprintf(s, n, format, ap);
+    int result = vsnprintf(s, n, format, ap);
 #pragma GCC diagnostic pop
     va_end(ap);
     return result;
@@ -372,20 +374,20 @@ int libc_fseek (libc_FILE *file, long offset, int origin) {
     fstat(fd, &stat);
 
     if(origin == SEEK_END) {
-        if(origin > 0) return -1;
-        if(origin < -stat.st_size) return -1;
-        seek(fd, stat.st_size + origin);
+        if(offset > 0) return -1;
+        if(offset < -stat.st_size) return -1;
+        seek(fd, stat.st_size + offset);
     } else if(origin == SEEK_SET) {
-        if(origin < 0) return -1;
-        if(origin >= stat.st_size) return -1;
-        seek(fd, origin);
+        if(offset < 0) return -1;
+        if(offset >= stat.st_size) return -1;
+        seek(fd, offset);
     } else if(origin == SEEK_SET) {
         int cur = tell(fd);
         if(cur < 0) return -1;
-        origin += cur;
-        if(origin < 0) return -1;
-        if(origin >= stat.st_size) return -1;
-        seek(fd, origin);
+        offset += cur;
+        if(offset < 0) return -1;
+        if(offset >= stat.st_size) return -1;
+        seek(fd, offset);
     } else return -1;
 
     return 0;
