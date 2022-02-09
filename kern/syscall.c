@@ -231,12 +231,10 @@ sys_alloc_region(envid_t envid, uintptr_t addr, size_t size, int perm) {
     }
 
     assert(perm & (ALLOC_ZERO | ALLOC_ONE));
-    cprintf("HERE\n");
     res = map_region(&env->address_space, addr, NULL, 0, size, perm);
     if (res < 0) {
         return res;
     }
-    cprintf("ok\n");
 
     return 0;
 }
@@ -590,7 +588,10 @@ sys_virtiogpu_flush() {
         return -E_INVAL;
     }
 
-    return virtio_gpu_flush();
+    struct AddressSpace *old_space = switch_address_space(&kspace);
+    int res = virtio_gpu_flush();
+    switch_address_space(old_space);
+    return res;
 }
 
 /* Dispatches to the correct kernel function, passing the arguments. */
