@@ -791,7 +791,7 @@ literal:
 
 				/*
 				 * The digit 0 is always legal, but is
-				 * special.  For %i conversions, if no
+				 * special.  For %d conversions, if no
 				 * digits (zero or nonzero) have been
 				 * scanned (only signs), we will have
 				 * base==0.  In that case, we should set
@@ -849,7 +849,7 @@ literal:
 				/* x ok iff flag still set & 2nd char */
 				case 'x': case 'X':
 					if (flags & PFXOK && p == buf + 1) {
-						base = 16;	/* if %i */
+						base = 16;	/* if %d */
 						flags &= ~PFXOK;
 						goto ok;
 					}

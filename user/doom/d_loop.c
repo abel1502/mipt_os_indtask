@@ -173,7 +173,7 @@ static boolean BuildNewTic(void)
            return false;
     }
 
-    //libc_printf ("mk:%i ",maketic);
+    //libc_printf ("mk:%d ",maketic);
     memset(&cmd, 0, sizeof(ticcmd_t));
     loop_interface->BuildTiccmd(&cmd, maketic);
 
