@@ -30,10 +30,10 @@
 #define KEY_DOWNARROW	0xe3
 #define KEY_STRAFE_L	0xa0
 #define KEY_STRAFE_R	0xa1
-#define KEY_USE			0xa2
-#define KEY_FIRE		0x1d
+#define KEY_USE			0x65
+#define KEY_FIRE		0x63 // 0x1d
 #define KEY_ESCAPE		0x1
-#define KEY_ENTER		0xd
+#define KEY_ENTER		0xa
 #define KEY_TAB			0x9
 #define KEY_F1			(0x80 + 0x3b)
 #define KEY_F2			(0x80 + 0x3c)
