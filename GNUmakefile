@@ -305,7 +305,8 @@ QEMUOPTS += -vga virtio
 # QEMUOPTS += -vga none -device virtio-vga,xres=640,yres=400
 # QEMUOPTS += -vga none -device virtio-gpu-pci,xres=640,yres=400
 
-QEMUOPTS += $(shell if $(QEMU) -display none -help | grep -q '^-D '; then echo '-D qemu.log'; fi)
+# NO. FUCK THIS. It took up 250 fucking gigabytes of my disk space in a single run. No, thanks.
+# QEMUOPTS += $(shell if $(QEMU) -display none -help | grep -q '^-D '; then echo '-D qemu.log'; fi)
 IMAGES = $(OVMF_FIRMWARE) $(JOS_LOADER) $(OBJDIR)/kern/kernel $(JOS_ESP)/EFI/BOOT/kernel $(JOS_ESP)/EFI/BOOT/$(JOS_BOOTER)
 ifeq ($(CONFIG_SNAPSHOT),y)
 	QEMUOPTS += -drive file=$(OBJDIR)/fs/fs.img,if=ide,snapshot=on
