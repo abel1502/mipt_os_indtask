@@ -162,7 +162,7 @@ void V_DrawPatch(int x, int y, patch_t *patch)
      || y < 0
      || y + SHORT(patch->height) > SCREENHEIGHT)
     {
-        I_Error("Bad V_DrawPatch x=%i y=%i patch.width=%i patch.height=%i topoffset=%i leftoffset=%i", x, y, patch->width, patch->height, patch->topoffset, patch->leftoffset);
+        I_Error("Bad V_DrawPatch x=%d y=%d patch.width=%d patch.height=%d topoffset=%d leftoffset=%d", x, y, patch->width, patch->height, patch->topoffset, patch->leftoffset);
     }
 #endif
 

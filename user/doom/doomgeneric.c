@@ -2,7 +2,7 @@
 #include <inc/lib.h>
 
 uint32_t *DG_ScreenBuffer = 0;
-static const unsigned improv_timer_iters_per_tick = 100000;
+static const unsigned improv_timer_iters_per_tick = 10000;
 static       unsigned improv_timer_ticks_per_100ms = 0;
 static int start_time = 0;
 
@@ -59,20 +59,21 @@ void DG_Init() {
         }
     }
 
-    libc_printf("%d\n", ticks);
     improv_timer_ticks_per_100ms = ticks / 10;
     assert(improv_timer_ticks_per_100ms > 1);  // Otherwise the speed is way too high
 }
 
 
 void DG_DrawFrame() {
-    printf("Flushing after doom...\n");
+    // libc_printf("[Doom] flush\n");
     int res = sys_virtiogpu_flush();
     assert(res >= 0);
 }
 
 
 void DG_SleepMs(uint32_t ms) {
+    // return;
+    // libc_printf("[Doom] request sleep\n");
     if (ms < improv_timer_ticks_per_100ms) {
         sys_yield();
         return;
@@ -101,11 +102,31 @@ void DG_SleepMs(uint32_t ms) {
 
 
 uint32_t DG_GetTicksMs() {
-    return (uint32_t)((start_time - vsys_gettime()) * 1000);
+    static unsigned cnt = 0;
+    static unsigned last_sec = 0;
+
+    unsigned cur_sec = (uint32_t)((vsys_gettime() - start_time));
+
+    if (cur_sec > last_sec) {
+        cnt = 0;
+    } else {
+        cnt++;
+    }
+
+    last_sec = cur_sec;
+
+    return cur_sec * 1000 + cnt;
 }
 
-
 int DG_GetKey(int* pressed, unsigned char* key) {
+    uint8_t is_released = false;
+    int c = sys_rcgetc(&is_released);
+    if(c != 0) {
+        libc_printf("Key 0x%x %s\n", c, is_released ? "released" : "pressed");
+        *pressed = is_released == 0 ? 1 : 0;
+        *key = c;
+        return 1;
+    }
     return 0;
 }
 

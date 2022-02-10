@@ -173,7 +173,7 @@ static boolean BuildNewTic(void)
            return false;
     }
 
-    //libc_printf ("mk:%i ",maketic);
+    //libc_printf ("mk:%d ",maketic);
     memset(&cmd, 0, sizeof(ticcmd_t));
     loop_interface->BuildTiccmd(&cmd, maketic);
 
@@ -331,6 +331,7 @@ static void BlockUntilStart(net_gamesettings_t *settings,
             I_Error("Netgame startup aborted.");
         }
 
+        libc_printf("[Doom] NET SLEEP\n");
         I_Sleep(100);
     }
 }
@@ -766,6 +767,15 @@ void TryRunTics (void)
 
     while (!PlayersInGame() || lowtic < gametic/ticdup + counts)
     {
+        // libc_printf("-----------\n");
+        // libc_printf("lowtic: %d\n", lowtic);
+        // libc_printf("gametic: %d\n", gametic);
+        // libc_printf("ticdup: %d\n", ticdup);
+        // libc_printf("counts: %d\n", counts);
+        // libc_printf("I_GetTime(): %d\n", I_GetTime());
+        // libc_printf("entertic: %d\n", entertic);
+
+
 	NetUpdate ();
 
         lowtic = GetLowTic();
@@ -780,7 +790,6 @@ void TryRunTics (void)
 	{
 	    return;
 	}
-
         I_Sleep(1);
     }
 

@@ -1765,6 +1765,8 @@ boolean M_Responder (event_t* ev)
 
     // Keys usable within menu
 
+    libc_printf("Keys usable within menu 0x%x | 0x%x\n", key, key_menu_forward);
+
     if (key == key_menu_down)
     {
         // Move down to next item
@@ -1819,6 +1821,7 @@ boolean M_Responder (event_t* ev)
     }
     else if (key == key_menu_forward)
     {
+        libc_printf("!!!!!\n");
         // Activate menu item
 
 	if (currentMenu->menuitems[itemOn].routine &&

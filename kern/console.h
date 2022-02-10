@@ -15,7 +15,7 @@
 
 void cons_init(void);
 void fb_init(void);
-int cons_getc(void);
+int cons_getc(uint8_t* is_released);
 
 /* IRQ1 */
 void kbd_intr(void);

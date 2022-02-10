@@ -362,7 +362,7 @@ void R_GenerateLookup (int texnum)
 	    
 	    if (texturecompositesize[texnum] > 0x10000-texture->height)
 	    {
-		I_Error ("R_GenerateLookup: texture %i is >64k",
+		I_Error ("R_GenerateLookup: texture %d is >64k",
 			 texnum);
 	    }
 	    

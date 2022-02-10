@@ -691,7 +691,7 @@ static void PadRejectArray(byte *array, unsigned int len)
 
     if (len > sizeof(rejectpad))
     {
-        libc_fprintf(libc_stderr, "PadRejectArray: REJECT lump too short to pad! (%i > %i)\n",
+        libc_fprintf(libc_stderr, "PadRejectArray: REJECT lump too short to pad! (%d > %d)\n",
                         len, (int) sizeof(rejectpad));
 
         // Pad remaining space with 0 (or 0xff, if specified on command line).
@@ -775,9 +775,9 @@ P_SetupLevel
     if ( gamemode == commercial)
     {
 	if (map<10)
-	    DEH_snprintf(lumpname, 9, "map0%i", map);
+	    DEH_snprintf(lumpname, 9, "map0%d", map);
 	else
-	    DEH_snprintf(lumpname, 9, "map%i", map);
+	    DEH_snprintf(lumpname, 9, "map%d", map);
     }
     else
     {

@@ -292,15 +292,14 @@ void D_Display (void)
 							  W_CacheLumpName (DEH_String("M_PAUSE"), PU_CACHE));
     }
 
-
     // menus go directly to the screen
     M_Drawer ();          // menu is drawn even on top of everything
     NetUpdate ();         // send out any new accumulation
 
-
     // normal update
     if (!wipe)
     {
+        
 	I_FinishUpdate ();              // page flip or blit buffer
 	return;
     }
@@ -317,7 +316,9 @@ void D_Display (void)
 	    nowtime = I_GetTime ();
 	    tics = nowtime - wipestart;
             I_Sleep(1);
+        // libc_printf("tics: %d\n", tics);
 	} while (tics <= 0);
+    // libc_printf("tics: %d\n", tics);
         
 	wipestart = nowtime;
 	done = wipe_ScreenWipe(wipe_Melt
@@ -442,11 +443,15 @@ void D_DoomLoop (void)
 
     while (1)
     {
+        // libc_printf("Start loop\n");
 		// frame syncronous IO operations
 		I_StartFrame ();
 
+        // libc_printf("------>\n");
+        // libc_printf("RunTics\n");
 		TryRunTics (); // will run at least one tic
 
+        // libc_printf("Continue\n");
 		S_UpdateSounds (players[consoleplayer].mo);// move positional sounds
 
 		// Update display, next frame, with current state.
@@ -454,6 +459,7 @@ void D_DoomLoop (void)
 		{
 			D_Display ();
 		}
+        // libc_printf("<+++++++\n");
     }
 }
 
@@ -606,31 +612,31 @@ static char *banners[] =
 {
     // doom2.wad
     "                         "
-    "DOOM 2: Hell on Earth v%i.%i"
+    "DOOM 2: Hell on Earth v%d.%d"
     "                           ",
     // doom1.wad
     "                            "
-    "DOOM Shareware Startup v%i.%i"
+    "DOOM Shareware Startup v%d.%d"
     "                           ",
     // doom.wad
     "                            "
-    "DOOM Registered Startup v%i.%i"
+    "DOOM Registered Startup v%d.%d"
     "                           ",
     // Registered DOOM uses this
     "                          "
-    "DOOM libc_system Startup v%i.%i"
+    "DOOM libc_system Startup v%d.%d"
     "                          ",
     // doom.wad (Ultimate DOOM)
     "                         "
-    "The Ultimate DOOM Startup v%i.%i"
+    "The Ultimate DOOM Startup v%d.%d"
     "                        ",
     // tnt.wad
     "                     "
-    "DOOM 2: TNT - Evilution v%i.%i"
+    "DOOM 2: TNT - Evilution v%d.%d"
     "                           ",
     // plutonia.wad
     "                   "
-    "DOOM 2: Plutonia Experiment v%i.%i"
+    "DOOM 2: Plutonia Experiment v%d.%d"
     "                           ",
 };
 
@@ -1341,7 +1347,7 @@ void D_DoomMain (void)
 	    scale = 10;
 	if (scale > 400)
 	    scale = 400;
-        DEH_printf("turbo scale: %i%%\n", scale);
+        DEH_printf("turbo scale: %d%%\n", scale);
 	forwardmove[0] = forwardmove[0]*scale/100;
 	forwardmove[1] = forwardmove[1]*scale/100;
 	sidemove[0] = sidemove[0]*scale/100;
@@ -1540,7 +1546,7 @@ void D_DoomMain (void)
             }
         }
 
-        libc_printf("  loaded %i DEHACKED lumps from PWAD files.\n", loaded);
+        libc_printf("  loaded %d DEHACKED lumps from PWAD files.\n", loaded);
     }
 #endif
 

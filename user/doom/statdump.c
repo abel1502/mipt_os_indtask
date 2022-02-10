@@ -164,14 +164,14 @@ static void PrintPercentage(libc_FILE *stream, int amount, int total)
     }
     else
     {
-        libc_fprintf(stream, "%i / %i", amount, total);
+        libc_fprintf(stream, "%d / %d", amount, total);
 
         // statdump.exe is a 16-bit program, so very occasionally an
         // integer overflow can occur when doing this calculation with
         // a large value. Therefore, cast to short to give the same
         // output.
 
-        libc_fprintf(stream, " (%i%%)", (short) (amount * 100) / total);
+        libc_fprintf(stream, " (%d%%)", (short) (amount * 100) / total);
     }
 }
 
@@ -186,7 +186,7 @@ static void PrintPlayerStats(libc_FILE *stream, wbstartstruct_t *stats,
 {
     wbplayerstruct_t *player = &stats->plyr[player_num];
 
-    libc_fprintf(stream, "Player %i (%s):\n", player_num + 1,
+    libc_fprintf(stream, "Player %d (%s):\n", player_num + 1,
             player_colors[player_num]);
 
     /* Kills percentage */
@@ -257,7 +257,7 @@ static void PrintFragsTable(libc_FILE *stream, wbstartstruct_t *stats)
                 continue;
             }
 
-            libc_fprintf(stream, "%i\t", stats->plyr[y].frags[x]);
+            libc_fprintf(stream, "%d\t", stats->plyr[y].frags[x]);
         }
 
         libc_fprintf(stream, "\n");
@@ -281,14 +281,14 @@ static void PrintLevelName(libc_FILE *stream, int episode, int level)
     {
 
         case doom:
-            libc_fprintf(stream, "E%iM%i\n", episode + 1, level + 1);
+            libc_fprintf(stream, "E%dM%d\n", episode + 1, level + 1);
             break;
         case doom2:
             libc_fprintf(stream, "MAP%02i\n", level + 1);
             break;
         default:
         case none:
-            libc_fprintf(stream, "E%iM%i / MAP%02i\n", 
+            libc_fprintf(stream, "E%dM%d / MAP%02i\n", 
                     episode + 1, level + 1, level + 1);
             break;
     }
@@ -312,8 +312,8 @@ static void PrintStats(libc_FILE *stream, wbstartstruct_t *stats)
 
     leveltime = stats->plyr[0].stime / TICRATE;
     partime = stats->partime / TICRATE;
-    libc_fprintf(stream, "Time: %i:%02i", leveltime / 60, leveltime % 60);
-    libc_fprintf(stream, " (par: %i:%02i)\n", partime / 60, partime % 60);
+    libc_fprintf(stream, "Time: %d:%02i", leveltime / 60, leveltime % 60);
+    libc_fprintf(stream, " (par: %d:%02i)\n", partime / 60, partime % 60);
     libc_fprintf(stream, "\n");
 
     for (i=0; i<MAXPLAYERS; ++i)
@@ -363,7 +363,7 @@ void StatDump(void)
 
     if (i > 0)
     {
-        libc_printf("Statistics captured for %i level(s)\n", num_captured_stats);
+        libc_printf("Statistics captured for %d level(s)\n", num_captured_stats);
 
         // We actually know what the real gamemission is, but this has
         // to match the output from statdump.exe.

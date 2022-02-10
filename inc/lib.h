@@ -78,6 +78,7 @@ char *readline(const char *buf);
 
 void sys_cputs(const char *string, size_t len);
 int sys_cgetc(void);
+int sys_rcgetc(uint8_t*);
 envid_t sys_getenvid(void);
 int sys_env_destroy(envid_t);
 void sys_yield(void);

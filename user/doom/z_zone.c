@@ -219,7 +219,7 @@ Z_Malloc
         if (rover == start)
         {
             // scanned all the way around the list
-            I_Error ("Z_Malloc: failed on allocation of %i bytes", size);
+            I_Error ("Z_Malloc: failed on allocation of %d bytes", size);
         }
 	
         if (rover->tag != PU_FREE)
@@ -331,10 +331,10 @@ Z_DumpHeap
 {
     memblock_t*	block;
 	
-    libc_printf ("zone size: %i  location: %p\n",
+    libc_printf ("zone size: %d  location: %p\n",
 	    mainzone->size,mainzone);
     
-    libc_printf ("tag range: %i to %i\n",
+    libc_printf ("tag range: %d to %d\n",
 	    lowtag, hightag);
 	
     for (block = mainzone->blocklist.next ; ; block = block->next)
@@ -370,7 +370,7 @@ void Z_FileDumpHeap (libc_FILE* f)
 
     // memblock_t*	block;
 	
-    // libc_fprintf (f,"zone size: %i  location: %p\n",mainzone->size,mainzone);
+    // libc_fprintf (f,"zone size: %d  location: %p\n",mainzone->size,mainzone);
 	
     // for (block = mainzone->blocklist.next ; ; block = block->next)
     // {
@@ -435,11 +435,11 @@ void Z_ChangeTag2(void *ptr, int tag, char *libc_FILE, int line)
     block = (memblock_t *) ((byte *)ptr - sizeof(memblock_t));
 
     if (block->id != ZONEID)
-        I_Error("%s:%i: Z_ChangeTag: block without a ZONEID!",
+        I_Error("%s:%d: Z_ChangeTag: block without a ZONEID!",
                 libc_FILE, line);
 
     if (tag >= PU_PURGELEVEL && block->user == NULL)
-        I_Error("%s:%i: Z_ChangeTag: an owner is required "
+        I_Error("%s:%d: Z_ChangeTag: an owner is required "
                 "for purgable blocks", libc_FILE, line);
 
     block->tag = tag;

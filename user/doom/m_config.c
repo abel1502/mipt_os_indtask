@@ -1684,11 +1684,11 @@ static void SaveDefaultCollection(default_collection_t *collection)
                     }
                 }
 
-	        libc_fprintf(f, "%i", v);
+	        libc_fprintf(f, "%d", v);
                 break;
 
             case DEFAULT_INT:
-	        libc_fprintf(f, "%i", * (int *) defaults[i].location);
+	        libc_fprintf(f, "%d", * (int *) defaults[i].location);
                 break;
 
             case DEFAULT_INT_HEX:
@@ -1721,7 +1721,7 @@ static int ParseIntParameter(char *strparm)
     if (strparm[0] == '0' && strparm[1] == 'x')
         libc_sscanf(strparm+2, "%x", &parm);
     else
-        libc_sscanf(strparm, "%i", &parm);
+        libc_sscanf(strparm, "%d", &parm);
 
     return parm;
 }
