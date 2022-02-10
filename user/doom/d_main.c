@@ -292,15 +292,14 @@ void D_Display (void)
 							  W_CacheLumpName (DEH_String("M_PAUSE"), PU_CACHE));
     }
 
-
     // menus go directly to the screen
     M_Drawer ();          // menu is drawn even on top of everything
     NetUpdate ();         // send out any new accumulation
 
-
     // normal update
     if (!wipe)
     {
+        
 	I_FinishUpdate ();              // page flip or blit buffer
 	return;
     }
@@ -448,6 +447,7 @@ void D_DoomLoop (void)
 		// frame syncronous IO operations
 		I_StartFrame ();
 
+        // libc_printf("------>\n");
         // libc_printf("RunTics\n");
 		TryRunTics (); // will run at least one tic
 
@@ -459,6 +459,7 @@ void D_DoomLoop (void)
 		{
 			D_Display ();
 		}
+        // libc_printf("<+++++++\n");
     }
 }
 

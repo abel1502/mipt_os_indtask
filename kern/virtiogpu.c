@@ -54,8 +54,9 @@ static void virtio_gpu_init_header() {
 
     virtio_gpu_reqpage->init.create.hdr = (struct virtio_gpu_ctrl_hdr){VIRTIO_GPU_CMD_RESOURCE_CREATE_2D};
     virtio_gpu_reqpage->init.create.resource_id = RES_ID;
-    virtio_gpu_reqpage->init.create.format = VIRTIO_GPU_FORMAT_R8G8B8A8_UNORM;
+    // virtio_gpu_reqpage->init.create.format = VIRTIO_GPU_FORMAT_R8G8B8A8_UNORM;
     // virtio_gpu_reqpage->init.create.format = VIRTIO_GPU_FORMAT_A8B8G8R8_UNORM;
+    virtio_gpu_reqpage->init.create.format = VIRTIO_GPU_FORMAT_B8G8R8A8_UNORM;
     virtio_gpu_reqpage->init.create.width = SCREEN_WIDTH;
     virtio_gpu_reqpage->init.create.height = SCREEN_HEIGHT;
     virtio_gpu_reqpage->init.attach.hdr = (struct virtio_gpu_ctrl_hdr){VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING};

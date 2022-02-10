@@ -59,14 +59,13 @@ void DG_Init() {
         }
     }
 
-    libc_printf("%d\n", ticks);
     improv_timer_ticks_per_100ms = ticks / 10;
     assert(improv_timer_ticks_per_100ms > 1);  // Otherwise the speed is way too high
 }
 
 
 void DG_DrawFrame() {
-    libc_printf("[Doom] flush\n");
+    // libc_printf("[Doom] flush\n");
     int res = sys_virtiogpu_flush();
     assert(res >= 0);
 }
@@ -103,7 +102,20 @@ void DG_SleepMs(uint32_t ms) {
 
 
 uint32_t DG_GetTicksMs() {
-    return (uint32_t)((vsys_gettime() - start_time) * 1000);
+    static unsigned cnt = 0;
+    static unsigned last_sec = 0;
+
+    unsigned cur_sec = (uint32_t)((vsys_gettime() - start_time));
+
+    if (cur_sec > last_sec) {
+        cnt = 0;
+    } else {
+        cnt++;
+    }
+
+    last_sec = cur_sec;
+
+    return cur_sec * 1000 + cnt;
 }
 
 
