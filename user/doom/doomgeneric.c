@@ -2,7 +2,7 @@
 #include <inc/lib.h>
 
 uint32_t *DG_ScreenBuffer = 0;
-static const unsigned improv_timer_iters_per_tick = 100000;
+static const unsigned improv_timer_iters_per_tick = 10000;
 static       unsigned improv_timer_ticks_per_100ms = 0;
 static int start_time = 0;
 
@@ -66,13 +66,15 @@ void DG_Init() {
 
 
 void DG_DrawFrame() {
-    printf("Flushing after doom...\n");
+    libc_printf("[Doom] flush\n");
     int res = sys_virtiogpu_flush();
     assert(res >= 0);
 }
 
 
 void DG_SleepMs(uint32_t ms) {
+    // return;
+    // libc_printf("[Doom] request sleep\n");
     if (ms < improv_timer_ticks_per_100ms) {
         sys_yield();
         return;
@@ -101,7 +103,7 @@ void DG_SleepMs(uint32_t ms) {
 
 
 uint32_t DG_GetTicksMs() {
-    return (uint32_t)((start_time - vsys_gettime()) * 1000);
+    return (uint32_t)((vsys_gettime() - start_time) * 1000);
 }
 
 

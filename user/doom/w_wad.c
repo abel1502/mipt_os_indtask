@@ -258,7 +258,7 @@ int W_CheckNumForName (char* name)
     lumpinfo_t *lump_p;
     int i;
 
-    libc_printf("name: %s\n", name);
+    // libc_printf("name: %s\n", name);
 
     // Do we have a hash table yet?
 
@@ -295,7 +295,7 @@ int W_CheckNumForName (char* name)
 
     // TFB. Not found.
 
-    libc_printf("Not found!\n");
+    // libc_printf("Not found!\n");
 
     return -1;
 }

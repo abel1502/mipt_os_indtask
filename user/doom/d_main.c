@@ -317,7 +317,9 @@ void D_Display (void)
 	    nowtime = I_GetTime ();
 	    tics = nowtime - wipestart;
             I_Sleep(1);
+        // libc_printf("tics: %d\n", tics);
 	} while (tics <= 0);
+    // libc_printf("tics: %d\n", tics);
         
 	wipestart = nowtime;
 	done = wipe_ScreenWipe(wipe_Melt
@@ -442,11 +444,14 @@ void D_DoomLoop (void)
 
     while (1)
     {
+        // libc_printf("Start loop\n");
 		// frame syncronous IO operations
 		I_StartFrame ();
 
+        // libc_printf("RunTics\n");
 		TryRunTics (); // will run at least one tic
 
+        // libc_printf("Continue\n");
 		S_UpdateSounds (players[consoleplayer].mo);// move positional sounds
 
 		// Update display, next frame, with current state.
