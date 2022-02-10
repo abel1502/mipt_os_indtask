@@ -48,7 +48,7 @@ static uint32_t *crt_buf = (uint32_t *)FRAMEBUFFER;
 
 static bool serial_exists;
 
-static void cons_intr(int (*proc)(void));
+static void cons_intr(int (*proc)(uint8_t*));
 static void cons_putc(int c);
 
 /* Text-mode framebuffer display output */
@@ -268,7 +268,8 @@ delay(void) {
 }
 
 static int
-serial_proc_data(void) {
+serial_proc_data(uint8_t* is_released) {
+    is_released = false;
     if (!(inb(COM1 + COM_LSR) & COM_LSR_DATA)) return -1;
     return inb(COM1 + COM_RX);
 }
@@ -428,10 +429,12 @@ static uint8_t *charcode[4] = {normalmap, shiftmap, ctlmap, ctlmap};
 /* Get data from the keyboard.  If we finish a character, return it.  Else 0.
  * Return -1 if no data. */
 static int
-kbd_proc_data(void) {
+kbd_proc_data(uint8_t* is_released) {
     int c;
     uint8_t data;
     static uint32_t shift;
+
+    *is_released = false;
 
     if (!(inb(KBSTATP) & KBS_DIB)) return -1;
 
@@ -445,15 +448,20 @@ kbd_proc_data(void) {
         /* Key released */
         data = (shift & E0ESC ? data : data & 0x7F);
         shift &= ~(shiftcode[data] | E0ESC);
-        return 0;
+//        cprintf("Released key: 0x%x\n", data);
+        *is_released = true;
+
     } else if (shift & E0ESC) {
         /* Last character was an E0 escape; or with 0x80 */
         data |= 0x80;
         shift &= ~E0ESC;
-    }
 
-    shift |= shiftcode[data];
-    shift ^= togglecode[data];
+        shift |= shiftcode[data];
+        shift ^= togglecode[data];
+    } else {
+        shift |= shiftcode[data];
+        shift ^= togglecode[data];
+    }
 
     c = charcode[shift & (CTL | SHIFT)][data];
     if (shift & CAPSLOCK) {
@@ -463,13 +471,15 @@ kbd_proc_data(void) {
             c += 'a' - 'A';
     }
 
-    /* Process special keys:
-     * Ctrl-Alt-Del -- reboot */
-    if (!(~shift & (CTL | ALT)) && c == KEY_DEL) {
-        cprintf("Rebooting!\n");
+    if(!*is_released) {
+        /* Process special keys:
+         * Ctrl-Alt-Del -- reboot */
+        if (!(~shift & (CTL | ALT)) && c == KEY_DEL) {
+            cprintf("Rebooting!\n");
 
-        /* Courtesy of Chris Frost */
-        outb(0x92, 0x3);
+            /* Courtesy of Chris Frost */
+            outb(0x92, 0x3);
+        }
     }
 
     return c;
@@ -498,6 +508,7 @@ kbd_init(void) {
 
 static struct {
     uint8_t buf[CONSBUFSIZE];
+    uint8_t is_released[CONSBUFSIZE];
     uint32_t rpos;
     uint32_t wpos;
 } cons;
@@ -505,19 +516,20 @@ static struct {
 /* called by device interrupt routines to feed input characters
  * into the circular console input buffer */
 static void
-cons_intr(int (*proc)(void)) {
+cons_intr(int (*proc)(uint8_t*)) {
     int ch;
-
-    while ((ch = (*proc)()) != -1) {
+    uint8_t is_released = false;
+    while ((ch = (*proc)(&is_released)) != -1) {
         if (!ch) continue;
         cons.buf[cons.wpos++] = ch;
+        cons.is_released[cons.wpos++] = is_released;
         if (cons.wpos == CONSBUFSIZE) cons.wpos = 0;
     }
 }
 
 /* Return the next input character from the console, or 0 if none waiting */
 int
-cons_getc(void) {
+cons_getc(uint8_t* is_released) {
 
     /* Poll for any pending input characters,
      * so that this function works even when interrupts are disabled
@@ -528,7 +540,14 @@ cons_getc(void) {
     /* Grab the next character from the input buffer */
     if (cons.rpos != cons.wpos) {
         uint8_t ch = cons.buf[cons.rpos++];
+        uint8_t ch_released = cons.is_released[cons.rpos++];
         cons.rpos %= CONSBUFSIZE;
+        if(is_released == NULL) {
+            if(ch_released) return 0;
+        } else {
+            *is_released = ch_released;
+
+        }
         return ch;
     }
     return 0;
@@ -567,7 +586,7 @@ int
 getchar(void) {
     int ch;
 
-    while (!(ch = cons_getc()))
+    while (!(ch = cons_getc(NULL)))
         /* nothing */;
 
     return ch;

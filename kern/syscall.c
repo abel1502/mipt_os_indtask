@@ -38,10 +38,10 @@ sys_cputs(const char *s, size_t len) {
 /* Read a character from the system console without blocking.
  * Returns the character, or 0 if there is no input waiting. */
 static int
-sys_cgetc(void) {
+sys_cgetc(uint8_t* is_released) {
     // LAB 8: Your code here DONE
 
-    return cons_getc();
+    return cons_getc(is_released);
 }
 
 /* Returns the current environment's envid. */
@@ -606,7 +606,7 @@ syscall(uintptr_t syscallno, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t
     // LAB 12: Your code here DONE
     switch (syscallno) {
     case SYS_cgetc:
-        return sys_cgetc();
+        return sys_cgetc((uint8_t*) a1);
 
     case SYS_cputs:
         return sys_cputs((const char *)a1, (size_t)a2);

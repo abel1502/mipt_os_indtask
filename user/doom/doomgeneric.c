@@ -118,8 +118,15 @@ uint32_t DG_GetTicksMs() {
     return cur_sec * 1000 + cnt;
 }
 
-
 int DG_GetKey(int* pressed, unsigned char* key) {
+    uint8_t is_released = false;
+    int c = sys_rcgetc(&is_released);
+    if(c != 0) {
+        libc_printf("Key 0x%x %s\n", c, is_released ? "released" : "pressed");
+        *pressed = is_released == 0 ? 1 : 0;
+        *key = c;
+        return 1;
+    }
     return 0;
 }
 

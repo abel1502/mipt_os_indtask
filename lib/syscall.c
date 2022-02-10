@@ -52,6 +52,11 @@ sys_cgetc(void) {
 }
 
 int
+sys_rcgetc(uint8_t* is_released) {
+    return syscall(SYS_cgetc, 0, (uintptr_t)is_released, 0, 0, 0, 0, 0);
+}
+
+int
 sys_env_destroy(envid_t envid) {
     return syscall(SYS_env_destroy, 1, envid, 0, 0, 0, 0, 0);
 }
