@@ -144,6 +144,7 @@ InitGraphics (
   }
 #endif
 
+#if 0
   UINT32 DesiredGMode = 4;
 
   if (DesiredGMode >= MaxGMode) {
@@ -160,6 +161,7 @@ InitGraphics (
             DesiredGMode, Status));
     return Status;
   }
+#endif
 
   //
   // Fill screen with black.

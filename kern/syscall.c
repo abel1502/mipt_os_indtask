@@ -588,7 +588,10 @@ sys_virtiogpu_flush() {
         return -E_INVAL;
     }
 
-    return virtio_gpu_flush();
+    struct AddressSpace *old_space = switch_address_space(&kspace);
+    int res = virtio_gpu_flush();
+    switch_address_space(old_space);
+    return res;
 }
 
 /* Dispatches to the correct kernel function, passing the arguments. */

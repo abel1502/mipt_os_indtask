@@ -13,7 +13,7 @@
 #define VIRTIO_GPU_FLAG_FENCE   (1 << 0)
 
 // The size of the single page that would contain everything gpu-related in a single physically contiguous region
-#define VIRTIO_GPU_CONTROLPAGE_CLASS 8
+#define VIRTIO_GPU_CONTROLPAGE_CLASS 9
 #define VIRTIO_GPU_CONTROLPAGE_SIZE  CLASS_SIZE(VIRTIO_GPU_CONTROLPAGE_CLASS)
 
 
@@ -137,7 +137,7 @@ struct virtio_gpu_bigfngreq {
         struct virtio_gpu_get_display_info req;
         // VIRTIO_GPU_RESP_OK_DISPLAY_INFO
         struct virtio_gpu_resp_display_info resp;
-    } display_info;
+    } __attribute__((packed)) display_info;
 
     struct {
         // VIRTIO_GPU_CMD_RESOURCE_CREATE_2D  // 640x400, VIRTIO_GPU_FORMAT_R8G8B8A8_UNORM
@@ -150,7 +150,7 @@ struct virtio_gpu_bigfngreq {
         // VIRTIO_GPU_CMD_SET_SCANOUT
         struct virtio_gpu_set_scanout scanout;
         struct virtio_gpu_ctrl_hdr scanout_resp;
-    } init;
+    } __attribute__((packed)) init;
 
     struct {
         // VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D
@@ -159,7 +159,7 @@ struct virtio_gpu_bigfngreq {
         // VIRTIO_GPU_CMD_RESOURCE_FLUSH
         struct virtio_gpu_resource_flush flush;
         struct virtio_gpu_ctrl_hdr flush_resp;
-    } flush;
+    } __attribute__((packed)) flush;
 } __attribute__((packed));
 // size = ?
 

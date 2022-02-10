@@ -22,10 +22,29 @@ static void virtio_gpu_init_header() {
     virtio_gpu_reqpage = (volatile struct virtio_gpu_bigfngreq *)VIRTIO_FRAMEBUFFER_HOLDER;
     virtio_gpu_reqpage_phys = lookup_physaddr((const void *)virtio_gpu_reqpage, VIRTIO_GPU_CONTROLPAGE_SIZE);
 
+    #if 0
+    physaddr_t lastAddr = 0;
+
+    for (uint8_t *ptr = (uint8_t *)virtio_gpu_reqpage;
+         ptr < ((uint8_t *)virtio_gpu_reqpage) + VIRTIO_GPU_CONTROLPAGE_SIZE;
+         ptr += PAGE_SIZE) {
+        
+        *ptr = 0;
+
+        physaddr_t addr = lookup_physaddr((const void *)ptr, PAGE_SIZE);
+        assert(addr);
+        assert(addr == lastAddr + PAGE_SIZE || !lastAddr);
+
+        lastAddr = addr;
+    }
+
+    virtio_gpu_reqpage_phys = lookup_physaddr((const void *)virtio_gpu_reqpage, VIRTIO_GPU_CONTROLPAGE_SIZE);
+    #endif
+
     // Init (most of) the reqpage data:
     static const unsigned RES_ID = 1;
     static const unsigned SCREEN_WIDTH = 640;
-    static const unsigned SCREEN_HEIGHT = 400;
+    static const unsigned SCREEN_HEIGHT = 480;  // Was 400
     static const unsigned FB_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(virtio_le32_t);
 
     static_assert(sizeof(*virtio_gpu_reqpage) + FB_SIZE <= VIRTIO_GPU_CONTROLPAGE_SIZE, "Bad size");
@@ -36,12 +55,16 @@ static void virtio_gpu_init_header() {
     virtio_gpu_reqpage->init.create.hdr = (struct virtio_gpu_ctrl_hdr){VIRTIO_GPU_CMD_RESOURCE_CREATE_2D};
     virtio_gpu_reqpage->init.create.resource_id = RES_ID;
     virtio_gpu_reqpage->init.create.format = VIRTIO_GPU_FORMAT_R8G8B8A8_UNORM;
+    // virtio_gpu_reqpage->init.create.format = VIRTIO_GPU_FORMAT_A8B8G8R8_UNORM;
     virtio_gpu_reqpage->init.create.width = SCREEN_WIDTH;
     virtio_gpu_reqpage->init.create.height = SCREEN_HEIGHT;
     virtio_gpu_reqpage->init.attach.hdr = (struct virtio_gpu_ctrl_hdr){VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING};
     virtio_gpu_reqpage->init.attach.resource_id = RES_ID;
     virtio_gpu_reqpage->init.attach.nr_entries = 1;
     virtio_gpu_reqpage->init.scanout.hdr = (struct virtio_gpu_ctrl_hdr){VIRTIO_GPU_CMD_SET_SCANOUT};
+    virtio_gpu_reqpage->init.scanout.r = (struct virtio_gpu_rect){0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+    virtio_gpu_reqpage->init.scanout.resource_id = RES_ID;
+    virtio_gpu_reqpage->init.scanout.scanout_id = 0;  // Should hopefully work
 
     virtio_gpu_reqpage->flush.transfer.hdr = (struct virtio_gpu_ctrl_hdr){VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D};
     virtio_gpu_reqpage->flush.transfer.r = (struct virtio_gpu_rect){0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
@@ -75,11 +98,7 @@ virtio_gpu_init() {
 
     struct virtq *queue = &virtio_gpu_device->queues[0];
 
-    cprintf("Doing...\n");
-
     virtio_gpu_init_header();
-
-    cprintf("Header inited...\n");
 
     size_t offs = offsetof(struct virtio_gpu_bigfngreq, display_info);
 
@@ -89,9 +108,8 @@ virtio_gpu_init() {
         sizeof(virtio_gpu_reqpage->display_info.req),
         sizeof(virtio_gpu_reqpage->display_info.resp)
     );
-    offs += sizeof(virtio_gpu_reqpage->display_info) + sizeof(virtio_gpu_reqpage->display_info.req);
-
-    cprintf("Done?\n");
+    offs += sizeof(virtio_gpu_reqpage->display_info);
+    assert(virtio_gpu_reqpage->display_info.resp.hdr.type == VIRTIO_GPU_RESP_OK_DISPLAY_INFO);
 
     // Now we have the display info in resp, if we need it for whatever reason...
     for (unsigned i = 0; i < VIRTIO_GPU_MAX_SCANOUTS; ++i) {
@@ -101,7 +119,8 @@ virtio_gpu_init() {
             continue;
         }
 
-        cprintf("%u %u %u %u\n", 
+        cprintf("Scanout %u: %u %u %u %u\n", 
+                i,
                 PMODE_.r.x,
                 PMODE_.r.y,
                 PMODE_.r.width,
@@ -117,15 +136,17 @@ virtio_gpu_init() {
         sizeof(virtio_gpu_reqpage->init.create_resp)
     );
     offs += sizeof(virtio_gpu_reqpage->init.create) + sizeof(virtio_gpu_reqpage->init.create_resp);
+    assert(virtio_gpu_reqpage->init.create_resp.type == VIRTIO_GPU_RESP_OK_NODATA);
 
     virtq_request(
         queue,
         virtio_gpu_reqpage_phys + offs,
-        sizeof(virtio_gpu_reqpage->init.attach),
+        sizeof(virtio_gpu_reqpage->init.attach) + sizeof(virtio_gpu_reqpage->init.attachment_page),
         sizeof(virtio_gpu_reqpage->init.attach_resp)
     );
     offs += sizeof(virtio_gpu_reqpage->init.attach) + sizeof(virtio_gpu_reqpage->init.attachment_page)
           + sizeof(virtio_gpu_reqpage->init.attach_resp);
+    assert(virtio_gpu_reqpage->init.attach_resp.type == VIRTIO_GPU_RESP_OK_NODATA);
     
     virtq_request(
         queue,
@@ -134,8 +155,9 @@ virtio_gpu_init() {
         sizeof(virtio_gpu_reqpage->init.scanout_resp)
     );
     offs += sizeof(virtio_gpu_reqpage->init.scanout) + sizeof(virtio_gpu_reqpage->init.scanout_resp);
+    assert(virtio_gpu_reqpage->init.scanout_resp.type == VIRTIO_GPU_RESP_OK_NODATA);
 
-    cprintf("Virtio gpu initialization complete");
+    cprintf("Virtio gpu initialization complete\n");
 }
 
 int
@@ -157,6 +179,7 @@ virtio_gpu_flush() {
         sizeof(virtio_gpu_reqpage->flush.transfer_resp)
     );
     offs += sizeof(virtio_gpu_reqpage->flush.transfer) + sizeof(virtio_gpu_reqpage->flush.transfer_resp);
+    assert(virtio_gpu_reqpage->flush.transfer_resp.type == VIRTIO_GPU_RESP_OK_NODATA);
 
     virtq_request(
         queue,
@@ -165,6 +188,7 @@ virtio_gpu_flush() {
         sizeof(virtio_gpu_reqpage->flush.flush_resp)
     );
     offs += sizeof(virtio_gpu_reqpage->flush.flush) + sizeof(virtio_gpu_reqpage->flush.flush_resp);
+    assert(virtio_gpu_reqpage->flush.flush_resp.type == VIRTIO_GPU_RESP_OK_NODATA);
 
     return 0;
 }
