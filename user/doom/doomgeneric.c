@@ -1,5 +1,6 @@
 #include "doomgeneric.h"
 #include <inc/lib.h>
+#include <inc/framebuffer.h>
 
 uint32_t *DG_ScreenBuffer = 0;
 static int start_time = 0;
@@ -9,8 +10,7 @@ static       unsigned improv_timer_ticks_per_100ms = 0;
 
 
 void dg_Create() {
-    int res = sys_virtiogpu_init(&DG_ScreenBuffer);
-    assert(res >= 0);
+    assert(framebuffer_init(&DG_ScreenBuffer, 640, 400) >= 0);
     // DG_ScreenBuffer = libc_malloc(DOOMGENERIC_RESX * DOOMGENERIC_RESY * 4);
 
     DG_Init();
@@ -66,8 +66,8 @@ void DG_Init() {
 
 void DG_DrawFrame() {
     // libc_printf("[Doom] flush\n");
-    int res = sys_virtiogpu_flush();
-    assert(res >= 0);
+
+    assert(framebuffer_flush() >= 0);
 }
 
 
