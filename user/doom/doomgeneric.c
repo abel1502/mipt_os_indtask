@@ -2,10 +2,10 @@
 #include <inc/lib.h>
 
 uint32_t *DG_ScreenBuffer = 0;
+static int start_time = 0;
+static uint32_t start_timems = 0;
 static const unsigned improv_timer_iters_per_tick = 10000;
 static       unsigned improv_timer_ticks_per_100ms = 0;
-static int start_time = 0;
-
 
 
 void dg_Create() {
@@ -22,7 +22,6 @@ void umain(int argc, char **argv) {
     main(argc, argv);
 }
 
-
 static void improv_timer_tick() {
     for (unsigned i = 0; i < improv_timer_iters_per_tick; ++i) {
         asm volatile ("pause");  // Since this is technically a spin-wait loop
@@ -30,6 +29,8 @@ static void improv_timer_tick() {
 }
 
 void DG_Init() {
+    start_timems = vsys_gettimems();
+
     unsigned ticks = 0;
 
     int time = vsys_gettime();
@@ -63,7 +64,6 @@ void DG_Init() {
     assert(improv_timer_ticks_per_100ms > 1);  // Otherwise the speed is way too high
 }
 
-
 void DG_DrawFrame() {
     // libc_printf("[Doom] flush\n");
     int res = sys_virtiogpu_flush();
@@ -72,8 +72,7 @@ void DG_DrawFrame() {
 
 
 void DG_SleepMs(uint32_t ms) {
-    // return;
-    // libc_printf("[Doom] request sleep\n");
+    #if 0
     if (ms < improv_timer_ticks_per_100ms) {
         sys_yield();
         return;
@@ -98,10 +97,37 @@ void DG_SleepMs(uint32_t ms) {
             improv_timer_tick();
         }
     }
+    #else
+    int seconds_last = vsys_gettime();
+
+    while (ms > 1000) {
+        int delta = vsys_gettime() - seconds_last;
+        seconds_last += delta;
+
+        if (delta * 1000 > ms) {
+            return;
+        }
+
+        ms -= delta * 1000;
+
+        sys_yield();
+    }
+
+    uint32_t timer_stop = vsys_gettimems() + ms;
+
+    if (timer_stop == (uint32_t)-1) {
+        timer_stop = 0;
+    }
+
+    while (vsys_gettimems() < timer_stop) {
+        asm volatile ("pause");
+    }
+    #endif
 }
 
 
 uint32_t DG_GetTicksMs() {
+    #if 0
     static unsigned cnt = 0;
     static unsigned last_sec = 0;
 
@@ -116,6 +142,9 @@ uint32_t DG_GetTicksMs() {
     last_sec = cur_sec;
 
     return cur_sec * 1000 + cnt;
+    #else
+    return vsys_gettimems() - start_timems;
+    #endif
 }
 
 int DG_GetKey(int* pressed, unsigned char* key) {

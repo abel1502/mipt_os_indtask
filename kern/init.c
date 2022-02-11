@@ -186,7 +186,7 @@ i386_init(void) {
 #endif /* TEST* */
 #endif
 
-    /* Choose the timer used for scheduling: hpet or pit */
+    /* Choose the timer used for scheduling: hpet or rtc */
     timers_schedule("hpet0");
     /* Should not be necessary - drains keyboard because interrupt has given up. */
     kbd_intr();

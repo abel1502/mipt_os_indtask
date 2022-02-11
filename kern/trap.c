@@ -321,6 +321,10 @@ trap_dispatch(struct Trapframe *tf) {
         // LAB 12: Your code here DONE
         vsys[VSYS_gettime] = gettime();
 
+        uint64_t hpet_ms = hpet_get_ms();
+        // cprintf(">> %lu\n", hpet_ms);
+        vsys[VSYS_gettimems] = (int)(hpet_ms & 0xFFFFFFFF);
+
         // LAB 5: Your code here DONE
         // LAB 4: Your code here DONE
         timer_for_schedule->handle_interrupts();

@@ -191,9 +191,11 @@ void hpet_enable_interrupts_tim1(void);
 uint64_t hpet_cpu_frequency(void);
 void hpet_handle_interrupts_tim0(void);
 void hpet_handle_interrupts_tim1(void);
+uint64_t hpet_get_ms(void);
 
 uint32_t pmtimer_get_timeval(void);
 uint64_t pmtimer_cpu_frequency(void);
+
 
 #define PM_FREQ 3579545
 

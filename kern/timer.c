@@ -293,7 +293,8 @@ hpet_enable_interrupts_tim0(void) {
     
     hpetReg->GEN_CONF |= HPET_LEG_RT_CNF;
     hpetReg->TIM0_CONF |= HPET_TN_INT_ENB_CNF | HPET_TN_TYPE_CNF;
-    hpetReg->TIM0_COMP = 50 * Mega;
+    // hpetReg->TIM0_COMP = 50 * Mega;
+    hpetReg->TIM0_COMP = 5 * Mega;
     pic_irq_unmask(IRQ_TIMER);
 
     hpet_print_reg();
@@ -352,6 +353,17 @@ hpet_cpu_frequency(void) {
     //}
 
     return cpu_freq;
+}
+
+uint64_t
+hpet_get_ms(void) {
+    static uint64_t start_val = 0;
+
+    if (!start_val) {
+        start_val = hpet_get_main_cnt();
+    }
+
+    return (hpet_get_main_cnt() - start_val) * 1000 / hpetFreq;
 }
 
 uint32_t

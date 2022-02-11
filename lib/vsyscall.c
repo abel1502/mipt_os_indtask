@@ -16,3 +16,8 @@ int
 vsys_gettime(void) {
     return vsyscall(VSYS_gettime);
 }
+
+uint32_t
+vsys_gettimems() {
+    return (uint32_t)vsyscall(VSYS_gettimems);
+}

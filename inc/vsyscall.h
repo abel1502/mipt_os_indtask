@@ -4,6 +4,7 @@
 /* system call numbers */
 enum {
     VSYS_gettime,
+    VSYS_gettimems,
     NVSYSCALLS
 };
 

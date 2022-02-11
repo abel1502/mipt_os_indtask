@@ -99,6 +99,7 @@ int sys_virtiogpu_init(uint32_t **fb_holder);
 int sys_virtiogpu_flush();
 
 int vsys_gettime(void);
+uint32_t vsys_gettimems(void);
 
 /* This must be inlined. Exercise for reader: why? */
 static inline envid_t __attribute__((always_inline))

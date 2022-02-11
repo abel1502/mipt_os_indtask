@@ -1821,7 +1821,6 @@ boolean M_Responder (event_t* ev)
     }
     else if (key == key_menu_forward)
     {
-        libc_printf("!!!!!\n");
         // Activate menu item
 
 	if (currentMenu->menuitems[itemOn].routine &&
